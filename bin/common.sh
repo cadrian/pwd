@@ -198,7 +198,7 @@ function loadpwds() {
                 echo "Missing ${server_pwdkey} password" >$VAULT_TTY
                 return 1
             else
-                curl -u ${server_login}:"$davpwd"-# "${server_vault_url}" -o "$vault"
+                curl -u ${server_login}:"$davpwd" -\# "${server_vault_url}" -o "$vault"
             fi
         fi
     )
