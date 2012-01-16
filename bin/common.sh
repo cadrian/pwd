@@ -283,4 +283,4 @@ function changemaster() {
     )
 }
 
-export VAULT_MASTER=$(checkmaster "$vault")
+export VAULT_MASTER=${PASSWORD:-$(checkmaster "$vault")}
