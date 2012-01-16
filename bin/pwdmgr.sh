@@ -84,6 +84,10 @@ EOF
             listp "$vault" | less
             ;;
 
+        raw)
+            rawp "$vault" | less
+            ;;
+
         save)
             savepwds "$vault"
             ;;

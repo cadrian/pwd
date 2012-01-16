@@ -39,15 +39,34 @@ function encode() {
     openssl bf -a -pass env:$envname
 }
 
+getmasterpass() {
+    FILE=/tmp/pwd_master_$USER
+    if [ -e $FILE ]; then
+        cat $FILE
+    else
+        case "$VAULT_TTY" in
+            /dev/*)
+                stty -F $VAULT_TTY -echo
+                echo -n 'Master: ' >$VAULT_TTY
+                read pass
+                echo >$VAULT_TTY
+                stty -F $VAULT_TTY echo
+                ;;
+            *)
+                pass=$(zenity --entry --hide-text --title="Password" --text="Please enter your password to open the pwd vault")
+                ;;
+        esac
+        touch $FILE
+        chmod 600 $FILE
+        echo $pass >> $FILE
+        echo $pass
+    fi
+}
+
 function checkmaster() {
     (
         vault="$1"
-        stty -F $VAULT_TTY -echo
-        echo -n 'Master: ' >$VAULT_TTY
-        read master
-        echo >$VAULT_TTY
-        stty -F $VAULT_TTY echo
-        export master
+        export master=$(getmasterpass)
 
         if [ -e "$vault" ]; then
             $DECODE master < "$vault" > /dev/null || exit 1
@@ -136,6 +155,13 @@ function showp() {
     fi
 }
 
+function rawp() {
+    vault="$1"
+    if [ -e "$vault" ]; then
+        $DECODE VAULT_MASTER < "${vault}"
+    fi
+}
+
 function listp() {
     vault="$1"
     if [ -e "$vault" ]; then
@@ -151,8 +177,15 @@ function listp() {
 }
 
 function genp() {
+    seed=$(
+        if [ -c /dev/random ]; then
+            dd if=/dev/random count=2 bs=4 status=noxfer 2>/dev/null | od -t u4 | awk '{printf("%s%s\n", $2, $3)}'
+        else
+            date +'%s%N'
+        fi
+    )
     awk 'BEGIN {
-             srand();
+             srand('$seed');
              letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
              symbols = "(-_)~#{[|^@]}+=<>,?./!§";
              printf("%s", substr(letters, length(letters)*rand(), 1));

@@ -1,18 +1,5 @@
 #!/bin/bash
 
-getmasterpass() {
-    FILE=/tmp/pwd_master_$USER
-    if [ -e $FILE ]; then
-        cat $FILE
-    else
-        pass=$(zenity --entry --hide-text --title="Password" --text="Please enter your password to open the pwd vault")
-        touch $FILE
-        chmod 600 $FILE
-        echo $pass >> $FILE
-        echo $pass
-    fi
-}
-
 if [ -z "$PASSWORD" ]; then
     PASSWORD=$(getmasterpass)
 fi
