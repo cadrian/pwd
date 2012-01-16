@@ -1,0 +1,27 @@
+#!/bin/bash
+
+getmasterpass() {
+    FILE=/tmp/pwd_master_$USER
+    if [ -e $FILE ]; then
+        cat $FILE
+    else
+        pass=$(zenity --entry --hide-text --title="Password" --text="Please enter your password to open the pwd vault")
+        touch $FILE
+        chmod 600 $FILE
+        echo $pass >> $FILE
+        echo $pass
+    fi
+}
+
+if [ -z "$PASSWORD" ]; then
+    PASSWORD=$(getmasterpass)
+fi
+
+exe=$0
+bindir=${exe%/*}
+. "$bindir/common.sh"
+
+if key=$(listp "$vault" | sort | dmenu -b -i -p 'Key: ' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#ff4040' -sf black); then
+    pass="$(showp "$key" "$vault")"
+    echo -n "$pass" | xclip -selection XA_CLIPBOARD -loops 3
+fi
