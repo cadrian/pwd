@@ -152,6 +152,7 @@ function listp() {
 
 function genp() {
     awk 'BEGIN {
+             srand();
              letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
              symbols = "(-_)~#{[|^@]}+=<>,?./!§";
              printf("%s", substr(letters, length(letters)*rand(), 1));
