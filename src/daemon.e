@@ -1,3 +1,17 @@
+-- This file is part of pwdmgr.
+--
+-- pwdmgr is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, version 3 of the License.
+--
+-- pwdmgr is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
+--
 class DAEMON
 
 inherit
@@ -38,12 +52,46 @@ feature {LOOP_ITEM}
 
    continue is
       local
-         line: STRING
+         file: STRING
       do
-         line := channel.last_string
-         std_output.put_line(once ">>>> #(1)" # line)
-         if line.is_equal(once "stop") then
-            channel.disconnect
+         command.clear_count
+         channel.last_string.split_in(command)
+         if not command.is_empty then
+            inspect
+               command.first
+            when "master" then
+               vault.close
+               if command.count = 2 then
+                  vault.open(command.last)
+               end
+               if not vault.is_open then
+                  std_output.put_line(once "Invalid master password")
+               end
+            when "list" then
+               if command.count = 2 then
+                  if vault.is_open then
+                     file := command.last
+                     vault.list(file)
+                  end
+               else
+                  std_output.put_line(once "Invalid list file name")
+               end
+            when "dmenu" then
+               if command.count >= 2 then
+                  command.remove_first
+                  file := command.first
+                  command.remove_first
+                  vault.dmenu(file, command)
+               else
+                  std_output.put_line(once "Invalid dmenu file name")
+               end
+            when "close" then
+               vault.close
+            when "stop" then
+               channel.disconnect
+            else
+               std_output.put_line(once "Unknown command: #(1)" # command.first)
+            end
          end
       end
 
@@ -54,25 +102,31 @@ feature {LOOP_ITEM}
 
    restart is
       do
-         create channel.connect_to(file)
+         create channel.connect_to(fifo)
       end
 
 feature {}
-   file: STRING
    channel: TEXT_FILE_READ_WRITE
          -- there must be at least one writer for the fifo to be blocking in select(2)
          -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo
+
+   vault: VAULT
+   fifo: FIXED_STRING
+
+   command: RING_ARRAY[STRING]
 
    start is
          -- the main loop
       local
          loop_stack: LOOP_STACK
+         ft: FILE_TOOLS
       do
          create loop_stack.make
          loop_stack.add_job(Current)
          restart
          loop_stack.run
          std_output.put_line("~~~~ DONE ~~~~")
+         ft.delete(fifo)
       end
 
    create_fifo is
@@ -83,10 +137,15 @@ feature {}
          c_inline_h("#include <sys/stat.h>%N")
          c_inline_h("#include <fcntl.h>%N")
          c_inline_h("#include <unistd.h>%N")
-         path := file.to_external
-         c_inline_c("_sts = mknod((const char*)_path, S_IFIFO | 0600, 0); if (_sts == -1) _sts = errno; if (_sts == EEXIST) _sts = 0;%N")
+         path := fifo.to_external
+         c_inline_c("[
+                     _sts = mknod((const char*)_path, S_IFIFO | 0600, 0);
+                     if (_sts == -1)
+                        _sts = errno;
+
+                     ]")
          if sts /= 0 then
-            std_error.put_line(once "#(1): error #(2) while creating #(3)" # command_name # sts.out # file)
+            std_error.put_line(once "#(1): error #(2) while creating #(3)" # command_name # sts.out # fifo)
             die_with_code(1)
          end
       end
@@ -108,19 +167,28 @@ feature {}
 
    main is
       do
-         if argument_count = 0 then
-            std_error.put_line(once "Usage: #(1) <fifo>" # command_name)
+         if argument_count /= 2 then
+            std_error.put_line(once "Usage: #(1) <fifo> <vault>" # command_name)
             die_with_code(1)
          end
-         file := argument(1)
-         create_fifo
 
          default_create
          direct_input := True
          direct_output := True
          direct_error := True
 
+         fifo := argument(1).intern
+         create_fifo
+         create vault.make(argument(2))
+         create command.with_capacity(16, 0)
+
          daemonize
       end
+
+invariant
+   vault /= Void
+   fifo /= Void
+   channel /= Void
+   command /= Void
 
 end
