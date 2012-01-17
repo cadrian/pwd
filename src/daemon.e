@@ -59,7 +59,9 @@ feature {LOOP_ITEM}
 
 feature {}
    file: STRING
-   channel: TEXT_FILE_READ
+   channel: TEXT_FILE_READ_WRITE
+         -- there must be at least one writer for the fifo to be blocking in select(2)
+         -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo
 
    start is
          -- the main loop
