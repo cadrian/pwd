@@ -49,6 +49,11 @@ feature {ANY}
          is_deleted
       end
 
+   encoded: ABSTRACT_STRING is
+      do
+         Result := encoder # name # &add_count # &del_count # pass
+      end
+
 feature {}
    make (a_line: STRING) is
       require

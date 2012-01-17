@@ -112,6 +112,15 @@ feature {LOOP_ITEM}
                else
                   std_output.put_line(once "Invalid set file name")
                end
+            when "save" then
+               if command.count = 1 then
+                  if vault.is_open then
+                     file := command.last
+                     vault.save(file)
+                  end
+               else
+                  std_output.put_line(once "Invalid save file name")
+               end
             when "close" then
                vault.close
             when "stop" then

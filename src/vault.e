@@ -55,8 +55,11 @@ feature {ANY}
       end
 
    close is
+      local
+         sys: SYSTEM
       do
          data.clear_count
+         sys.set_environment_variable(once "VAULT_MASTER", once "")
          is_open := False
       ensure
          not is_open
@@ -78,10 +81,42 @@ feature {ANY}
          end
       end
 
+   save (filename: STRING) is
+      require
+         is_open
+         filename /= Void
+      local
+         tfw: TEXT_FILE_WRITE
+         proc: PROCESS
+      do
+         create tfw.connect_to(filename)
+         if tfw.is_connected then
+            proc := execute_command_line(once "openssl bf -a -pass env:VAULT_MASTER")
+            if proc.is_connected then
+               print_all_keys(proc.input)
+               proc.input.disconnect
+               from
+                  proc.output.read_line
+               until
+                  proc.output.end_of_input
+               loop
+                  tfw.put_line(proc.output.last_string)
+                  proc.output.read_line
+               end
+               if not proc.output.last_string.is_empty then
+                  tfw.put_line(proc.output.last_string)
+               end
+               proc.wait
+            end
+
+            tfw.disconnect
+         end
+      end
+
    dmenu (filename: STRING; args: COLLECTION[STRING]) is
       local
-         proc: PROCESS
          tfw: TEXT_FILE_WRITE
+         proc: PROCESS
       do
          create tfw.connect_to(filename)
          if tfw.is_connected then
@@ -116,8 +151,8 @@ feature {ANY}
          filename /= Void
          name /= Void
       local
-         actual_pass: STRING; key: KEY
          tfw: TEXT_FILE_WRITE
+         actual_pass: STRING; key: KEY
      do
          create tfw.connect_to(filename)
          if tfw.is_connected then
@@ -158,6 +193,20 @@ feature {}
          stream.is_connected
       do
          stream.put_line(name)
+      end
+
+   print_all_keys (stream: OUTPUT_STREAM) is
+      require
+         stream.is_connected
+      do
+         data.do_all(agent print_key(?, ?, stream))
+      end
+
+   print_key (key: KEY; name: FIXED_STRING; stream: OUTPUT_STREAM) is
+      require
+         stream.is_connected
+      do
+         stream.put_line(key.encoded)
       end
 
    display_name_and_pass (name: FIXED_STRING; stream: OUTPUT_STREAM) is
