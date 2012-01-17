@@ -200,27 +200,6 @@ feature {}
          ft.delete(fifo)
       end
 
-   create_fifo is
-      local
-         path: POINTER; sts: INTEGER
-      do
-         c_inline_h("#include <sys/types.h>%N")
-         c_inline_h("#include <sys/stat.h>%N")
-         c_inline_h("#include <fcntl.h>%N")
-         c_inline_h("#include <unistd.h>%N")
-         path := fifo.to_external
-         c_inline_c("[
-                     _sts = mknod((const char*)_path, S_IFIFO | 0600, 0);
-                     if (_sts == -1)
-                        _sts = errno;
-
-                     ]")
-         if sts /= 0 then
-            std_error.put_line(once "#(1): error #(2) while creating #(3)" # command_name # sts.out # fifo)
-            die_with_code(1)
-         end
-      end
-
    daemonize is
       local
          proc: PROCESS
@@ -237,6 +216,8 @@ feature {}
       end
 
    main is
+      local
+         fifo_factory: FIFO
       do
          if argument_count /= 2 then
             std_error.put_line(once "Usage: #(1) <fifo> <vault>" # command_name)
@@ -249,7 +230,7 @@ feature {}
          direct_error := True
 
          fifo := argument(1).intern
-         create_fifo
+         fifo_factory.make(fifo)
          create vault.make(argument(2))
          create command.with_capacity(16, 0)
 
