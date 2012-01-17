@@ -15,7 +15,7 @@
 class KEY
 
 create {ANY}
-   make
+   make, new
 
 feature {ANY}
    name: FIXED_STRING
@@ -27,6 +27,27 @@ feature {ANY}
       end
 
    is_valid: BOOLEAN
+
+   set_pass (a_pass: STRING) is
+      require
+         is_valid
+         a_pass /= Void
+      do
+         pass := a_pass.intern
+         add_count := add_count + 1
+      ensure
+         pass = a_pass.intern
+         not is_deleted
+      end
+
+   delete is
+      require
+         is_valid
+      do
+         del_count := add_count
+      ensure
+         is_deleted
+      end
 
 feature {}
    make (a_line: STRING) is
@@ -55,6 +76,20 @@ feature {}
             decoder.append_named_group(a_line, dat, once "pass")
             pass := dat.intern
          end
+      end
+
+   new (a_name, a_pass: STRING) is
+      require
+         a_name /= Void
+         a_pass /= Void
+      do
+         name := a_name.intern
+         pass := a_name.intern
+         add_count := 1
+         is_valid := True
+      ensure
+         is_valid
+         not is_deleted
       end
 
    add_count: INTEGER

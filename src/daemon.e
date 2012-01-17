@@ -52,23 +52,25 @@ feature {LOOP_ITEM}
 
    continue is
       local
-         file: STRING
+         cmd, file, name: STRING
       do
          command.clear_count
          channel.last_string.split_in(command)
          if not command.is_empty then
+            cmd := command.first
+            command.remove_first
             inspect
-               command.first
+               cmd
             when "master" then
                vault.close
-               if command.count = 2 then
+               if command.count = 1 then
                   vault.open(command.last)
                end
                if not vault.is_open then
                   std_output.put_line(once "Invalid master password")
                end
             when "list" then
-               if command.count = 2 then
+               if command.count = 1 then
                   if vault.is_open then
                      file := command.last
                      vault.list(file)
@@ -77,13 +79,38 @@ feature {LOOP_ITEM}
                   std_output.put_line(once "Invalid list file name")
                end
             when "dmenu" then
-               if command.count >= 2 then
-                  command.remove_first
+               if command.count >= 1 then
                   file := command.first
                   command.remove_first
                   vault.dmenu(file, command)
                else
                   std_output.put_line(once "Invalid dmenu file name")
+               end
+            when "get" then
+               if command.count = 2 then
+                  if vault.is_open then
+                     file := command.first
+                     name := command.last
+                     vault.get(file, name)
+                  end
+               else
+                  std_output.put_line(once "Invalid get file name")
+               end
+            when "set" then
+               if command.count >= 2 then
+                  if vault.is_open then
+                     file := command.first
+                     command.remove_first
+                     name := command.first
+                     command.remove_first
+                     if command.is_empty then
+                        vault.set(file, name, Void)
+                     else
+                        vault.set(file, name, command.first)
+                     end
+                  end
+               else
+                  std_output.put_line(once "Invalid set file name")
                end
             when "close" then
                vault.close
