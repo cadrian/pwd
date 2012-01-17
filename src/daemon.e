@@ -52,7 +52,7 @@ feature {LOOP_ITEM}
 
    continue is
       local
-         cmd, file, name: STRING
+         cmd, file, name: STRING; merge_vault: VAULT
       do
          command.clear_count
          channel.last_string.split_in(command)
@@ -78,13 +78,13 @@ feature {LOOP_ITEM}
                else
                   std_output.put_line(once "Invalid list file name")
                end
-            when "dmenu" then
+            when "menu" then
                if command.count >= 1 then
                   file := command.first
                   command.remove_first
-                  vault.dmenu(file, command)
+                  vault.menu(file, command)
                else
-                  std_output.put_line(once "Invalid dmenu file name")
+                  std_output.put_line(once "Invalid menu file name")
                end
             when "get" then
                if command.count = 2 then
@@ -112,6 +112,16 @@ feature {LOOP_ITEM}
                else
                   std_output.put_line(once "Invalid set file name")
                end
+            when "unset" then
+               if command.count = 2 then
+                  if vault.is_open then
+                     file := command.first
+                     name := command.last
+                     vault.unset(file, name)
+                  end
+               else
+                  std_output.put_line(once "Invalid unset file name")
+               end
             when "save" then
                if command.count = 1 then
                   if vault.is_open then
@@ -121,9 +131,27 @@ feature {LOOP_ITEM}
                else
                   std_output.put_line(once "Invalid save file name")
                end
+            when "merge" then
+               if command.count = 3 then
+                  if vault.is_open then
+                     file := command.first
+                     command.remove_first
+                     create merge_vault.make(command.first)
+                     merge_vault.open(command.last)
+                     vault.merge(file, merge_vault)
+                     merge_vault.close
+                     merge_vault := Void
+                     collect_garbage
+                  end
+               else
+                  std_output.put_line(once "Invalid merge file name")
+               end
             when "close" then
                vault.close
+               collect_garbage
             when "stop" then
+               vault.close
+               collect_garbage
                channel.disconnect
             else
                std_output.put_line(once "Unknown command: #(1)" # command.first)
@@ -139,6 +167,13 @@ feature {LOOP_ITEM}
    restart is
       do
          create channel.connect_to(fifo)
+      end
+
+   collect_garbage is
+      local
+         mem: MEMORY
+      do
+         mem.full_collect
       end
 
 feature {}

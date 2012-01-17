@@ -21,7 +21,7 @@ create {ANY}
    make
 
 feature {ANY}
-   open (pass: ABSTRACT_STRING) is
+   open (pass: STRING) is
       require
          pass /= Void
          not is_open
@@ -31,7 +31,7 @@ feature {ANY}
       do
          create vault_file.connect_to(file)
          if vault_file.is_connected then
-            sys.set_environment_variable(once "VAULT_MASTER", pass.out)
+            sys.set_environment_variable(once "VAULT_MASTER", pass)
             proc := execute_command_line(once "openssl bf -d -a -pass env:VAULT_MASTER")
             if proc.is_connected then
                from
@@ -113,7 +113,7 @@ feature {ANY}
          end
       end
 
-   dmenu (filename: STRING; args: COLLECTION[STRING]) is
+   menu (filename: STRING; args: COLLECTION[STRING]) is
       local
          tfw: TEXT_FILE_WRITE
          proc: PROCESS
@@ -125,7 +125,7 @@ feature {ANY}
                print_all_names(proc.input)
                proc.input.disconnect
                proc.output.read_line
-               display_name_and_pass(proc.output.last_string.intern, tfw)
+               display_or_add_key(proc.output.last_string.intern, tfw)
                proc.wait
             end
             tfw.disconnect
@@ -152,35 +152,85 @@ feature {ANY}
          name /= Void
       local
          tfw: TEXT_FILE_WRITE
-         actual_pass: STRING; key: KEY
-     do
+      do
          create tfw.connect_to(filename)
          if tfw.is_connected then
-            if pass = Void then
-               actual_pass := generate_pass
-            else
-               actual_pass := pass
-            end
+            set_key(name, pass, tfw)
+            tfw.disconnect
+         end
+      end
 
-            key := data.reference_at(name.intern)
-            if key = Void then
-               create key.new(name, actual_pass)
-               data.add(key, key.name)
-            else
-               key.set_pass(actual_pass)
-            end
+   unset (filename, name: STRING) is
+      local
+         tfw: TEXT_FILE_WRITE
+      do
+         create tfw.connect_to(filename)
+         if tfw.is_connected then
+            delete_key(name.intern, tfw)
+            tfw.disconnect
+         end
+      end
 
-            check
-               key.pass = actual_pass.intern
-               not key.is_deleted
-            end
-
-            display_name_and_pass(name.intern, tfw)
+   merge (filename: STRING; other: like Current) is
+         -- The greatest id is kept.
+         -- If the ids are equal the local is kept.
+      local
+         tfw: TEXT_FILE_WRITE
+      do
+         create tfw.connect_to(filename)
+         if tfw.is_connected then
+            -- merge existing
+            data.do_all(agent merge_other(other.data, ?))
+            -- add missing
+            other.data.do_all(agent add_key(?))
+            tfw.put_line(once "merge done.")
             tfw.disconnect
          end
       end
 
 feature {}
+   merge_other (other: like data; key: KEY) is
+      local
+         other_key: KEY
+      do
+         other_key := other.reference_at(key.name)
+         if other_key /= Void then
+            key.merge(other_key)
+         end
+      end
+
+   add_key (key: KEY) is
+      do
+         data.add(key, key.name)
+      end
+
+feature {}
+   set_key (name: ABSTRACT_STRING; pass: STRING; stream: OUTPUT_STREAM) is
+      local
+         actual_pass: STRING; key: KEY
+      do
+         if pass = Void then
+            actual_pass := generate_pass
+         else
+            actual_pass := pass
+         end
+
+         key := data.reference_at(name.intern)
+         if key = Void then
+            create key.new(name, actual_pass)
+            data.add(key, key.name)
+         else
+            key.set_pass(actual_pass)
+         end
+
+         check
+            key.pass = actual_pass
+            not key.is_deleted
+         end
+
+         display_key(key, stream)
+      end
+
    print_all_names (stream: OUTPUT_STREAM) is
       require
          stream.is_connected
@@ -209,6 +259,14 @@ feature {}
          stream.put_line(key.encoded)
       end
 
+   display_key (key: KEY; stream: OUTPUT_STREAM) is
+      require
+         not key.is_deleted
+         stream.is_connected
+      do
+         stream.put_line(once "#(1) #(2)" # key.name # key.pass)
+      end
+
    display_name_and_pass (name: FIXED_STRING; stream: OUTPUT_STREAM) is
       require
          name /= Void
@@ -218,8 +276,37 @@ feature {}
       do
          key := data.reference_at(name)
          if key /= Void and then not key.is_deleted then
-            stream.put_line(once "#(1) #(2)" # key.name # key.pass)
+            display_key(key, stream)
          else
+            stream.put_line(name)
+         end
+      end
+
+   display_or_add_key (name: FIXED_STRING; stream: OUTPUT_STREAM) is
+      require
+         name /= Void
+         stream.is_connected
+      local
+         key: KEY
+      do
+         key := data.reference_at(name)
+         if key /= Void and then not key.is_deleted then
+            display_key(key, stream)
+         else
+            set_key(name, Void, stream)
+         end
+      end
+
+   delete_key (name: FIXED_STRING; stream: OUTPUT_STREAM) is
+      require
+         name /= Void
+         stream.is_connected
+      local
+         key: KEY
+      do
+         key := data.reference_at(name)
+         if key /= Void and then not key.is_deleted then
+            key.delete
             stream.put_line(name)
          end
       end
@@ -313,6 +400,8 @@ feature {}
       end
 
    file: FIXED_STRING
+
+feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]
 
 invariant

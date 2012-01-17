@@ -19,11 +19,14 @@ create {ANY}
 
 feature {ANY}
    name: FIXED_STRING
-   pass: FIXED_STRING
+
+   pass: STRING
+         -- note: MUST NOT be a fixed string because the interned
+         -- strings are never released (hence visible in memory dumps)
 
    is_deleted: BOOLEAN is
       do
-         Result := del_count = add_count
+         Result := del_count > add_count
       end
 
    is_valid: BOOLEAN
@@ -33,7 +36,7 @@ feature {ANY}
          is_valid
          a_pass /= Void
       do
-         pass := a_pass.intern
+         pass := a_pass
          add_count := add_count + 1
       ensure
          pass = a_pass.intern
@@ -44,7 +47,7 @@ feature {ANY}
       require
          is_valid
       do
-         del_count := add_count
+         del_count := add_count + 1
       ensure
          is_deleted
       end
@@ -52,6 +55,19 @@ feature {ANY}
    encoded: ABSTRACT_STRING is
       do
          Result := encoder # name # &add_count # &del_count # pass
+      end
+
+   merge (other: like Current) is
+      require
+         other.name = name
+      do
+         if del_count < other.del_count then
+            del_count := other.del_count
+         end
+         if add_count < other.add_count then
+            pass := other.pass
+            add_count := other.add_count
+         end
       end
 
 feature {}
@@ -79,26 +95,24 @@ feature {}
 
             dat.clear_count
             decoder.append_named_group(a_line, dat, once "pass")
-            pass := dat.intern
+            pass := dat.twin
+
+            dat.clear_count
          end
       end
 
-   new (a_name, a_pass: STRING) is
+   new (a_name: ABSTRACT_STRING; a_pass: STRING) is
       require
          a_name /= Void
          a_pass /= Void
       do
          name := a_name.intern
-         pass := a_name.intern
-         add_count := 1
+         pass := a_pass
          is_valid := True
       ensure
          is_valid
          not is_deleted
       end
-
-   add_count: INTEGER
-   del_count: INTEGER
 
    decoder: REGULAR_EXPRESSION is
       local
@@ -111,6 +125,10 @@ feature {}
       once
          Result := "#(1):#(2):#(3):#(4)".intern
       end
+
+feature {KEY}
+   add_count: INTEGER
+   del_count: INTEGER
 
 invariant
    is_valid implies name /= Void
