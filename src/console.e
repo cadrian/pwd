@@ -169,6 +169,7 @@ feature {} -- commands
                               xclip(data.last)
                            else
                               check data.count = 1 end
+                              xclip(once "")
                               io.put_line(once "[1mError[0m") -- ???
                            end
                         end
@@ -184,7 +185,8 @@ feature {} -- commands
                      do
                         stream.read_line
                         if not stream.end_of_input then
-                           io.put_line(once "[1mDone[0m") -- ???
+                           xclip(once "")
+                           io.put_line(once "[1mDone[0m")
                         end
                      end)
          send_save
