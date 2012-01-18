@@ -25,6 +25,8 @@ feature {}
 
    run is
       do
+         direct_output := True
+
          from
             stop := False
             io.put_string(once "[
@@ -77,35 +79,48 @@ feature {}
          inspect
             cmd
          when "help" then
-            io.put_string(once "[
-                                Known commands:
+            less(once "[
+                       [1;32mKnown commands[0m
 
-                                add <key> [pass]   Add a new password. Needs at least a key.
-                                                   If the password is not specified it is randomly generated.
-                                                   If the password already exists it is changed.
+                       [33madd <key> [pass][0m   Add a new password. Needs at least a key.
+                                          If the password is not specified it is randomly generated.
+                                          If the password already exists it is changed.
 
-                                rem <key>          Removes the password corresponding to the given key.
+                       [33mrem <key>[0m          Removes the password corresponding to the given key.
 
-                                list               List the known passwords (show only the keys).
+                       [33mlist[0m               List the known passwords (show only the keys).
 
-                                save               Save the password vault upto the server.
+                       [33msave[0m               Save the password vault upto the server.
 
-                                load               Replace the local vault with the server's version.
+                       [33mload[0m               Replace the local vault with the server's version.
 
-                                merge              Load the server version and compare to the local one.
-                                                   Keep the most recent keys and save the merged version
-                                                   back to the server.
+                       [33mmerge[0m              Load the server version and compare to the local one.
+                                          Keep the most recent keys and save the merged version
+                                          back to the server.
 
-                                master             Change the master password.
+                       [33mmaster[0m             Change the master password. [1m(not yet implemented)[0m
 
-                                help               Show this screen :-)
+                       [33mhelp[0m               Show this screen :-)
 
-                                Any other "command" is understood as a key.
-                                In that case the password is stored in the clipboard.
+                       Any other "command" is understood as a key.
+                       In that case the password is stored in the clipboard.
 
-                                ]")
+                       ]")
          else
-            io.put_line(once "Command <#(1)> not recognized." # io.last_string)
+
+         end
+      end
+
+   less (string: ABSTRACT_STRING) is
+      local
+         proc: PROCESS
+      do
+         proc := execute_command_line("less -R")
+         if proc.is_connected then
+            proc.input.put_string(string)
+            proc.input.flush
+            proc.input.disconnect
+            proc.wait
          end
       end
 
