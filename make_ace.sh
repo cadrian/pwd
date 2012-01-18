@@ -1,11 +1,12 @@
 #!/bin/bash
 
 target=$1
-exe=${target%.ace}
-CLASS=$(echo $exe | tr '[a-z]' '[A-Z]')
+name=${target%.ace}
+exe=$name.exe
+CLASS=$(echo $name | tr '[a-z]' '[A-Z]')
 
 cat > $target <<EOF
-system "bin/$exe"
+system "$exe"
 
 root
     $CLASS:main
@@ -15,7 +16,7 @@ default
     collect(yes)
     debug(no)
     trace(no)
-    verbose(yes)
+    verbose(no)
 
 cluster
     pwdmgr: "src"
