@@ -93,6 +93,7 @@ feature {} -- commands
                     [33madd <key> [pass][0m   Add a new password. Needs at least a key.
                                        If the password is not specified it is randomly generated.
                                        If the password already exists it is changed.
+                                       In all cases the password is stored in the clipboard.
 
                     [33mrem <key>[0m          Removes the password corresponding to the given key.
 
@@ -110,8 +111,9 @@ feature {} -- commands
 
                     [33mhelp[0m               Show this screen :-)
 
-                    Any other "command" is understood as a key.
-                    In that case the password is stored in the clipboard.
+                    Any other input is understood as a password request using the given key.
+                    If that key exists the password is stored in the clipboard.
+                    Otherwise the key is generated and stored in the clipboard.
 
                     ]")
       end
