@@ -102,7 +102,7 @@ feature {} -- command management
             run_help
          else
             command.add_first(cmd) -- yes, add it again... it's a ring array so no harm done
-            run_get_or_add
+            run_get
          end
       ensure
          not fifo.exists(client_fifo)
@@ -128,8 +128,8 @@ feature {} -- commands
          not fifo.exists(client_fifo)
       end
 
-   run_get_or_add is
-         -- get or add key
+   run_get
+         -- get key
       do
          get_data(once "get #(1) #(2)" # client_fifo # command.first,
                   agent (stream: INPUT_STREAM) is
