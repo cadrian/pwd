@@ -1,4 +1,4 @@
-all: bin/daemon bin/menu #bin/console
+all: bin/daemon bin/menu bin/console
 
 bin/daemon: daemon.ace src/daemon.e src/fifo.e src/key.e src/vault.e
 	se c daemon.ace

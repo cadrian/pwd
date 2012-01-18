@@ -6,7 +6,7 @@ cd $dir
 test -d bootstrap && rm -rf bootstrap
 mkdir bootstrap
 
-for exe in daemon menu #console
+for exe in daemon menu console
 do
     ace=$exe.ace
     ./make_ace.sh $ace dontclean

@@ -26,6 +26,10 @@ feature {}
          send_menu
       end
 
+   check_argument_count: BOOLEAN is True
+
+   extra_args: STRING is " <dmenu args>"
+
    send_menu is
       require
          not fifo.exists(client_fifo)

@@ -33,14 +33,14 @@ feature {}
          default_create
          direct_error := True
 
-         if argument_count < 2 then
-            std_error.put_line("Usage: #(1) <server fifo> <vault> <dmenu args>" # command_name)
+         if argument_count < 2 or else not check_argument_count then
+            std_error.put_line("Usage: #(1) <server fifo> <vault>#(2)" # command_name # extra_args)
             die_with_code(1)
          end
 
          client_fifo := fifo.tmp
          if client_fifo = Void then
-            std_error.put_line("Could not create fifo!")
+            std_error.put_line("#(1): could not create client fifo!" # command_name)
             die_with_code(1)
          end
 
@@ -51,6 +51,14 @@ feature {}
          run
 
          delete(client_fifo.substring(client_fifo.lower, client_fifo.upper - 5)) -- "/fifo".count
+      end
+
+   check_argument_count: BOOLEAN is
+      deferred
+      end
+
+   extra_args: STRING is
+      deferred
       end
 
    run is

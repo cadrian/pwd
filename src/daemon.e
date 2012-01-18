@@ -71,7 +71,7 @@ feature {LOOP_ITEM}
                   vault.open(command.last)
                end
                if not vault.is_open then
-                  std_output.put_line(once "Invalid master password")
+                  io.put_line(once "Invalid master password")
                end
             when "list" then
                if command.count = 1 then
@@ -80,7 +80,7 @@ feature {LOOP_ITEM}
                      vault.list(file)
                   end
                else
-                  std_output.put_line(once "Invalid list file name")
+                  io.put_line(once "Invalid list file name")
                end
             when "menu" then
                if command.count >= 1 then
@@ -88,7 +88,7 @@ feature {LOOP_ITEM}
                   command.remove_first
                   vault.menu(file, command)
                else
-                  std_output.put_line(once "Invalid menu file name")
+                  io.put_line(once "Invalid menu file name")
                end
             when "get" then
                if command.count = 2 then
@@ -98,7 +98,7 @@ feature {LOOP_ITEM}
                      vault.get(file, name)
                   end
                else
-                  std_output.put_line(once "Invalid get file name")
+                  io.put_line(once "Invalid get file name")
                end
             when "set" then
                if command.count >= 2 then
@@ -114,7 +114,7 @@ feature {LOOP_ITEM}
                      end
                   end
                else
-                  std_output.put_line(once "Invalid set file name")
+                  io.put_line(once "Invalid set file name")
                end
             when "unset" then
                if command.count = 2 then
@@ -124,7 +124,7 @@ feature {LOOP_ITEM}
                      vault.unset(file, name)
                   end
                else
-                  std_output.put_line(once "Invalid unset file name")
+                  io.put_line(once "Invalid unset file name")
                end
             when "save" then
                if command.count = 1 then
@@ -133,7 +133,7 @@ feature {LOOP_ITEM}
                      vault.save(file)
                   end
                else
-                  std_output.put_line(once "Invalid save file name")
+                  io.put_line(once "Invalid save file name")
                end
             when "merge" then
                if command.count = 3 then
@@ -148,7 +148,7 @@ feature {LOOP_ITEM}
                      collect_garbage
                   end
                else
-                  std_output.put_line(once "Invalid merge file name")
+                  io.put_line(once "Invalid merge file name")
                end
             when "close" then
                vault.close
@@ -158,7 +158,7 @@ feature {LOOP_ITEM}
                collect_garbage
                channel.disconnect
             else
-               std_output.put_line(once "Unknown command: #(1)" # command.first)
+               io.put_line(once "Unknown command: #(1)" # command.first)
             end
          end
       end
@@ -199,7 +199,7 @@ feature {}
          loop_stack.add_job(Current)
          restart
          loop_stack.run
-         std_output.put_line("~~~~ DONE ~~~~")
+         io.put_line("~~~~ DONE ~~~~")
          delete(fifo)
       end
 
@@ -212,8 +212,8 @@ feature {}
          if proc.is_child then
             start
          else
-            std_output.put_integer(proc.id)
-            std_output.put_new_line
+            io.put_integer(proc.id)
+            io.put_new_line
             die_with_code(0)
          end
       end
