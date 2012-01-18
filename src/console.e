@@ -59,8 +59,14 @@ feature {} -- command management
          create Result.with_capacity(16, 0)
       end
 
+   data: RING_ARRAY[STRING] is
+      once
+         create Result.with_capacity(16, 0)
+      end
+
    read_command is
       do
+         command.clear_count
          io.put_string(once "%N[33mReady.[0m%N[1;32m>[0m ")
          io.flush
          io.read_line
@@ -95,48 +101,95 @@ feature {} -- command management
          when "help" then
             run_help
          else
-
+            command.add_first(cmd) -- yes, add it again... it's a ring array so no harm done
+            run_get_or_add
          end
       ensure
          not fifo.exists(client_fifo)
       end
 
 feature {} -- commands
-   run_add is
-      do
-      end
-
-   run_rem is
-      do
-      end
-
-   run_list is
+   get_data (cmd: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
+      require
+         not fifo.exists(client_fifo)
       local
-         tfr: TEXT_FILE_READ; str: STRING_OUTPUT_STREAM
+         tfr: TEXT_FILE_READ
       do
          fifo.make(client_fifo)
-         send(once "list #(1)" # client_fifo)
+         send(cmd)
          fifo.wait_for(client_fifo)
          create tfr.connect_to(client_fifo)
          if tfr.is_connected then
-            create str.make
-            splice(tfr, str)
+            action.call([tfr])
             tfr.disconnect
-            less(str.to_string)
             delete(client_fifo)
          end
+      ensure
+         not fifo.exists(client_fifo)
+      end
+
+   run_get_or_add is
+         -- get or add key
+      do
+         get_data(once "get #(1) #(2)" # client_fifo # command.first,
+                  agent (stream: INPUT_STREAM) is
+                     do
+                        stream.read_line
+                        if not stream.end_of_input then
+                           data.clear_count
+                           stream.last_string.split_in(data)
+                           if data.count = 2 then
+                              xclip(data.last)
+                           else
+                              check data.count = 1 end
+                              io.put_line(once "[1mUnknown password[0m")
+                           end
+                        end
+                     end)
+      end
+
+   run_add is
+         -- add key
+      do
+         send_save
+      end
+
+   run_rem is
+         -- remove key
+      do
+         send_save
+      end
+
+   run_list is
+         -- list known keys
+      do
+         get_data(once "list #(1)" # client_fifo,
+                  agent (stream: INPUT_STREAM) is
+                     local
+                        str: STRING_OUTPUT_STREAM
+                     do
+                        create str.make
+                        splice(stream, str)
+                        less(str.to_string)
+                     end)
       end
 
    run_save is
+         -- save to remote
       do
+         send_save
       end
 
    run_load is
+         -- load from remote
       do
+         send_save
       end
 
    run_merge is
+         -- merge from remote
       do
+         send_save
       end
 
    run_help is
@@ -167,7 +220,6 @@ feature {} -- commands
 
                     Any other input is understood as a password request using the given key.
                     If that key exists the password is stored in the clipboard.
-                    Otherwise the key is generated and stored in the clipboard.
 
                     ]")
       end
