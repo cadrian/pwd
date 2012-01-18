@@ -26,6 +26,38 @@ insert
       end
 
 feature {}
+   client_fifo: FIXED_STRING
+
+   main is
+      do
+         default_create
+         direct_error := True
+
+         if argument_count < 2 then
+            std_error.put_line("Usage: #(1) <server fifo> <vault> <dmenu args>" # command_name)
+            die_with_code(1)
+         end
+
+         client_fifo := fifo.tmp
+         if client_fifo = Void then
+            std_error.put_line("Could not create fifo!")
+            die_with_code(1)
+         end
+
+         server_fifo := argument(1).intern
+         vault := argument(2).intern
+         check_server
+
+         run
+
+         delete(client_fifo.substring(client_fifo.lower, client_fifo.upper - 5)) -- "/fifo".count
+      end
+
+   run is
+      deferred
+      end
+
+feature {}
    fifo: FIFO
 
    server_fifo: FIXED_STRING
@@ -127,6 +159,7 @@ feature {}
 
 invariant
    server_fifo /= Void
+   client_fifo /= Void
    vault /= Void
 
 end

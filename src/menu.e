@@ -21,33 +21,9 @@ create {}
    main
 
 feature {}
-   client_fifo: FIXED_STRING
-
-   main is
+   run is
       do
-         default_create
-         direct_error := True
-
-         if argument_count < 2 then
-            std_error.put_line("Usage: #(1) <server fifo> <vault> <dmenu args>" # command_name)
-            die_with_code(1)
-         end
-
-         client_fifo := fifo.tmp
-         if client_fifo = Void then
-            std_error.put_line("#(1): Could not create fifo!" # command_name)
-            die_with_code(1)
-         end
-
-         server_fifo := argument(1).intern
-         vault := argument(2).intern
-         check_server
-
          send_menu
-
-         delete(client_fifo.substring(client_fifo.lower, client_fifo.upper - 5)) -- "/fifo".count
-
-         send_save
       end
 
    send_menu is
