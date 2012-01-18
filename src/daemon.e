@@ -26,6 +26,10 @@ insert
       undefine
          default_create
       end
+   FILE_TOOLS
+      undefine
+         default_create
+      end
 
 create {}
    main
@@ -190,14 +194,13 @@ feature {}
          -- the main loop
       local
          loop_stack: LOOP_STACK
-         ft: FILE_TOOLS
       do
          create loop_stack.make
          loop_stack.add_job(Current)
          restart
          loop_stack.run
          std_output.put_line("~~~~ DONE ~~~~")
-         ft.delete(fifo)
+         delete(fifo)
       end
 
    daemonize is
