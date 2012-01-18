@@ -1,14 +1,5 @@
 #!/bin/bash
 
-if [ -z "$PASSWORD" ]; then
-    PASSWORD=$(getmasterpass)
-fi
-
-exe=$0
-bindir=${exe%/*}
-. "$bindir/common.sh"
-
-if key=$(listp "$vault" | sort | dmenu -b -i -p 'Key: ' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#ff4040' -sf black); then
-    pass="$(showp "$key" "$vault")"
-    echo -n "$pass" | xclip -selection clipboard -loops 3
-fi
+dist=$(dirname $(dirname $(readlink -f $0)))
+export PATH=$dist/bin:$PATH
+exec menu $HOME/.pwdmgr_fifo $dist/data/vault -b -i -p 'Key: ' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#ff4040' -sf black
