@@ -122,7 +122,7 @@ feature {} -- config
       local
          builder: REGULAR_EXPRESSION_BUILDER
       once
-         Result := builder.convert_python_pattern("^(?P<key>[a-zA-Z0-9_]+)\s*[:=]\s*(?P<value>.*)$")
+         Result := builder.convert_python_pattern("^(?P<key>[a-zA-Z0-9_.]+)\s*[:=]\s*(?P<value>.*)$")
       end
 
 feature {} -- command management
@@ -185,8 +185,8 @@ feature {} -- command management
          not fifo.exists(client_fifo)
       end
 
-feature {} -- commands
    get_data (cmd: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
+         -- communication with the daemon
       require
          not fifo.exists(client_fifo)
       local
@@ -205,24 +205,34 @@ feature {} -- commands
          not fifo.exists(client_fifo)
       end
 
+feature {} -- local vault commands
    run_get is
-         -- get key
       do
-         get_data(once "get #(1) #(2)" # client_fifo # command.first,
-                  agent (stream: INPUT_STREAM) is
-                     do
-                        stream.read_line
-                        if not stream.end_of_input then
-                           data.clear_count
-                           stream.last_string.split_in(data)
-                           if data.count = 2 then
-                              xclip(data.last)
-                           else
-                              check data.count = 1 end
-                              io.put_line(once "[1mUnknown password[0m")
-                           end
-                        end
-                     end)
+         do_get(command.first, agent xclip)
+      end
+
+   get_back (stream: INPUT_STREAM; key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]) is
+      do
+         stream.read_line
+         if not stream.end_of_input then
+            data.clear_count
+            stream.last_string.split_in(data)
+            if data.count = 2 then
+               callback.call([data.last])
+            else
+               check data.count = 1 end
+               io.put_line(once "[1mUnknown password:[0m #(1)" # key)
+            end
+         end
+      end
+
+   do_get (key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]) is
+         -- get key
+      require
+         password /= Void
+      do
+         get_data(once "get #(1) #(2)" # client_fifo # key,
+                  agent get_back(?, key, callback))
       end
 
    run_add is
@@ -283,24 +293,7 @@ feature {} -- commands
                      end)
       end
 
-   run_save is
-         -- save to remote
-      do
-         send_save
-      end
-
-   run_load is
-         -- load from remote
-      do
-         send_save
-      end
-
-   run_merge is
-         -- merge from remote
-      do
-         send_save
-      end
-
+feature {} -- help
    run_help is
       do
          less(once "[
@@ -318,12 +311,15 @@ feature {} -- commands
                     [33msave[0m               Save the password vault upto the server.
 
                     [33mload[0m               Replace the local vault with the server's version.
+                                       Note: in that case you will be asked for the new vault
+                                       password (the previous vault is closed).
 
                     [33mmerge[0m              Load the server version and compare to the local one.
                                        Keep the most recent keys and save the merged version
                                        back to the server.
 
-                    [33mmaster[0m             Change the master password. [1m(not yet implemented)[0m
+                    [33mmaster[0m             Change the master password.
+                                       [1m(not yet implemented)[0m
 
                     [33mhelp[0m               Show this screen :-)
 
@@ -333,13 +329,104 @@ feature {} -- commands
                     ]")
       end
 
+feature {} -- remote vault management
+   config_key_login: FIXED_STRING is
+      once
+         Result := "remote.login".intern
+      end
+
+   config_key_password: FIXED_STRING is
+      once
+         Result := "remote.password".intern
+      end
+
+   config_key_vault_url: FIXED_STRING is
+      once
+         Result := "remote.vault_url".intern
+      end
+
+   is_anonymous: BOOLEAN is
+      do
+         Result := not config.fast_has(config_key_login) or else not config.fast_has(config_key_password)
+      end
+
+   curl_arguments (option: STRING): FAST_ARRAY[STRING] is
+      require
+         option.is_equal(once "-T") or else option.is_equal(once "-o")
+      local
+         pass: REFERENCE[STRING]
+         url: FIXED_STRING
+      do
+         url := config.fast_reference_at(config_key_vault_url)
+         if url = Void then
+            std_output.put_line(once "[1mMissing vault url![0m")
+         else
+            Result := {FAST_ARRAY[STRING] << once "-#", option, vault.out, url.out >>}
+            if not is_anonymous then
+               create pass
+               do_get(config.fast_reference_at(config_key_password),
+                      agent (p: STRING; p_ref: REFERENCE[STRING]) is
+                         do
+                            p_ref.set_item(p)
+                         end (?, pass))
+               if pass.item /= Void then
+                  Result.add_last(once "-u")
+                  Result.add_last(("#(1):#(2)" # config.fast_reference_at(config_key_login) # pass.item).out)
+               end
+            end
+         end
+      end
+
+   run_save is
+         -- save to remote
+      local
+         proc: PROCESS; arg: like curl_arguments
+      do
+         arg := curl_arguments(once "-T")
+         if arg /= Void then
+            direct_output := True
+            std_output.put_line(once "[32mPlease wait...[0m")
+            proc := execute(once "curl", arg)
+            if proc.is_connected then
+               proc.wait
+            end
+         end
+      end
+
+   run_load is
+         -- load from remote
+      local
+         proc: PROCESS
+      do
+         -- shut the daemon down
+         send("stop")
+
+         direct_output := True
+         std_output.put_line(once "[32mPlease wait...[0m")
+         proc := execute(once "curl", curl_arguments(once "-o"))
+         if proc.is_connected then
+            proc.wait
+         end
+
+         -- stop the inner command loop
+         stop := True
+         -- ask the main client loop to start again (will restart the daemon)
+         restart := True
+      end
+
+   run_merge is
+         -- merge from remote
+      do
+         send_save
+      end
+
 feature {} -- helpers
    less (string: ABSTRACT_STRING) is
       local
          proc: PROCESS
       do
          direct_output := True
-         proc := execute_command_line("less -R")
+         proc := execute_command_line(once "less -R")
          if proc.is_connected then
             proc.input.put_string(string)
             proc.input.flush

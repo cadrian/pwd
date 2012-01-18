@@ -27,6 +27,7 @@ insert
 
 feature {}
    client_fifo: FIXED_STRING
+   restart: BOOLEAN
 
    main is
       do
@@ -46,9 +47,17 @@ feature {}
 
          server_fifo := argument(1).intern
          vault := argument(2).intern
-         check_server
 
-         run
+         from
+            restart := True
+         until
+            not restart
+         loop
+            restart := False
+            check_server
+            run
+         end
+
          cleanup
       rescue
          cleanup
@@ -148,7 +157,7 @@ feature {}
          if tfw.is_connected then
             tfw.put_line(string)
             tfw.flush
-            fifo.sleep(50)
+            fifo.sleep(50) -- give time to the OS and the daemon to get the message before closing the connection
             tfw.disconnect
          end
       end
