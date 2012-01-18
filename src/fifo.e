@@ -54,7 +54,7 @@ feature {ANY}
          p: POINTER; s: STRING
       do
          c_inline_c("[
-                     char template[] = "pwd.XXXXXX%";
+                     char template[] = "/tmp/.pwd.XXXXXX";
                      _p = mkdtemp(template);
 
                      ]")
@@ -87,23 +87,26 @@ feature {ANY}
          Result := sts /= 0
       end
 
+   sleep (milliseconds: INTEGER_64) is
+      do
+         c_inline_c("[
+                     fd_set r,w,e;
+                     struct timeval t;
+
+                     t.tv_sec  = 0L;
+                     t.tv_usec = a1;
+                     select(0, &r, &w, &e, &t);
+
+                     ]")
+      end
+
    wait_for (name: FIXED_STRING) is
       do
          from
-            c_inline_c("[
-                        fd_set r,w,e;
-                        struct timeval t;
-
-                        ]")
          until
             exists(name)
          loop
-            c_inline_c("[
-                        t.tv_sec  = 0L;
-                        t.tv_usec = 10000L; // sleep for 10 milliseconds
-                        select(0, &r, &w, &e, &t);
-
-                        ]")
+            sleep(10)
          end
       end
 

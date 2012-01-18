@@ -89,27 +89,28 @@ feature {ANY}
          tfw: TEXT_FILE_WRITE
          proc: PROCESS
       do
-         create tfw.connect_to(filename)
-         if tfw.is_connected then
-            proc := execute_command_line(once "openssl bf -a -pass env:VAULT_MASTER")
-            if proc.is_connected then
-               print_all_keys(proc.input)
-               proc.input.disconnect
-               from
-                  proc.output.read_line
-               until
-                  proc.output.end_of_input
-               loop
-                  tfw.put_line(proc.output.last_string)
-                  proc.output.read_line
+         if dirty then
+            create tfw.connect_to(filename)
+            if tfw.is_connected then
+               proc := execute_command_line(once "openssl bf -a -pass env:VAULT_MASTER")
+               if proc.is_connected then
+                  print_all_keys(proc.input)
+                  proc.input.disconnect
+                  from
+                     proc.output.read_line
+                  until
+                     proc.output.end_of_input
+                  loop
+                     tfw.put_line(proc.output.last_string)
+                     proc.output.read_line
+                  end
+                  if not proc.output.last_string.is_empty then
+                     tfw.put_line(proc.output.last_string)
+                  end
+                  proc.wait
                end
-               if not proc.output.last_string.is_empty then
-                  tfw.put_line(proc.output.last_string)
-               end
-               proc.wait
+               tfw.disconnect
             end
-
-            tfw.disconnect
          end
       end
 
@@ -184,6 +185,7 @@ feature {ANY}
             -- add missing
             other.data.do_all(agent add_key(?))
             tfw.put_line(once "merge done.")
+            dirty := True
             tfw.disconnect
          end
       end
@@ -229,6 +231,7 @@ feature {}
          end
 
          display_key(key, stream)
+         dirty := True
       end
 
    print_all_names (stream: OUTPUT_STREAM) is
@@ -364,7 +367,7 @@ feature {}
       local
          int: INTEGER_32
       do
-         c_inline_c("_int=(((int)io_getc((FILE*)a1) & 0x7f) << 8) | (int)io_getc((FILE*)a1);%N")
+         c_inline_c("_int=(((int)io_getc((FILE*)a1) & 0x7f) << 8) | (int)io_getc((FILE*)a1);%N") -- >>
          pass.extend(range.item(int \\ range.count + range.lower))
       ensure
          pass.count = old pass.count + 1
@@ -400,6 +403,7 @@ feature {}
       end
 
    file: FIXED_STRING
+   dirty: BOOLEAN
 
 feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]

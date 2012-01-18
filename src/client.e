@@ -70,6 +70,11 @@ feature {}
          send(once "master #(1)" # pass)
       end
 
+   send_save is
+      do
+         send(once "save #(1)" # vault)
+      end
+
    zenity_args: FAST_ARRAY[STRING] is
       once
          Result := {FAST_ARRAY[STRING] <<
@@ -89,7 +94,9 @@ feature {}
       do
          create tfw.connect_to(server_fifo)
          if tfw.is_connected then
-            tfw.put_string(string)
+            tfw.put_line(string)
+            tfw.flush
+            fifo.sleep(50)
             tfw.disconnect
          end
       end

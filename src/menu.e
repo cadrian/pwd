@@ -35,7 +35,7 @@ feature {}
 
          client_fifo := fifo.tmp
          if client_fifo = Void then
-            std_error.put_line("Could not create fifo!")
+            std_error.put_line("#(1): Could not create fifo!" # command_name)
             die_with_code(1)
          end
 
@@ -46,6 +46,8 @@ feature {}
          send_menu
 
          delete(client_fifo.substring(client_fifo.lower, client_fifo.upper - 5)) -- "/fifo".count
+
+         send_save
       end
 
    send_menu is
@@ -59,7 +61,8 @@ feature {}
          create tfr.connect_to(client_fifo)
          if tfr.is_connected then
             tfr.read_line
-            xclip(tfr.last_string)
+            -- note: the server sends the name AND the password
+            xclip(tfr.last_string.split.last)
             tfr.disconnect
             delete(client_fifo)
          end
@@ -71,11 +74,11 @@ feature {}
       once
          from
             Result := ""
-            i := 2
+            i := 3
          until
             i > argument_count
          loop
-            if i > 2 then
+            if i > 3 then
                Result.extend_unless(' ')
             end
             Result.append(argument(i))
