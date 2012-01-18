@@ -119,6 +119,7 @@ feature {} -- commands
          fifo.wait_for(client_fifo)
          create tfr.connect_to(client_fifo)
          if tfr.is_connected then
+            create str.make
             splice(tfr, str)
             tfr.disconnect
             less(str.to_string)
