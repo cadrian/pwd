@@ -10,5 +10,5 @@ bindir=${exe%/*}
 
 if key=$(listp "$vault" | sort | dmenu -b -i -p 'Key: ' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#ff4040' -sf black); then
     pass="$(showp "$key" "$vault")"
-    echo -n "$pass" | xclip -selection XA_CLIPBOARD -loops 3
+    echo -n "$pass" | xclip -selection clipboard -loops 3
 fi
