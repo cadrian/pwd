@@ -83,6 +83,7 @@ feature {}
    send (string: ABSTRACT_STRING) is
       require
          fifo.exists(server_fifo)
+         string /= Void
       local
          tfw: TEXT_FILE_WRITE
       do
@@ -91,6 +92,28 @@ feature {}
             tfw.put_string(string)
             tfw.disconnect
          end
+      end
+
+   xclip (string: ABSTRACT_STRING) is
+      require
+         string /= Void
+      local
+         proc: PROCESS
+      do
+         xclipboards.do_all(agent (string, selection: STRING) is
+                            do
+                               proc := execute_command_line((once "xclip -selection #(1) -loops 3" # selection).out)
+                               if proc.is_connected then
+                                  proc.input.put_line(string)
+                                  proc.input.disconnect
+                                  proc.wait
+                               end
+                            end (string, ?))
+      end
+
+   xclipboards: FAST_ARRAY[STRING] is
+      once
+         Result := {FAST_ARRAY[STRING] << "primary", "clipboard" >>}
       end
 
 invariant
