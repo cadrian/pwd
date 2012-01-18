@@ -1,4 +1,4 @@
 *.ace
 *.[coh]
 *.id
-bootstrap
+target

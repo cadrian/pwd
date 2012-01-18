@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 target=$1
 name=${target%.ace}

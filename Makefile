@@ -1,3 +1,5 @@
+#!/usr/bin/env make -f
+
 all: bin/daemon bin/menu bin/console
 
 bin/daemon: daemon.ace src/daemon.e src/fifo.e src/key.e src/vault.e
