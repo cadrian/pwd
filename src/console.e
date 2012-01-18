@@ -20,13 +20,11 @@ inherit
 create {}
    main
 
-feature {}
+feature {} -- the CLIENT interface
    stop: BOOLEAN
 
    run is
       do
-         direct_output := True
-
          from
             stop := False
             io.put_string(once "[
@@ -55,6 +53,7 @@ feature {}
 
    extra_args: STRING is "" -- no extra arg
 
+feature {} -- command management
    command: RING_ARRAY[STRING] is
       once
          create Result.with_capacity(16, 0)
@@ -79,42 +78,50 @@ feature {}
          inspect
             cmd
          when "help" then
-            less(once "[
-                       [1;32mKnown commands[0m
-
-                       [33madd <key> [pass][0m   Add a new password. Needs at least a key.
-                                          If the password is not specified it is randomly generated.
-                                          If the password already exists it is changed.
-
-                       [33mrem <key>[0m          Removes the password corresponding to the given key.
-
-                       [33mlist[0m               List the known passwords (show only the keys).
-
-                       [33msave[0m               Save the password vault upto the server.
-
-                       [33mload[0m               Replace the local vault with the server's version.
-
-                       [33mmerge[0m              Load the server version and compare to the local one.
-                                          Keep the most recent keys and save the merged version
-                                          back to the server.
-
-                       [33mmaster[0m             Change the master password. [1m(not yet implemented)[0m
-
-                       [33mhelp[0m               Show this screen :-)
-
-                       Any other "command" is understood as a key.
-                       In that case the password is stored in the clipboard.
-
-                       ]")
+            run_help
          else
 
          end
       end
 
+feature {} -- commands
+   run_help is
+      do
+         less(once "[
+                    [1;32mKnown commands[0m
+
+                    [33madd <key> [pass][0m   Add a new password. Needs at least a key.
+                                       If the password is not specified it is randomly generated.
+                                       If the password already exists it is changed.
+
+                    [33mrem <key>[0m          Removes the password corresponding to the given key.
+
+                    [33mlist[0m               List the known passwords (show only the keys).
+
+                    [33msave[0m               Save the password vault upto the server.
+
+                    [33mload[0m               Replace the local vault with the server's version.
+
+                    [33mmerge[0m              Load the server version and compare to the local one.
+                                       Keep the most recent keys and save the merged version
+                                       back to the server.
+
+                    [33mmaster[0m             Change the master password. [1m(not yet implemented)[0m
+
+                    [33mhelp[0m               Show this screen :-)
+
+                    Any other "command" is understood as a key.
+                    In that case the password is stored in the clipboard.
+
+                    ]")
+      end
+
+feature {} -- helpers
    less (string: ABSTRACT_STRING) is
       local
          proc: PROCESS
       do
+         direct_output := True
          proc := execute_command_line("less -R")
          if proc.is_connected then
             proc.input.put_string(string)
