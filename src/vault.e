@@ -16,22 +16,41 @@ class VAULT
 
 insert
    PROCESS_FACTORY
+   FILE_TOOLS
+      undefine
+         default_create
+      end
+   SYSTEM
+      rename
+         execute_command_line as sys_execute_command_line
+      undefine
+         default_create
+      end
 
 create {ANY}
    make
 
 feature {ANY}
+   open_new (pass: STRING) is
+      require
+         pass /= Void
+         not is_open
+      do
+         set_environment_variable(once "VAULT_MASTER", pass)
+         dirty := True
+         is_open := True
+      end
+
    open (pass: STRING) is
       require
          pass /= Void
          not is_open
       local
          proc: PROCESS; vault_file: TEXT_FILE_READ
-         sys: SYSTEM
       do
          create vault_file.connect_to(file)
          if vault_file.is_connected then
-            sys.set_environment_variable(once "VAULT_MASTER", pass)
+            set_environment_variable(once "VAULT_MASTER", pass)
             proc := execute_command_line(once "openssl bf -d -a -pass env:VAULT_MASTER")
             if proc.is_connected then
                from
@@ -42,9 +61,8 @@ feature {ANY}
                   proc.input.put_line(vault_file.last_string)
                   vault_file.read_line
                end
-               if not vault_file.last_string.is_empty then
-                  proc.input.put_line(vault_file.last_string)
-               end
+               proc.input.put_string(vault_file.last_string)
+               proc.input.flush
                proc.input.disconnect
                read_data(proc.output)
                proc.wait
@@ -55,11 +73,9 @@ feature {ANY}
       end
 
    close is
-      local
-         sys: SYSTEM
       do
          data.clear_count
-         sys.set_environment_variable(once "VAULT_MASTER", once "")
+         set_environment_variable(once "VAULT_MASTER", once "")
          is_open := False
       ensure
          not is_open
@@ -95,6 +111,7 @@ feature {ANY}
                proc := execute_command_line(once "openssl bf -a -pass env:VAULT_MASTER")
                if proc.is_connected then
                   print_all_keys(proc.input)
+                  proc.input.flush
                   proc.input.disconnect
                   from
                      proc.output.read_line
@@ -104,9 +121,8 @@ feature {ANY}
                      tfw.put_line(proc.output.last_string)
                      proc.output.read_line
                   end
-                  if not proc.output.last_string.is_empty then
-                     tfw.put_line(proc.output.last_string)
-                  end
+                  tfw.put_string(proc.output.last_string)
+                  tfw.flush
                   proc.wait
                end
                tfw.disconnect
@@ -413,5 +429,7 @@ invariant
    data /= Void
 
    data.for_all(agent (key: KEY; name: FIXED_STRING): BOOLEAN is do Result := key /= Void and then name = key.name and then key.is_valid end)
+
+   not is_open implies data.is_empty
 
 end

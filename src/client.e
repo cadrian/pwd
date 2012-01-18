@@ -94,9 +94,15 @@ feature {}
 
    check_server is
       do
-         if not fifo.exists(server_fifo) then
+         if not file_exists(vault) then
+            read_new_master(once "This is a new vault")
+            create_vault
             start_server
-            send_password
+            send_master
+         elseif not fifo.exists(server_fifo) then
+            start_server
+            read_master(once "Please enter your encryption phrase to open the password vault.")
+            send_master
          end
       end
 
@@ -115,35 +121,41 @@ feature {}
          fifo.exists(server_fifo)
       end
 
-   send_password is
-      require
-         fifo.exists(server_fifo)
+feature {} -- master phrase
+   master_pass: STRING
+
+   read_master (text: ABSTRACT_STRING) is
       local
-         proc: PROCESS; pass: STRING
+         proc: PROCESS
       do
-         proc := execute(once "zenity", zenity_args)
+         proc := execute(once "zenity", zenity_args(text.out))
          if proc.is_connected then
             proc.output.read_line
-            pass := proc.output.last_string
+            master_pass := proc.output.last_string
             proc.wait
          end
+      end
 
-         send(once "master #(1)" # pass)
+   zenity_args (text: ABSTRACT_STRING): FAST_ARRAY[STRING] is
+      do
+         Result := {FAST_ARRAY[STRING] <<
+                                         "--entry",
+                                         "--hide-text",
+                                         "--title=Password",
+                                         ("--text=#(1)" # text).out
+                                       >> }
+      end
+
+   send_master is
+      require
+         fifo.exists(server_fifo)
+      do
+         send(once "master #(1)" # master_pass)
       end
 
    send_save is
       do
          send(once "save #(1)" # vault)
-      end
-
-   zenity_args: FAST_ARRAY[STRING] is
-      once
-         Result := {FAST_ARRAY[STRING] <<
-                                         "--entry",
-                                         "--hide-text",
-                                         "--title=Password",
-                                         "--text=Please enter your master key to open the password vault"
-                                       >> }
       end
 
    send (string: ABSTRACT_STRING) is
@@ -162,6 +174,7 @@ feature {}
          end
       end
 
+feature {} -- xclip
    xclip (string: ABSTRACT_STRING) is
       require
          string /= Void
@@ -184,6 +197,41 @@ feature {}
    xclipboards: FAST_ARRAY[STRING] is
       once
          Result := {FAST_ARRAY[STRING] << "primary", "clipboard" >>}
+      end
+
+feature {} -- create a brand new vault
+   read_new_master (reason: ABSTRACT_STRING) is
+      local
+         pass1: STRING; text: ABSTRACT_STRING
+      do
+         from
+            text := once "#(1), please enter an encryption phrase." # reason
+         until
+            pass1 /= Void
+         loop
+            read_master(text)
+            pass1 := master_pass.twin
+            text := once "#(1), please enter the same encryption phrase again." # reason
+            read_master(text)
+            if not pass1.is_equal(master_pass) then
+               text := once "Your phrases did not match.%N#(1), please enter an encryption phrase." # reason
+               pass1 := Void
+            end
+         end
+         check
+            by_construction: pass1.is_equal(master_pass)
+         end
+      end
+
+   create_vault is
+      local
+         new_vault: VAULT
+      do
+sedb_breakpoint
+         create new_vault.make(vault)
+         new_vault.open_new(master_pass)
+         new_vault.save(vault.out)
+         new_vault.close
       end
 
 invariant

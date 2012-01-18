@@ -212,6 +212,8 @@ feature {} -- local vault commands
       end
 
    get_back (stream: INPUT_STREAM; key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]) is
+      require
+         callback /= Void
       do
          stream.read_line
          if not stream.end_of_input then
@@ -229,7 +231,7 @@ feature {} -- local vault commands
    do_get (key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]) is
          -- get key
       require
-         password /= Void
+         callback /= Void
       do
          get_data(once "get #(1) #(2)" # client_fifo # key,
                   agent get_back(?, key, callback))
