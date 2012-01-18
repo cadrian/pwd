@@ -5,6 +5,9 @@ name=${target%.ace}
 exe=$name.exe
 CLASS=$(echo $name | tr '[a-z]' '[A-Z]')
 
+clean=${2:+no}
+clean=${clean:-yes}
+
 cat > $target <<EOF
 system "$exe"
 
@@ -25,7 +28,7 @@ cluster
 generate
     no_strip(no)
     no_split(yes)
-    clean(yes)
+    clean($clean)
 
 end
 EOF
