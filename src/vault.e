@@ -15,6 +15,10 @@
 class VAULT
 
 insert
+   LOGGING
+      undefine
+         default_create
+      end
    PROCESS_FACTORY
    FILE_TOOLS
       undefine
@@ -36,6 +40,7 @@ feature {ANY}
          pass /= Void
          not is_open
       do
+         log.info.put_line(once "open vault as new")
          set_environment_variable(once "VAULT_MASTER", pass)
          dirty := True
          is_open := True
@@ -48,12 +53,14 @@ feature {ANY}
       local
          proc: PROCESS; vault_file: TEXT_FILE_READ
       do
+         log.info.put_line(once "open vault")
          create vault_file.connect_to(file)
          if vault_file.is_connected then
             set_environment_variable(once "VAULT_MASTER", pass)
             proc := execute_command_line(once "openssl bf -d -a -pass env:VAULT_MASTER")
             if proc.is_connected then
                fifo.splice(vault_file, proc.input)
+               proc.input.disconnect
                read_data(proc.output)
                proc.wait
                is_open := proc.status = 0
@@ -64,9 +71,12 @@ feature {ANY}
 
    close is
       do
-         data.clear_count
-         set_environment_variable(once "VAULT_MASTER", once "")
-         is_open := False
+         if is_open then
+            log.info.put_line(once "close vault")
+            data.clear_count
+            set_environment_variable(once "VAULT_MASTER", once "")
+            is_open := False
+         end
       ensure
          not is_open
       end
@@ -77,6 +87,7 @@ feature {ANY}
       require
          filename /= Void
       do
+         log.info.put_line(once "#(1): list" # filename)
          run_open(filename, agent do_list)
       end
 
@@ -84,11 +95,13 @@ feature {ANY}
       require
          filename /= Void
       do
+         log.info.put_line(once "#(1): save" # filename)
          run_open(filename, agent do_save)
       end
 
    menu (filename: STRING; args: COLLECTION[STRING]) is
       do
+         log.info.put_line(once "#(1): menu" # filename)
          run_open(filename, agent do_menu(?, args))
       end
 
@@ -97,6 +110,7 @@ feature {ANY}
          filename /= Void
          name /= Void
       do
+         log.info.put_line(once "#(1): get #(2)" # filename # name)
          run_open(filename, agent do_get(?, name))
       end
 
@@ -105,14 +119,16 @@ feature {ANY}
          filename /= Void
          name /= Void
       do
+         log.info.put_line(once "#(1): set #(2)" # filename # name)
          run_open(filename, agent do_set(?, name, pass))
       end
 
    unset (filename, name: STRING) is
       require
          filename /= Void
-         other.is_open
+         name /= Void
       do
+         log.info.put_line(once "#(1): unset #(2)" # filename # name)
          run_open(filename, agent do_unset(?, name))
       end
 
@@ -123,6 +139,7 @@ feature {ANY}
          filename /= Void
          other.is_open
       do
+         log.info.put_line(once "#(1): merge vault #(2) + #(3)" # filename # file # other.file)
          run_open(filename, agent do_merge(?, other))
       end
 
@@ -220,6 +237,7 @@ feature {}
       local
          tfw: TEXT_FILE_WRITE
       do
+         log.warning.put_line("#(1): command called on closed vault #(2)" # filename # file)
          create tfw.connect_to(filename)
          if tfw.is_connected then
             tfw.put_line(once "VAULT NOT OPEN")
@@ -375,6 +393,7 @@ feature {}
       local
          line: STRING; key: KEY
       do
+         log.info.put_line(once "reading vault data...")
          from
             a_data.read_line
          until
@@ -387,6 +406,7 @@ feature {}
             end
             a_data.read_line
          end
+         log.info.put_line(once "vault data read.")
       end
 
    generate_pass: STRING is
@@ -456,13 +476,12 @@ feature {}
          file = a_file.intern
       end
 
-   file: FIXED_STRING
    dirty: BOOLEAN
-
    fifo: FIFO
 
 feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]
+   file: FIXED_STRING
 
 invariant
    file /= Void

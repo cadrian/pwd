@@ -13,6 +13,9 @@
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
 expanded class FIFO
+--
+-- originally POSIX fifo helpers, now misc helpers too
+--
 
 insert
    ARGUMENTS

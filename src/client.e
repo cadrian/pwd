@@ -34,8 +34,8 @@ feature {}
          default_create
          direct_error := True
 
-         if argument_count < 2 or else not check_argument_count then
-            std_error.put_line("Usage: #(1) <server fifo> <vault>#(2)" # command_name # extra_args)
+         if argument_count < 3 or else not check_argument_count then
+            std_error.put_line("Usage: #(1) <server fifo> <vault> <log dir>#(2)" # command_name # extra_args)
             die_with_code(1)
          end
 
@@ -47,6 +47,7 @@ feature {}
 
          server_fifo := argument(1).intern
          vault := argument(2).intern
+         logdir := argument(3).intern
 
          from
             restart := True
@@ -91,6 +92,7 @@ feature {}
 
    server_fifo: FIXED_STRING
    vault: FIXED_STRING
+   logdir: FIXED_STRING
 
    check_server is
       do
@@ -112,7 +114,7 @@ feature {}
       local
          proc: PROCESS
       do
-         proc := execute_command_line((once "daemon #(1) #(2)" # server_fifo # vault).out)
+         proc := execute_command_line((once "daemon #(1) #(2) #(3)/daemon.log" # server_fifo # vault # logdir).out)
          if proc.is_connected then
             proc.wait
             fifo.wait_for(server_fifo)

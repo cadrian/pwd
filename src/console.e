@@ -50,7 +50,7 @@ feature {} -- the CLIENT interface
 
    check_argument_count: BOOLEAN is
       do
-         Result := argument_count = 3
+         Result := argument_count = 4
       end
 
    extra_args: STRING is " <config>"
@@ -61,7 +61,7 @@ feature {} -- config
          tfr: TEXT_FILE_READ
       do
          create config.make
-         create tfr.connect_to(argument(3))
+         create tfr.connect_to(argument(4))
          if not tfr.is_connected then
             std_error.put_line(once "Invalid config file")
             die_with_code(1)

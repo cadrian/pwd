@@ -55,11 +55,11 @@ feature {}
       once
          from
             Result := ""
-            i := 3
+            i := 4
          until
             i > argument_count
          loop
-            if i > 3 then
+            if i > 4 then
                Result.extend_unless(' ')
             end
             Result.append(argument(i))

@@ -4,4 +4,5 @@ dist=$(dirname $(dirname $(readlink -f $0)))
 export PATH=$dist/bin:$PATH
 umask 077
 test -d $dist/data || mkdir -p $dist/data
-exec menu $HOME/.pwdmgr_fifo $dist/data/vault -b -i -p 'Key: ' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#ff4040' -sf black
+test -d $dist/log || mkdir -p $dist/log
+exec menu $HOME/.pwdmgr_fifo $dist/data/vault $dist/log -b -i -p 'Key: ' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#ff4040' -sf black
