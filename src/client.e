@@ -45,7 +45,7 @@ feature {}
       local
          proc: PROCESS
       do
-         proc := execute_command_line(once "daemon #(1) #(2)" # server_fifo # vault)
+         proc := execute_command_line((once "daemon #(1) #(2)" # server_fifo # vault).out)
          if proc.is_connected then
             proc.wait
             fifo.wait_for(server_fifo)
@@ -97,18 +97,20 @@ feature {}
    xclip (string: ABSTRACT_STRING) is
       require
          string /= Void
+      do
+         xclipboards.do_all(agent xclip_select(string, ?))
+      end
+
+   xclip_select (string: ABSTRACT_STRING; selection: STRING) is
       local
          proc: PROCESS
       do
-         xclipboards.do_all(agent (string, selection: STRING) is
-                            do
-                               proc := execute_command_line((once "xclip -selection #(1) -loops 3" # selection).out)
-                               if proc.is_connected then
-                                  proc.input.put_line(string)
-                                  proc.input.disconnect
-                                  proc.wait
-                               end
-                            end (string, ?))
+         proc := execute_command_line((once "xclip -selection #(1) -loops 3" # selection).out)
+         if proc.is_connected then
+            proc.input.put_line(string)
+            proc.input.disconnect
+            proc.wait
+         end
       end
 
    xclipboards: FAST_ARRAY[STRING] is

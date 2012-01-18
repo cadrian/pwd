@@ -54,7 +54,7 @@ feature {ANY}
          p: POINTER; s: STRING
       do
          c_inline_c("[
-                     char template[11] = %"pwd.XXXXXX%";
+                     char template[] = "pwd.XXXXXX%";
                      _p = mkdtemp(template);
 
                      ]")
