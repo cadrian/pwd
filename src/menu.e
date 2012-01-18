@@ -36,6 +36,7 @@ feature {}
       local
          tfr: TEXT_FILE_READ
       do
+         fifo.make(client_fifo)
          send(once "menu #(1) #(2)" # client_fifo # menu_args)
          fifo.wait_for(client_fifo)
          create tfr.connect_to(client_fifo)

@@ -39,7 +39,7 @@ feature {ANY}
          pass := a_pass
          add_count := add_count + 1
       ensure
-         pass = a_pass.intern
+         pass = a_pass
          not is_deleted
       end
 

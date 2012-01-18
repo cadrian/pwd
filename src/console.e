@@ -70,6 +70,7 @@ feature {} -- command management
    run_command is
       require
          not command.is_empty
+         not fifo.exists(client_fifo)
       local
          cmd: STRING
       do
@@ -77,14 +78,66 @@ feature {} -- command management
          command.remove_first
          inspect
             cmd
+         when "add" then
+            run_add
+         when "rem" then
+            run_rem
+         when "list" then
+            run_list
+         when "save" then
+            run_save
+         when "load" then
+            run_load
+         when "merge" then
+            run_merge
+         when "master" then
+            io.put_line(once "not yet implemented.")
          when "help" then
             run_help
          else
 
          end
+      ensure
+         not fifo.exists(client_fifo)
       end
 
 feature {} -- commands
+   run_add is
+      do
+      end
+
+   run_rem is
+      do
+      end
+
+   run_list is
+      local
+         tfr: TEXT_FILE_READ; str: STRING_OUTPUT_STREAM
+      do
+         fifo.make(client_fifo)
+         send(once "list #(1)" # client_fifo)
+         fifo.wait_for(client_fifo)
+         create tfr.connect_to(client_fifo)
+         if tfr.is_connected then
+            splice(tfr, str)
+            tfr.disconnect
+            less(str.to_string)
+            delete(client_fifo)
+         end
+      end
+
+   run_save is
+      do
+      end
+
+   run_load is
+      do
+      end
+
+   run_merge is
+      do
+      end
+
    run_help is
       do
          less(once "[
@@ -131,6 +184,23 @@ feature {} -- helpers
             proc.input.disconnect
             proc.wait
          end
+      end
+
+   splice (input: INPUT_STREAM; output: OUTPUT_STREAM) is
+      require
+         input.is_connected
+         output.is_connected
+      do
+         from
+            input.read_line
+         until
+            input.end_of_input or else input.last_string.is_empty
+         loop
+            output.put_line(input.last_string)
+            input.read_line
+         end
+         output.put_string(input.last_string)
+         output.flush
       end
 
 end

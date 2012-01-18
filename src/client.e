@@ -49,7 +49,17 @@ feature {}
          check_server
 
          run
+         cleanup
+      rescue
+         cleanup
+         crash
+      end
 
+   cleanup is
+      do
+         if fifo.exists(client_fifo) then
+            delete(client_fifo)
+         end
          delete(client_fifo.substring(client_fifo.lower, client_fifo.upper - 5)) -- "/fifo".count
       end
 
@@ -62,6 +72,8 @@ feature {}
       end
 
    run is
+      require
+         not fifo.exists(client_fifo)
       deferred
       end
 

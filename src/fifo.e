@@ -62,7 +62,6 @@ feature {ANY}
             create s.from_external_copy(p)
             s.append(once "/fifo")
             create Result.make_from_string(s)
-            make(Result)
          end
       ensure
          Result /= Void implies Result.has_suffix(once "/fifo")
