@@ -128,7 +128,7 @@ feature {} -- commands
          not fifo.exists(client_fifo)
       end
 
-   run_get
+   run_get is
          -- get key
       do
          get_data(once "get #(1) #(2)" # client_fifo # command.first,
@@ -150,13 +150,43 @@ feature {} -- commands
 
    run_add is
          -- add key
+      local
+         cmd: ABSTRACT_STRING
       do
+         if command.count > 1 then
+            cmd := once "set #(1) #(2) #(3)" # client_fifo # command.first # command.last
+         else
+            cmd := once "set #(1) #(2)" # client_fifo # command.first
+         end
+         get_data(cmd,
+                  agent (stream: INPUT_STREAM) is
+                     do
+                        stream.read_line
+                        if not stream.end_of_input then
+                           data.clear_count
+                           stream.last_string.split_in(data)
+                           if data.count = 2 then
+                              xclip(data.last)
+                           else
+                              check data.count = 1 end
+                              io.put_line(once "[1mError[0m") -- ???
+                           end
+                        end
+                     end)
          send_save
       end
 
    run_rem is
          -- remove key
       do
+         get_data(once "unset #(1) #(2)" # client_fifo # command.first,
+                  agent (stream: INPUT_STREAM) is
+                     do
+                        stream.read_line
+                        if not stream.end_of_input then
+                           io.put_line(once "[1mDone[0m") -- ???
+                        end
+                     end)
          send_save
       end
 
