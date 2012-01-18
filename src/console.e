@@ -290,7 +290,7 @@ feature {} -- local vault commands
                         str: STRING_OUTPUT_STREAM
                      do
                         create str.make
-                        splice(stream, str)
+                        fifo.splice(stream, str)
                         less(str.to_string)
                      end)
       end
@@ -435,23 +435,6 @@ feature {} -- helpers
             proc.input.disconnect
             proc.wait
          end
-      end
-
-   splice (input: INPUT_STREAM; output: OUTPUT_STREAM) is
-      require
-         input.is_connected
-         output.is_connected
-      do
-         from
-            input.read_line
-         until
-            input.end_of_input or else input.last_string.is_empty
-         loop
-            output.put_line(input.last_string)
-            input.read_line
-         end
-         output.put_string(input.last_string)
-         output.flush
       end
 
 invariant

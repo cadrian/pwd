@@ -227,7 +227,6 @@ feature {} -- create a brand new vault
       local
          new_vault: VAULT
       do
-sedb_breakpoint
          create new_vault.make(vault)
          new_vault.open_new(master_pass)
          new_vault.save(vault.out)

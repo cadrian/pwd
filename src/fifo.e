@@ -109,4 +109,21 @@ feature {ANY}
          end
       end
 
+   splice (input: INPUT_STREAM; output: OUTPUT_STREAM) is
+      require
+         input.is_connected
+         output.is_connected
+      do
+         from
+            input.read_line
+         until
+            input.end_of_input or else input.last_string.is_empty
+         loop
+            output.put_line(input.last_string)
+            input.read_line
+         end
+         output.put_string(input.last_string)
+         output.flush
+      end
+
 end

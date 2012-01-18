@@ -53,17 +53,7 @@ feature {ANY}
             set_environment_variable(once "VAULT_MASTER", pass)
             proc := execute_command_line(once "openssl bf -d -a -pass env:VAULT_MASTER")
             if proc.is_connected then
-               from
-                  vault_file.read_line
-               until
-                  vault_file.end_of_input
-               loop
-                  proc.input.put_line(vault_file.last_string)
-                  vault_file.read_line
-               end
-               proc.input.put_string(vault_file.last_string)
-               proc.input.flush
-               proc.input.disconnect
+               fifo.splice(vault_file, proc.input)
                read_data(proc.output)
                proc.wait
                is_open := proc.status = 0
@@ -85,124 +75,172 @@ feature {ANY}
 
    list (filename: STRING) is
       require
-         is_open
          filename /= Void
-      local
-         tfw: TEXT_FILE_WRITE
       do
-         create tfw.connect_to(filename)
-         if tfw.is_connected then
-            print_all_names(tfw)
-            tfw.disconnect
-         end
+         run_open(filename, agent do_list)
       end
 
    save (filename: STRING) is
       require
-         is_open
          filename /= Void
-      local
-         tfw: TEXT_FILE_WRITE
-         proc: PROCESS
       do
-         if dirty then
-            create tfw.connect_to(filename)
-            if tfw.is_connected then
-               proc := execute_command_line(once "openssl bf -a -pass env:VAULT_MASTER")
-               if proc.is_connected then
-                  print_all_keys(proc.input)
-                  proc.input.flush
-                  proc.input.disconnect
-                  from
-                     proc.output.read_line
-                  until
-                     proc.output.end_of_input
-                  loop
-                     tfw.put_line(proc.output.last_string)
-                     proc.output.read_line
-                  end
-                  tfw.put_string(proc.output.last_string)
-                  tfw.flush
-                  proc.wait
-               end
-               tfw.disconnect
-            end
-         end
+         run_open(filename, agent do_save)
       end
 
    menu (filename: STRING; args: COLLECTION[STRING]) is
-      local
-         tfw: TEXT_FILE_WRITE
-         proc: PROCESS
       do
-         create tfw.connect_to(filename)
-         if tfw.is_connected then
-            proc := execute(once "dmenu", args)
-            if proc.is_connected then
-               print_all_names(proc.input)
-               proc.input.disconnect
-               proc.output.read_line
-               display_or_add_key(proc.output.last_string.intern, tfw)
-               proc.wait
-            end
-            tfw.disconnect
-         end
+         run_open(filename, agent do_menu(?, args))
       end
 
    get (filename, name: STRING) is
       require
          filename /= Void
          name /= Void
-      local
-         tfw: TEXT_FILE_WRITE
       do
-         create tfw.connect_to(filename)
-         if tfw.is_connected then
-            display_name_and_pass(name.intern, tfw)
-            tfw.disconnect
-         end
+         run_open(filename, agent do_get(?, name))
       end
 
    set (filename, name, pass: STRING) is
       require
          filename /= Void
          name /= Void
-      local
-         tfw: TEXT_FILE_WRITE
       do
-         create tfw.connect_to(filename)
-         if tfw.is_connected then
-            set_key(name, pass, tfw)
-            tfw.disconnect
-         end
+         run_open(filename, agent do_set(?, name, pass))
       end
 
    unset (filename, name: STRING) is
-      local
-         tfw: TEXT_FILE_WRITE
+      require
+         filename /= Void
+         other.is_open
       do
-         create tfw.connect_to(filename)
-         if tfw.is_connected then
-            delete_key(name.intern, tfw)
-            tfw.disconnect
-         end
+         run_open(filename, agent do_unset(?, name))
       end
 
    merge (filename: STRING; other: like Current) is
          -- The greatest id is kept.
          -- If the ids are equal the local is kept.
+      require
+         filename /= Void
+         other.is_open
+      do
+         run_open(filename, agent do_merge(?, other))
+      end
+
+feature {}
+   do_list (stream: OUTPUT_STREAM) is
+      require
+         is_open
+         stream.is_connected
+      do
+         print_all_names(stream)
+      end
+
+   do_save (stream: OUTPUT_STREAM) is
+      require
+         is_open
+         stream.is_connected
+      local
+         proc: PROCESS
+      do
+         if dirty then
+            proc := execute_command_line(once "openssl bf -a -pass env:VAULT_MASTER")
+            if proc.is_connected then
+               print_all_keys(proc.input)
+               proc.input.flush
+               proc.input.disconnect
+               fifo.splice(proc.output, stream)
+               proc.wait
+            end
+         end
+      end
+
+   do_menu (stream: OUTPUT_STREAM; args: COLLECTION[STRING]) is
+      require
+         is_open
+         stream.is_connected
+      local
+         proc: PROCESS
+      do
+         proc := execute(once "dmenu", args)
+         if proc.is_connected then
+            print_all_names(proc.input)
+            proc.input.disconnect
+            proc.output.read_line
+            display_or_add_key(proc.output.last_string.intern, stream)
+            proc.wait
+         end
+      end
+
+   do_get (stream:  OUTPUT_STREAM; name: STRING) is
+      require
+         is_open
+         stream.is_connected
+         name /= Void
+      do
+         display_name_and_pass(name.intern, stream)
+      end
+
+   do_set (stream: OUTPUT_STREAM; name, pass: STRING) is
+      require
+         is_open
+         stream.is_connected
+         name /= Void
+      do
+         set_key(name, pass, stream)
+      end
+
+   do_unset (stream: OUTPUT_STREAM; name: STRING) is
+      require
+         is_open
+         stream.is_connected
+         name /= Void
+      do
+         delete_key(name.intern, stream)
+      end
+
+   do_merge (stream: OUTPUT_STREAM; other: like Current) is
+      require
+         is_open
+         stream.is_connected
+         other.is_open
+      do
+         -- merge existing
+         data.do_all(agent merge_other(other.data, ?))
+         -- add missing
+         other.data.do_all(agent add_key(?))
+         stream.put_line(once "Merge done.")
+         dirty := True
+      end
+
+feature {}
+   reply_not_open (filename: STRING) is
+      require
+         filename /= Void
+         not is_open
       local
          tfw: TEXT_FILE_WRITE
       do
          create tfw.connect_to(filename)
          if tfw.is_connected then
-            -- merge existing
-            data.do_all(agent merge_other(other.data, ?))
-            -- add missing
-            other.data.do_all(agent add_key(?))
-            tfw.put_line(once "merge done.")
-            dirty := True
+            tfw.put_line(once "VAULT NOT OPEN")
             tfw.disconnect
+         end
+      end
+
+   run_open (filename: STRING; if_open: PROCEDURE[TUPLE[OUTPUT_STREAM]]) is
+      require
+         filename /= Void
+      local
+         tfw: OUTPUT_STREAM
+      do
+         if is_open then
+            create {TEXT_FILE_WRITE} tfw.connect_to(filename)
+            if tfw.is_connected then
+               if_open.call([tfw])
+               tfw.disconnect
+            end
+         else
+            reply_not_open(filename)
          end
       end
 
@@ -420,6 +458,8 @@ feature {}
 
    file: FIXED_STRING
    dirty: BOOLEAN
+
+   fifo: FIFO
 
 feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]

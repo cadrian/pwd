@@ -75,10 +75,8 @@ feature {LOOP_ITEM}
                end
             when "list" then
                if command.count = 1 then
-                  if vault.is_open then
-                     file := command.last
-                     vault.list(file)
-                  end
+                  file := command.last
+                  vault.list(file)
                else
                   io.put_line(once "Invalid list file name")
                end
@@ -92,61 +90,55 @@ feature {LOOP_ITEM}
                end
             when "get" then
                if command.count = 2 then
-                  if vault.is_open then
-                     file := command.first
-                     name := command.last
-                     vault.get(file, name)
-                  end
+                  file := command.first
+                  name := command.last
+                  vault.get(file, name)
                else
                   io.put_line(once "Invalid get file name")
                end
             when "set" then
                if command.count >= 2 then
-                  if vault.is_open then
-                     file := command.first
-                     command.remove_first
-                     name := command.first
-                     command.remove_first
-                     if command.is_empty then
-                        vault.set(file, name, Void)
-                     else
-                        vault.set(file, name, command.first)
-                     end
+                  file := command.first
+                  command.remove_first
+                  name := command.first
+                  command.remove_first
+                  if command.is_empty then
+                     vault.set(file, name, Void)
+                  else
+                     vault.set(file, name, command.first)
                   end
                else
                   io.put_line(once "Invalid set file name")
                end
             when "unset" then
                if command.count = 2 then
-                  if vault.is_open then
-                     file := command.first
-                     name := command.last
-                     vault.unset(file, name)
-                  end
+                  file := command.first
+                  name := command.last
+                  vault.unset(file, name)
                else
                   io.put_line(once "Invalid unset file name")
                end
             when "save" then
                if command.count = 1 then
-                  if vault.is_open then
-                     file := command.last
-                     vault.save(file)
-                  end
+                  file := command.last
+                  vault.save(file)
                else
                   io.put_line(once "Invalid save file name")
                end
             when "merge" then
                if command.count = 3 then
-                  if vault.is_open then
-                     file := command.first
-                     command.remove_first
-                     create merge_vault.make(command.first)
-                     merge_vault.open(command.last)
+                  file := command.first
+                  command.remove_first
+                  create merge_vault.make(command.first)
+                  merge_vault.open(command.last)
+                  if merge_vault.is_open then
                      vault.merge(file, merge_vault)
                      merge_vault.close
-                     merge_vault := Void
-                     collect_garbage
+                  else
+                     io.put_line(once "Invalid merge vault password")
                   end
+                  merge_vault := Void
+                  collect_garbage
                else
                   io.put_line(once "Invalid merge file name")
                end
