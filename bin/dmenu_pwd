@@ -2,4 +2,9 @@
 
 dist=$(dirname $(dirname $(readlink -f $0)))
 export PATH=$dist/bin:$PATH
+if [ ! -e $dist/data/vault ]; then
+    mkdir -p $dist/data
+    touch $dist/data/vault
+    chmod 0600 $dist/data/vault
+fi
 exec menu $HOME/.pwdmgr_fifo $dist/data/vault -b -i -p 'Key: ' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#ff4040' -sf black
