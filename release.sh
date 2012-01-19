@@ -13,3 +13,5 @@ for d in bin src conf COPYING *.sh Makefile README.md
 do
     cp -a $d $release_dir/
 done
+
+test -e $release_dir/bin/se && rm $release_dir/bin/se

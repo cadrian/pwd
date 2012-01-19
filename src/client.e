@@ -216,15 +216,15 @@ feature {} -- create a brand new vault
          pass1, pass2: STRING; text: ABSTRACT_STRING
       do
          from
-            text := once "#(1), please enter an encryption phrase." # reason
+            text := once "#(1),%Nplease enter an encryption phrase." # reason
          until
             pass1 /= Void
          loop
             pass1 := once ""
             pass1.copy(read_master(text))
-            text := once "#(1),%Nplease enter the same encryption phrase again." # reason
+            text := once "Please enter the same encryption phrase again." # reason
             pass2 := read_master(text)
-            if not pass1.is_equal(master_pass) then
+            if not pass1.is_equal(pass2) then
                text := once "Your phrases did not match.%N#(1),%Nplease enter an encryption phrase." # reason
                pass1 := Void
             end
