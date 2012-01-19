@@ -237,26 +237,35 @@ feature {}
          start
       end
 
-   daemonize is
+   run_in_parent (proc: PROCESS) is
+      do
+         log.info.put_line("Process id is #(1)" # &proc.id)
+         die_with_code(0)
+      end
+
+   daemonize (detach: BOOLEAN) is
       local
          proc: PROCESS
       do
-         proc := create_process
-         proc.duplicate
-         if proc.is_child then
-            do_log(agent run_in_child)
+         if detach then
+            proc := create_process
+            proc.duplicate
+            if proc.is_child then
+               do_log(agent run_in_child)
+            else
+               do_log(agent run_in_parent(proc))
+            end
          else
-            log.info.put_line("Process id is #(1)" # &proc.id)
-            die_with_code(0)
+            do_log(agent run_in_child)
          end
       end
 
    main is
       local
-         fifo_factory: FIFO
+         fifo_factory: FIFO; detach: BOOLEAN
       do
-         if argument_count /= 3 then
-            std_error.put_line(once "Usage: #(1) <fifo> <vault> <log>" # command_name)
+         if not argument_count.in_range(3, 4) then
+            std_error.put_line(once "Usage: #(1) <fifo> <vault> <log> [-no_detach]" # command_name)
             die_with_code(1)
          end
 
@@ -274,7 +283,16 @@ feature {}
 
          create command.with_capacity(16, 0)
 
-         daemonize
+         if argument_count = 3 then
+            detach := True
+         elseif argument(4).is_equal(once "-no_detach") then
+            check not detach end
+         else
+            log.error.put_line(once "Unknown argument: #(1)" # argument(4))
+            die_with_code(1)
+         end
+
+         daemonize(detach)
       end
 
 invariant
