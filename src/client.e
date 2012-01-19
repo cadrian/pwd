@@ -116,12 +116,15 @@ feature {}
       local
          proc: PROCESS
       do
-         proc := execute_command_line((once "daemon #(1) #(2) #(3)/daemon.log" # server_fifo # vault # logdir).out)
+         direct_error := False
+         direct_output := False
+         proc := execute_command_line((once "nohup daemon #(1) #(2) #(3)/daemon.log" # server_fifo # vault # logdir).out)
          if proc.is_connected then
             proc.wait
             fifo.wait_for(server_fifo)
-            fifo.sleep(100)
+            fifo.sleep(50)
          end
+         direct_error := True
       ensure
          fifo.exists(server_fifo)
       end
@@ -174,7 +177,10 @@ feature {} -- master phrase
          if tfw.is_connected then
             tfw.put_line(string)
             tfw.flush
-            fifo.sleep(50) -- give time to the OS and the daemon to get the message before closing the connection
+
+            -- give time to the OS and the daemon to get the message before closing the connection
+            fifo.sleep(50)
+
             tfw.disconnect
          end
       end

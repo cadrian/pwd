@@ -55,8 +55,9 @@ feature {LOOP_ITEM}
       do
          if events.event_occurred(channel.event_can_read) then
             channel.read_line
-            Result := not channel.last_string.is_empty
+            Result := not channel.end_of_input and then not channel.last_string.is_empty
          end
+         log.info.put_line(once "Connection received")
       end
 
    continue is
@@ -152,6 +153,7 @@ feature {LOOP_ITEM}
                collect_garbage
             when "stop" then
                vault.close
+               log.info.put_line(once "Terminating...")
                collect_garbage
                channel.disconnect
             else
@@ -195,6 +197,7 @@ feature {}
          create loop_stack.make
          loop_stack.add_job(Current)
          restart
+         log.info.put_line("Starting main loop.")
          loop_stack.run
          log.info.put_line("Terminated.")
          delete(fifo)
@@ -258,6 +261,8 @@ feature {}
          else
             do_log(agent run_in_child)
          end
+      rescue
+         retry
       end
 
    main is
