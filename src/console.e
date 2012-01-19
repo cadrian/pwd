@@ -352,9 +352,10 @@ feature {} -- remote vault management
          Result := not config.fast_has(config_key_login) or else not config.fast_has(config_key_password)
       end
 
-   curl_arguments (option: STRING): FAST_ARRAY[STRING] is
+   curl_arguments (option, file: STRING): FAST_ARRAY[STRING] is
       require
          option.is_equal(once "-T") or else option.is_equal(once "-o")
+         file /= Void
       local
          pass: REFERENCE[STRING]
          url: FIXED_STRING
@@ -363,7 +364,7 @@ feature {} -- remote vault management
          if url = Void then
             std_output.put_line(once "[1mMissing vault url![0m")
          else
-            Result := {FAST_ARRAY[STRING] << once "-#", option, vault.out, url.out >>}
+            Result := {FAST_ARRAY[STRING] << once "-#", option, file, url.out >>}
             if not is_anonymous then
                create pass
                do_get(config.fast_reference_at(config_key_password),
@@ -384,7 +385,7 @@ feature {} -- remote vault management
       local
          proc: PROCESS; arg: like curl_arguments
       do
-         arg := curl_arguments(once "-T")
+         arg := curl_arguments(once "-T", vault.out)
          if arg /= Void then
             direct_output := True
             std_output.put_line(once "[32mPlease wait...[0m")
@@ -405,7 +406,7 @@ feature {} -- remote vault management
 
          direct_output := True
          std_output.put_line(once "[32mPlease wait...[0m")
-         proc := execute(once "curl", curl_arguments(once "-o"))
+         proc := execute(once "curl", curl_arguments(once "-o", vault.out))
          if proc.is_connected then
             proc.wait
          end
@@ -418,11 +419,42 @@ feature {} -- remote vault management
 
    run_merge is
          -- merge from remote
+      local
+         merge_pass: STRING
+         proc: PROCESS
       do
+         direct_output := True
+         std_output.put_line(once "[32mPlease wait...[0m")
+         proc := execute(once "curl", curl_arguments(once "-o", merge_vault.out))
+         if proc.is_connected then
+            proc.wait
+         end
+
+         merge_pass := once ""
+         merge_pass.copy(read_master(once "Please enter the encryption phrase%Nto the remote vault%N(enter if the same as the current vault's)"))
+         if merge_pass.is_empty then
+            merge_pass := master_pass
+         end
+
+         get_data("merge #(1) #(2) #(3)" # client_fifo # merge_vault # merge_pass,
+                  agent (stream: INPUT_STREAM) is
+                     do
+                        stream.read_line
+                        if not stream.end_of_input then
+                           xclip(once "")
+                           io.put_line(once "[1mDone[0m")
+                        end
+                     end)
+         delete(merge_vault)
          send_save
       end
 
 feature {} -- helpers
+   merge_vault: FIXED_STRING is
+      once
+         Result := ("#(1)/merge_vault" # tmpdir).intern
+      end
+
    less (string: ABSTRACT_STRING) is
       local
          proc: PROCESS

@@ -36,6 +36,7 @@ feature {}
 
 feature {ANY}
    make (fifo: FIXED_STRING) is
+         -- create a named fifo
       local
          path: POINTER; sts: INTEGER
       do
@@ -53,6 +54,7 @@ feature {ANY}
       end
 
    tmp: FIXED_STRING is
+         -- create a temporary directory
       local
          p: POINTER; s: STRING
       do
@@ -62,12 +64,8 @@ feature {ANY}
 
                      ]")
          if not p.is_default then
-            create s.from_external_copy(p)
-            s.append(once "/fifo")
-            create Result.make_from_string(s)
+            create Result.from_external_copy(p)
          end
-      ensure
-         Result /= Void implies Result.has_suffix(once "/fifo")
       end
 
    exists (name: FIXED_STRING): BOOLEAN is

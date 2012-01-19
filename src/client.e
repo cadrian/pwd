@@ -26,6 +26,7 @@ insert
       end
 
 feature {}
+   tmpdir: FIXED_STRING
    client_fifo: FIXED_STRING
    restart: BOOLEAN
 
@@ -39,12 +40,13 @@ feature {}
             die_with_code(1)
          end
 
-         client_fifo := fifo.tmp
-         if client_fifo = Void then
-            std_error.put_line("#(1): could not create client fifo!" # command_name)
+         tmpdir := fifo.tmp
+         if tmpdir = Void then
+            std_error.put_line("#(1): could not create tmp directory!" # command_name)
             die_with_code(1)
          end
 
+         client_fifo := ("#(1)/fifo" # tmpdir).intern
          server_fifo := argument(1).intern
          vault := argument(2).intern
          logdir := argument(3).intern
@@ -103,7 +105,7 @@ feature {}
             send_master
          elseif not fifo.exists(server_fifo) then
             start_server
-            read_master(once "Please enter your encryption phrase to open the password vault.")
+            master_pass.copy(read_master(once "Please enter your encryption phrase%Nto open the password vault."))
             send_master
          end
       end
@@ -118,22 +120,23 @@ feature {}
          if proc.is_connected then
             proc.wait
             fifo.wait_for(server_fifo)
+            fifo.sleep(100)
          end
       ensure
          fifo.exists(server_fifo)
       end
 
 feature {} -- master phrase
-   master_pass: STRING
+   master_pass: STRING is ""
 
-   read_master (text: ABSTRACT_STRING) is
+   read_master (text: ABSTRACT_STRING): STRING is
       local
          proc: PROCESS
       do
          proc := execute(once "zenity", zenity_args(text.out))
          if proc.is_connected then
             proc.output.read_line
-            master_pass := proc.output.last_string
+            Result := proc.output.last_string
             proc.wait
          end
       end
@@ -204,25 +207,26 @@ feature {} -- xclip
 feature {} -- create a brand new vault
    read_new_master (reason: ABSTRACT_STRING) is
       local
-         pass1: STRING; text: ABSTRACT_STRING
+         pass1, pass2: STRING; text: ABSTRACT_STRING
       do
          from
             text := once "#(1), please enter an encryption phrase." # reason
          until
             pass1 /= Void
          loop
-            read_master(text)
-            pass1 := master_pass.twin
-            text := once "#(1), please enter the same encryption phrase again." # reason
-            read_master(text)
+            pass1 := once ""
+            pass1.copy(read_master(text))
+            text := once "#(1),%Nplease enter the same encryption phrase again." # reason
+            pass2 := read_master(text)
             if not pass1.is_equal(master_pass) then
-               text := once "Your phrases did not match.%N#(1), please enter an encryption phrase." # reason
+               text := once "Your phrases did not match.%N#(1),%Nplease enter an encryption phrase." # reason
                pass1 := Void
             end
          end
          check
-            by_construction: pass1.is_equal(master_pass)
+            by_construction: pass1.is_equal(pass2)
          end
+         master_pass.copy(pass1)
       end
 
    create_vault is
