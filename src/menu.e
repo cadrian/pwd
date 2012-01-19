@@ -26,10 +26,6 @@ feature {}
          send_menu
       end
 
-   check_argument_count: BOOLEAN is True
-
-   extra_args: STRING is " <dmenu args>"
-
    send_menu is
       require
          not fifo.exists(client_fifo)
@@ -49,22 +45,14 @@ feature {}
          end
       end
 
-   menu_args: STRING is
-      local
-         i: INTEGER
+   config_dmenu_arguments: FIXED_STRING is
       once
-         from
-            Result := ""
-            i := 4
-         until
-            i > argument_count
-         loop
-            if i > 4 then
-               Result.extend_unless(' ')
-            end
-            Result.append(argument(i))
-            i := i + 1
-         end
+         Result := "dmenu.arguments".intern
+      end
+
+   menu_args: FIXED_STRING is
+      do
+         Result := conf(config_dmenu_arguments)
       end
 
 end

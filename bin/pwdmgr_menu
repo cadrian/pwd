@@ -5,4 +5,4 @@ export PATH=$dist/exe:$PATH
 umask 077
 test -d $dist/data || mkdir -p $dist/data
 test -d $dist/log || mkdir -p $dist/log
-exec menu $HOME/.pwdmgr_fifo $dist/data/vault $dist/log -b -i -p 'Key: ' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#ff4040' -sf black
+exec menu $HOME/.pwdmgr_fifo $dist/data/vault $dist/log $dist/conf/pwdmgr.properties

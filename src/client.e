@@ -24,6 +24,10 @@ insert
       undefine
          default_create
       end
+   CONFIGURABLE
+      undefine
+         default_create
+      end
 
 feature {}
    tmpdir: FIXED_STRING
@@ -35,8 +39,8 @@ feature {}
          default_create
          direct_error := True
 
-         if argument_count < 3 or else not check_argument_count then
-            std_error.put_line("Usage: #(1) <server fifo> <vault> <log dir>#(2)" # command_name # extra_args)
+         if argument_count /= 4 then
+            std_error.put_line("Usage: #(1) <server fifo> <vault> <log dir> <conf file>")
             die_with_code(1)
          end
 
@@ -73,14 +77,6 @@ feature {}
             delete(client_fifo)
          end
          delete(client_fifo.substring(client_fifo.lower, client_fifo.upper - 5)) -- "/fifo".count
-      end
-
-   check_argument_count: BOOLEAN is
-      deferred
-      end
-
-   extra_args: STRING is
-      deferred
       end
 
    run is

@@ -22,13 +22,11 @@ create {}
 
 feature {} -- the CLIENT interface
    stop: BOOLEAN
-   config: HASHED_DICTIONARY[FIXED_STRING, FIXED_STRING]
 
    run is
       do
          from
             stop := False
-            check_config
             io.put_string(once "[
                                 [1;32mWelcome to the pwdmgr administration console![0m
 
@@ -46,83 +44,6 @@ feature {} -- the CLIENT interface
                run_command
             end
          end
-      end
-
-   check_argument_count: BOOLEAN is
-      do
-         Result := argument_count = 4
-      end
-
-   extra_args: STRING is " <config>"
-
-feature {} -- config
-   check_config is
-      local
-         tfr: TEXT_FILE_READ
-      do
-         create config.make
-         create tfr.connect_to(argument(4))
-         if not tfr.is_connected then
-            std_error.put_line(once "Invalid config file")
-            die_with_code(1)
-         end
-         from
-            tfr.read_line
-         until
-            tfr.end_of_input
-         loop
-            add_config(tfr.last_string)
-            tfr.read_line
-         end
-         add_config(tfr.last_string)
-      end
-
-   add_config (conf: STRING) is
-      local
-         key, value: FIXED_STRING
-      do
-         if conf.is_empty then
-            -- ignore
-         else
-            inspect
-               conf.first
-            when '*', '#', ';' then
-               -- ignore comment
-            else
-               if not config_decoder.match(conf) then
-                  std_error.put_line(once "Invalid configuration line:%N#(1)" # conf)
-                  die_with_code(1)
-               end
-               key := decode_config(once "key", conf)
-               if config.fast_has(key) then
-                  std_error.put_line(once "Duplicate key: #(1)" # key)
-                  die_with_code(1)
-               end
-
-               value := decode_config(once "value", conf)
-
-               config.add(value, key)
-            end
-         end
-      end
-
-   decode_config (group_name, conf: STRING): FIXED_STRING is
-      require
-         config_decoder.match(conf)
-      local
-         s: STRING
-      do
-         s := once ""
-         s.clear_count
-         config_decoder.append_named_group(conf, s, group_name)
-         Result := s.intern
-      end
-
-   config_decoder: REGULAR_EXPRESSION is
-      local
-         builder: REGULAR_EXPRESSION_BUILDER
-      once
-         Result := builder.convert_python_pattern("^(?P<key>[a-zA-Z0-9_.]+)\s*[:=]\s*(?P<value>.*)$")
       end
 
 feature {} -- command management
@@ -172,11 +93,6 @@ feature {} -- command management
             io.put_line(once "not yet implemented.")
          when "help" then
             run_help
-         when "conf" then
-            config.do_all(agent (value, key: FIXED_STRING) is
-                             do
-                                std_output.put_line(once "[1m#(1)[0m=[33m#(2)[0m" # key # value)
-                             end)
          when "stop" then
             send("stop")
             fifo.sleep(100)
@@ -355,7 +271,7 @@ feature {} -- remote vault management
 
    is_anonymous: BOOLEAN is
       do
-         Result := not config.fast_has(config_key_login) or else not config.fast_has(config_key_password)
+         Result := not has_conf(config_key_login) or else not has_conf(config_key_password)
       end
 
    curl_arguments (option, file: STRING): FAST_ARRAY[STRING] is
@@ -366,21 +282,21 @@ feature {} -- remote vault management
          pass: REFERENCE[STRING]
          url: FIXED_STRING
       do
-         url := config.fast_reference_at(config_key_vault_url)
+         url := conf(config_key_vault_url)
          if url = Void then
             std_output.put_line(once "[1mMissing vault url![0m")
          else
             Result := {FAST_ARRAY[STRING] << once "-#", option, file, url.out >>}
             if not is_anonymous then
                create pass
-               do_get(config.fast_reference_at(config_key_password),
+               do_get(conf(config_key_password),
                       agent (p: STRING; p_ref: REFERENCE[STRING]) is
                          do
                             p_ref.set_item(p)
                          end (?, pass))
                if pass.item /= Void then
                   Result.add_last(once "-u")
-                  Result.add_last(("#(1):#(2)" # config.fast_reference_at(config_key_login) # pass.item).out)
+                  Result.add_last(("#(1):#(2)" # conf(config_key_login) # pass.item).out)
                end
             end
          end
@@ -474,8 +390,5 @@ feature {} -- helpers
             proc.wait
          end
       end
-
-invariant
-   config /= Void
 
 end
