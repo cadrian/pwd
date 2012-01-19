@@ -177,6 +177,10 @@ feature {} -- command management
                              do
                                 std_output.put_line(once "[1m#(1)[0m=[33m#(2)[0m" # key # value)
                              end)
+         when "stop" then
+            send("stop")
+            fifo.sleep(100)
+            die_with_code(0)
          else
             command.add_first(cmd) -- yes, add it again... it's a ring array so no harm done
             run_get
@@ -322,6 +326,8 @@ feature {} -- help
 
                     [33mmaster[0m             Change the master password.
                                        [1m(not yet implemented)[0m
+
+                    [33mstop[0m               Stop the daemon and closes the administration console.
 
                     [33mhelp[0m               Show this screen :-)
 
