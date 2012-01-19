@@ -10,7 +10,7 @@ test -d $bootstrap_dir && rm -rf $bootstrap_dir
 mkdir -p $bootstrap_dir/bin
 mkdir -p $bootstrap_dir/c
 
-for script in dmenu_pwd pwdmgr.sh
+for script in pwdmgr_*
 do
     cp bin/$script $bootstrap_dir/bin/
 done
@@ -24,7 +24,7 @@ MAKEFILE_BOOT=$bootstrap_dir/Makefile
 cat > $MAKEFILE_BOOT <<EOF
 #!/usr/bin/env make -f
 
-.PHONY: all
+.PHONY: all clean
 .SILENT:
 
 all: $EXE
@@ -32,14 +32,14 @@ EOF
 
 for exe in $EXE
 do
-    printf '\tbin/%s\n' $exe
+    printf '\texe/%s\n' $exe
 done >> $MAKEFILE_BOOT
 
 for exe in $EXE
 do
     {
         echo
-        echo "bin/$exe: c/$exe.[ch]"
+        echo "exe/$exe: exe c/$exe.[ch]"
         printf '\t%s\n' '$(CC) -o $@ $<'
     } >> $MAKEFILE_BOOT
 
@@ -49,6 +49,15 @@ do
     rm $ace $exe.id $exe.make
     mv $exe.[ch] $bootstrap_dir/c/
 done
+
+{
+    echo
+    echo "exe:"
+    printf '\t%s\n' 'mkdir exe'
+    echo
+    echo "clean:"
+    printf '\t%s\n' 'rm -rf exe'
+} >> $MAKEFILE_BOOT
 
 chmod +x $MAKEFILE_BOOT
 

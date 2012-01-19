@@ -3,3 +3,5 @@
 *.id
 target
 log
+data/vault*
+exe

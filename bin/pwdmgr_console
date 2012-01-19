@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dist=$(dirname $(dirname $(readlink -f $0)))
-export PATH=$dist/bin:$PATH
+export PATH=$dist/exe:$PATH
 umask 077
 test -d $dist/data || mkdir -p $dist/data
 test -d $dist/log || mkdir -p $dist/log

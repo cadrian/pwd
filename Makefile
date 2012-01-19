@@ -1,21 +1,27 @@
-#!/usr/bin/env make -f
+#!/usr/exe/env make -f
 
-all: bin/daemon bin/menu bin/console
+all: exe/daemon exe/menu exe/console
 
-bin/daemon: daemon.ace src/daemon.e src/fifo.e src/key.e src/vault.e
+clean:
+	rm -rf exe *.ace
+
+exe/daemon: exe daemon.ace src/daemon.e src/fifo.e src/key.e src/vault.e
 	se c daemon.ace
 	mv daemon.exe $@
 
-bin/menu: menu.ace src/client.e src/menu.e
+exe/menu: exe menu.ace src/client.e src/menu.e
 	se c menu.ace
 	mv menu.exe $@
 
-bin/console: console.ace src/client.e src/console.e
+exe/console: exe console.ace src/client.e src/console.e
 	se c console.ace
 	mv console.exe $@
+
+exe:
+	mkdir exe
 
 %.ace: make_ace.sh
 	./make_ace.sh $@
 
-.PHONY: all
+.PHONY: all clean
 .SILENT:
