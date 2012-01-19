@@ -15,12 +15,12 @@ do
     cp bin/$script $bootstrap_dir/bin/
 done
 
-for d in src conf COPYING *.sh Makefile README.md
+for d in conf COPYING README.md
 do
     cp -a $d $bootstrap_dir/
 done
 
-MAKEFILE_BOOT=$bootstrap_dir/Makefile.boot
+MAKEFILE_BOOT=$bootstrap_dir/Makefile
 cat > $MAKEFILE_BOOT <<EOF
 #!/usr/bin/env make -f
 
@@ -53,5 +53,6 @@ done
 chmod +x $MAKEFILE_BOOT
 
 cat > $bootstrap_dir/c/README <<EOF
-Those files were generated using LibertyEiffel (http://github.com/LibertyEiffel/Liberty)
+Those files were generated using LibertyEiffel
+(http://github.com/LibertyEiffel/Liberty)
 EOF

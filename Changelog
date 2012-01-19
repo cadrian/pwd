@@ -1,0 +1,12 @@
+0.0.3 (not yet released)
+
+        * Changelog
+        * fixed release & bootstrap package contents
+
+0.0.2 (released 2012-01-19)
+
+        * fixed #1: empty vault creation
+
+0.0.1 (released 2012-01-18)
+
+        * initial version
