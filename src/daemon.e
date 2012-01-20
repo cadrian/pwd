@@ -21,12 +21,11 @@ inherit
       end
 
 insert
-   LOGGING
-   ARGUMENTS
+   GLOBALS
    FILE_TOOLS
 
 create {}
-   main
+   make
 
 feature {LOOP_ITEM}
    prepare (events: EVENTS_SET) is
@@ -158,7 +157,8 @@ feature {LOOP_ITEM}
 
    restart is
       do
-         create channel.connect_to(fifo)
+         fifo.make(fifo_filename)
+         create channel.connect_to(fifo_filename)
       end
 
    collect_garbage is
@@ -172,15 +172,19 @@ feature {}
    processor: PROCESSOR
 
    channel: TEXT_FILE_READ_WRITE
-         -- there must be at least one writer for the fifo to be blocking in select(2)
-         -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo
+         -- there must be at least one writer for the fifo_filename to be blocking in select(2)
+         -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo_filename
 
    vault: VAULT
-   fifo: FIXED_STRING
+
+   fifo_filename: FIXED_STRING is
+      do
+         Result := shared.daemon_fifo
+      end
 
    command: RING_ARRAY[STRING]
 
-   start is
+   run_in_child is
          -- the main loop
       local
          loop_stack: LOOP_STACK
@@ -191,44 +195,7 @@ feature {}
          log.info.put_line("Starting main loop.")
          loop_stack.run
          log.info.put_line("Terminated.")
-         delete(fifo)
-      end
-
-   do_log (in_log: PROCEDURE[TUPLE]) is
-      require
-         in_log /= Void
-      local
-         logconf: LOG_CONFIGURATION
-         conf: STRING_INPUT_STREAM
-      do
-         create conf.from_string(("[
-                                   log configuration
-
-                                   root DAEMON
-
-                                   output
-                                      default is file "#(1)"
-                                      rotated each day keeping 3
-                                      end
-
-                                   logger
-                                      DAEMON is
-                                      output default
-                                      level info
-                                      end
-
-                                   end
-
-                                                         ]"
-                                   # argument(3)
-                                   ).out)
-         logconf.load(conf, Void, Void, in_log)
-      end
-
-   run_in_child is
-      do
-         create vault.make(argument(2))
-         start
+         delete(fifo_filename)
       end
 
    run_in_parent (proc: PROCESS) is
@@ -237,58 +204,56 @@ feature {}
          die_with_code(0)
       end
 
-   daemonize (detach: BOOLEAN) is
+   preload is
+      local
+         args: ARGUMENTS
+      do
+         if not args.argument_count.in_range(1, 2) then
+            std_error.put_line(once "Usage: #(1) <conf> [-no_detach]" # command_name)
+            die_with_code(1)
+         end
+
+         if not fifo.exists(fifo_filename) then
+            log.error.put_line(once "Error while opening fifo_filename #(1)" # fifo_filename)
+            die_with_code(1)
+         end
+
+         create command.with_capacity(16, 0)
+
+         if args.argument_count = 1 then
+            detach := True
+         elseif args.argument(2).is_equal(once "-no_detach") then
+            check not detach end
+         else
+            log.error.put_line(once "Unknown argument: #(1)" # args.argument(2))
+            die_with_code(1)
+         end
+      end
+
+   main is
       local
          proc: PROCESS
       do
          if detach then
             proc := processor.fork
             if proc.is_child then
-               do_log(agent run_in_child)
+               run_in_child
             else
-               do_log(agent run_in_parent(proc))
+               run_in_parent(proc)
             end
          else
-            do_log(agent run_in_child)
+            run_in_child
          end
       rescue
          retry
       end
 
-   main is
-      local
-         fifo_factory: FIFO; detach: BOOLEAN
-      do
-         if not argument_count.in_range(4, 5) then
-            std_error.put_line(once "Usage: #(1) <fifo> <vault> <log> <conf> [-no_detach]" # command_name)
-            die_with_code(1)
-         end
-
-         fifo := argument(1).intern
-         fifo_factory.make(fifo)
-
-         if not fifo_factory.exists(fifo) then
-            log.error.put_line(once "Error while opening fifo #(1)" # fifo)
-            die_with_code(1)
-         end
-
-         create command.with_capacity(16, 0)
-
-         if argument_count = 4 then
-            detach := True
-         elseif argument(5).is_equal(once "-no_detach") then
-            check not detach end
-         else
-            log.error.put_line(once "Unknown argument: #(1)" # argument(5))
-            die_with_code(1)
-         end
-
-         daemonize(detach)
-      end
+   detach: BOOLEAN
+   fifo: FIFO
 
 invariant
    vault /= Void
-   fifo /= Void
+   fifo_filename /= Void
    channel /= Void
    command /= Void
 

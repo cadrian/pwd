@@ -15,9 +15,8 @@
 deferred class CLIENT
 
 insert
-   ARGUMENTS
+   GLOBALS
    FILE_TOOLS
-   CONFIGURABLE
 
 feature {}
    processor: PROCESSOR
@@ -26,10 +25,12 @@ feature {}
    client_fifo: FIXED_STRING
    restart: BOOLEAN
 
-   main is
+   preload is
+      local
+         args: ARGUMENTS
       do
-         if argument_count /= 4 then
-            std_error.put_line("Usage: #(1) <server fifo> <vault> <log dir> <conf file>")
+         if args.argument_count /= 1 then
+            std_error.put_line("Usage: #(1) <conf>")
             die_with_code(1)
          end
 
@@ -40,10 +41,10 @@ feature {}
          end
 
          client_fifo := ("#(1)/fifo" # tmpdir).intern
-         server_fifo := argument(1).intern
-         vault := argument(2).intern
-         logdir := argument(3).intern
+      end
 
+   main is
+      do
          from
             restart := True
          until
@@ -77,13 +78,14 @@ feature {}
 feature {}
    fifo: FIFO
 
-   server_fifo: FIXED_STRING
-   vault: FIXED_STRING
-   logdir: FIXED_STRING
+   server_fifo: FIXED_STRING is
+      do
+         Result := shared.daemon_fifo
+      end
 
    check_server is
       do
-         if not file_exists(vault) then
+         if not file_exists(shared.vault_file) then
             read_new_master(once "This is a new vault")
             create_vault
             start_server
@@ -101,7 +103,7 @@ feature {}
       local
          proc: PROCESS
       do
-         proc := processor.execute_to_dev_null(once "nohup", once "daemon '#(1)' '#(2)' '#(3)/daemon.log' '#(4)'" # server_fifo # vault # logdir # conf_filename)
+         proc := processor.execute_to_dev_null(once "nohup", once "daemon '#(1)'" # conf_filename)
          if proc.is_connected then
             proc.wait
             fifo.wait_for(server_fifo)
@@ -140,7 +142,7 @@ feature {} -- master phrase
 
    send_save is
       do
-         send(once "save #(1)" # vault)
+         send(once "save #(1)" # shared.vault_file)
       end
 
    send (string: ABSTRACT_STRING) is
@@ -216,15 +218,14 @@ feature {} -- create a brand new vault
       local
          new_vault: VAULT
       do
-         create new_vault.make(vault)
+         create new_vault.make(shared.vault_file)
          new_vault.open_new(master_pass)
-         new_vault.save(vault.out)
+         new_vault.save(shared.vault_file.out)
          new_vault.close
       end
 
 invariant
    server_fifo /= Void
    client_fifo /= Void
-   vault /= Void
 
 end

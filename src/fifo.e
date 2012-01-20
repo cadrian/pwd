@@ -18,7 +18,7 @@ expanded class FIFO
 --
 
 insert
-   ARGUMENTS
+   LOGGING
       redefine
          default_create
       end
@@ -48,9 +48,11 @@ feature {ANY}
 
                      ]")
          if sts /= 0 then
-            std_error.put_line(once "#(1): error #(2) while creating #(3)" # command_name # sts.out # fifo)
+            log.error.put_line(once "Error #(2) while creating #(3)" # sts.out # fifo)
             die_with_code(1)
          end
+      ensure
+         exists(fifo)
       end
 
    tmp: FIXED_STRING is

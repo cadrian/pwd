@@ -36,7 +36,7 @@ feature {ANY}
 
    filename: FIXED_STRING is
       once
-         Result := argument(4).intern
+         Result := argument(1).intern
       end
 
 feature {}

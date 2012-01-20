@@ -18,7 +18,7 @@ inherit
    CLIENT
 
 create {}
-   main
+   make
 
 feature {}
    run is

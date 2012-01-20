@@ -12,7 +12,7 @@ cat > $target <<EOF
 system "$exe"
 
 root
-    $CLASS:main
+    $CLASS:make
 
 default
     assertion(boost)

@@ -18,7 +18,7 @@ inherit
    CLIENT
 
 create {}
-   main
+   make
 
 feature {} -- the CLIENT interface
    stop: BOOLEAN
@@ -306,7 +306,7 @@ feature {} -- remote vault management
       local
          proc: PROCESS; arg: like curl_arguments
       do
-         arg := curl_arguments(once "-T", vault)
+         arg := curl_arguments(once "-T", shared.vault_file)
          if arg /= Void then
             std_output.put_line(once "[32mPlease wait...[0m")
             proc := processor.execute(once "curl", arg)
@@ -325,7 +325,7 @@ feature {} -- remote vault management
          send("stop")
 
          std_output.put_line(once "[32mPlease wait...[0m")
-         proc := processor.execute(once "curl", curl_arguments(once "-o", vault))
+         proc := processor.execute(once "curl", curl_arguments(once "-o", shared.vault_file))
          if proc.is_connected then
             proc.wait
          end

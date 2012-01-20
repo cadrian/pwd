@@ -14,6 +14,9 @@
 --
 expanded class PROCESSOR
 
+insert
+   LOGGING
+
 feature {ANY}
    execute (command: STRING; arguments: ABSTRACT_STRING): PROCESS is
       require
@@ -53,6 +56,15 @@ feature {ANY}
          Result.duplicate
       end
 
+   split_arguments (arguments: ABSTRACT_STRING): COLLECTION[STRING] is
+      require
+         arguments /= Void
+      do
+         Result := parse_arguments(arguments.intern)
+      ensure
+         Result /= Void
+      end
+
 feature {}
    execute_ (command: STRING; arguments: ABSTRACT_STRING; direct_output, direct_error: BOOLEAN): PROCESS is
       require
@@ -87,11 +99,12 @@ feature {}
 
    a_arguments (arguments: FIXED_STRING): FAST_ARRAY[STRING] is
       local
-         i, state: INTEGER; c: CHARACTER; word: STRING
+         i, state: INTEGER; c: CHARACTER; word, var: STRING
       do
          create Result.make(0)
          word := once ""
          word.clear_count
+         var := once ""
          from
             i := arguments.lower
          until
@@ -110,6 +123,9 @@ feature {}
                      state := State_simple_quote
                   when '%"' then
                      state := State_double_quote
+                  when '$' then
+                     var.clear_count
+                     state := State_simple_variable
                   when '\' then
                      if i = arguments.upper then
                         state := -1
@@ -130,6 +146,9 @@ feature {}
                   state := State_simple_quote
                when '%"' then
                   state := State_double_quote
+               when '$' then
+                  var.clear_count
+                  state := State_simple_variable
                when '\' then
                   if i = arguments.upper then
                      state := -1
@@ -149,39 +168,77 @@ feature {}
                word.extend(c)
                state := State_word
             when State_simple_quote then
-               inspect
-                  c
-               when '%'' then
-                  state := State_word
-               when '\' then
-                  if i = arguments.upper then
-                     state := -1
-                  else
-                     state := State_escape
-                  end
+               if i = arguments.upper and then c /= '%'' then
+                  state := -1
                else
-                  word.extend(c)
+                  inspect
+                     c
+                  when '%'' then
+                     state := State_word
+                  when '\' then
+                     state := State_escape
+                  else
+                     word.extend(c)
+                  end
                end
             when State_simple_quote_escape then
                word.extend(c)
                state := State_simple_quote
             when State_double_quote then
-               inspect
-                  c
-               when '%"' then
-                  state := State_word
-               when '\' then
-                  if i = arguments.upper then
-                     state := -1
-                  else
-                     state := State_escape
-                  end
+               if i = arguments.upper and then c /= '%"' then
+                  state := -1
                else
-                  word.extend(c)
+                  inspect
+                     c
+                  when '%"' then
+                     state := State_word
+                  when '$' then
+                     var.clear_count
+                     state := State_simple_variable_quoted
+                  when '\' then
+                     state := State_escape
+                  else
+                     word.extend(c)
+                  end
                end
             when State_double_quote_escape then
                word.extend(c)
                state := State_double_quote
+            when State_simple_variable, State_simple_variable_quoted then
+               if var.is_empty and then c = '{' then
+                  if state = State_simple_variable then
+                     state := State_braced_variable
+                  else
+                     state := State_braced_variable_quoted
+                  end
+               else
+                  inspect
+                     c
+                  when 'A'..'Z', 'a'..'z', '_' then
+                     var.extend(c)
+                  else
+                     append_var(word, var)
+                     i := i - 1
+                     if state = State_simple_variable then
+                        state := State_word
+                     else
+                        state := State_double_quote
+                     end
+                  end
+               end
+            when State_braced_variable, State_braced_variable_quoted then
+               if i = arguments.upper then
+                  state := -1
+               elseif c = '}' then
+                  if state = State_braced_variable then
+                     state := State_word
+                  else
+                     state := State_double_quote
+                  end
+                  append_var(word, var)
+               else
+                  var.extend(c)
+               end
             end
             i := i + 1
          end
@@ -195,6 +252,17 @@ feature {}
          Result /= Void
       end
 
+   append_var (word, var: STRING) is
+      require
+         word /= Void
+         var /= Void
+      local
+         sys: SYSTEM; value: STRING
+      do
+         value := sys.get_environment_variable(var)
+         word.append(value)
+      end
+
    State_blank: INTEGER is 0
    State_word: INTEGER is 1
    State_escape: INTEGER is 2
@@ -202,5 +270,9 @@ feature {}
    State_simple_quote_escape: INTEGER is 12
    State_double_quote: INTEGER is 21
    State_double_quote_escape: INTEGER is 22
+   State_simple_variable: INTEGER is 31
+   State_braced_variable: INTEGER is 32
+   State_simple_variable_quoted: INTEGER is 33
+   State_braced_variable_quoted: INTEGER is 34
 
 end
