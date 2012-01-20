@@ -101,7 +101,7 @@ feature {}
       local
          proc: PROCESS
       do
-         proc := processor.execute_redirect(once "nohup", once "daemon '#(1)' '#(2)' '#(3)/daemon.log'" # server_fifo # vault # logdir)
+         proc := processor.execute_to_dev_null(once "nohup", once "daemon '#(1)' '#(2)' '#(3)/daemon.log'" # server_fifo # vault # logdir)
          if proc.is_connected then
             proc.wait
             fifo.wait_for(server_fifo)

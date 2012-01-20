@@ -55,6 +55,9 @@ feature {ANY}
             end
             vault_file.disconnect
          end
+         if not is_open then
+            log.error.put_line(once "VAULT NOT OPEN!")
+         end
       end
 
    close is

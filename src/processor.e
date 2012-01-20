@@ -19,7 +19,7 @@ feature {ANY}
       require
          command /= Void
       do
-         Result := execute_(command, arguments, True)
+         Result := execute_(command, arguments, True, True)
       ensure
          Result /= Void
       end
@@ -28,7 +28,16 @@ feature {ANY}
       require
          command /= Void
       do
-         Result := execute_(command, arguments, False)
+         Result := execute_(command, arguments, False, True)
+      ensure
+         Result /= Void
+      end
+
+   execute_to_dev_null (command: STRING; arguments: ABSTRACT_STRING): PROCESS is
+      require
+         command /= Void
+      do
+         Result := execute_(command, arguments, False, False)
       ensure
          Result /= Void
       end
@@ -45,7 +54,7 @@ feature {ANY}
       end
 
 feature {}
-   execute_ (command: STRING; arguments: ABSTRACT_STRING; output: BOOLEAN): PROCESS is
+   execute_ (command: STRING; arguments: ABSTRACT_STRING; direct_output, direct_error: BOOLEAN): PROCESS is
       require
          command /= Void
       local
@@ -55,8 +64,8 @@ feature {}
          if arguments /= Void then
             args := parse_arguments(arguments.intern)
          end
-         factory.set_direct_output(output)
-         factory.set_direct_error(output)
+         factory.set_direct_output(direct_output)
+         factory.set_direct_error(direct_error)
          Result := factory.execute(command, args)
       ensure
          Result /= Void
