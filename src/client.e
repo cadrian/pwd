@@ -15,30 +15,19 @@
 deferred class CLIENT
 
 insert
-   PROCESS_FACTORY
    ARGUMENTS
-      undefine
-         default_create
-      end
    FILE_TOOLS
-      undefine
-         default_create
-      end
    CONFIGURABLE
-      undefine
-         default_create
-      end
 
 feature {}
+   processor: PROCESSOR
+
    tmpdir: FIXED_STRING
    client_fifo: FIXED_STRING
    restart: BOOLEAN
 
    main is
       do
-         default_create
-         direct_error := True
-
          if argument_count /= 4 then
             std_error.put_line("Usage: #(1) <server fifo> <vault> <log dir> <conf file>")
             die_with_code(1)
@@ -112,15 +101,12 @@ feature {}
       local
          proc: PROCESS
       do
-         direct_error := False
-         direct_output := False
-         proc := execute_command_line((once "nohup daemon #(1) #(2) #(3)/daemon.log" # server_fifo # vault # logdir).out)
+         proc := processor.execute_redirect(once "nohup", once "daemon '#(1)' '#(2)' '#(3)/daemon.log'" # server_fifo # vault # logdir)
          if proc.is_connected then
             proc.wait
             fifo.wait_for(server_fifo)
             fifo.sleep(50)
          end
-         direct_error := True
       ensure
          fifo.exists(server_fifo)
       end
@@ -132,7 +118,7 @@ feature {} -- master phrase
       local
          proc: PROCESS
       do
-         proc := execute(once "zenity", zenity_args(text.out))
+         proc := processor.execute(once "zenity", zenity_args(text))
          if proc.is_connected then
             proc.output.read_line
             Result := proc.output.last_string
@@ -140,14 +126,9 @@ feature {} -- master phrase
          end
       end
 
-   zenity_args (text: ABSTRACT_STRING): FAST_ARRAY[STRING] is
+   zenity_args (text: ABSTRACT_STRING): ABSTRACT_STRING is
       do
-         Result := {FAST_ARRAY[STRING] <<
-                                         "--entry",
-                                         "--hide-text",
-                                         "--title=Password",
-                                         ("--text=#(1)" # text).out
-                                       >> }
+         Result := once "--entry --hide-text --title=Password --text=%"#(1)%"" # text
       end
 
    send_master is
@@ -193,7 +174,7 @@ feature {} -- xclip
       local
          proc: PROCESS
       do
-         proc := execute_command_line((once "xclip -selection #(1) -loops 3" # selection).out)
+         proc := processor.execute(once "xclip", once "-selection #(1) -loops 3" # selection)
          if proc.is_connected then
             proc.input.put_line(string)
             proc.input.disconnect

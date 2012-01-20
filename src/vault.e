@@ -16,20 +16,8 @@ class VAULT
 
 insert
    LOGGING
-      undefine
-         default_create
-      end
-   PROCESS_FACTORY
    FILE_TOOLS
-      undefine
-         default_create
-      end
    SYSTEM
-      rename
-         execute_command_line as sys_execute_command_line
-      undefine
-         default_create
-      end
 
 create {ANY}
    make
@@ -57,7 +45,7 @@ feature {ANY}
          create vault_file.connect_to(file)
          if vault_file.is_connected then
             set_environment_variable(once "VAULT_MASTER", pass)
-            proc := execute_command_line(once "openssl bf -d -a -pass env:VAULT_MASTER")
+            proc := processor.execute(once "openssl", once "bf -d -a -pass env:VAULT_MASTER")
             if proc.is_connected then
                fifo.splice(vault_file, proc.input)
                proc.input.disconnect
@@ -99,7 +87,7 @@ feature {ANY}
          run_open(filename, agent do_save)
       end
 
-   menu (filename: STRING; args: COLLECTION[STRING]) is
+   menu (filename, args: STRING) is
       do
          log.info.put_line(once "#(1): menu" # filename)
          run_open(filename, agent do_menu(?, args))
@@ -160,7 +148,7 @@ feature {}
          proc: PROCESS
       do
          if dirty then
-            proc := execute_command_line(once "openssl bf -a -pass env:VAULT_MASTER")
+            proc := processor.execute(once "openssl", once "bf -a -pass env:VAULT_MASTER")
             if proc.is_connected then
                print_all_keys(proc.input)
                proc.input.flush
@@ -171,14 +159,15 @@ feature {}
          end
       end
 
-   do_menu (stream: OUTPUT_STREAM; args: COLLECTION[STRING]) is
+   do_menu (stream: OUTPUT_STREAM; args: STRING) is
       require
          is_open
          stream.is_connected
       local
          proc: PROCESS
       do
-         proc := execute(once "dmenu", args)
+         --| **** TODO: it's stupid to let the client send arguments when read from the same configuration file
+         proc := processor.execute(once "dmenu", args)
          if proc.is_connected then
             print_all_names(proc.input)
             proc.input.disconnect
@@ -467,9 +456,6 @@ feature {}
       require
          a_file /= Void
       do
-         default_create
-         direct_error := True
-
          file := a_file.intern
          create data.make
       ensure
@@ -478,6 +464,8 @@ feature {}
 
    dirty: BOOLEAN
    fifo: FIFO
+
+   processor: PROCESSOR
 
 feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]

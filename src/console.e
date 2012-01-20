@@ -274,7 +274,7 @@ feature {} -- remote vault management
          Result := not has_conf(config_key_login) or else not has_conf(config_key_password)
       end
 
-   curl_arguments (option, file: STRING): FAST_ARRAY[STRING] is
+   curl_arguments (option, file: ABSTRACT_STRING): ABSTRACT_STRING is
       require
          option.is_equal(once "-T") or else option.is_equal(once "-o")
          file /= Void
@@ -286,7 +286,7 @@ feature {} -- remote vault management
          if url = Void then
             std_output.put_line(once "[1mMissing vault url![0m")
          else
-            Result := {FAST_ARRAY[STRING] << once "-#", option, file, url.out >>}
+            Result := once "-\# #(1) '#(2)' '#(3)'" # option # file # url
             if not is_anonymous then
                create pass
                do_get(conf(config_key_password),
@@ -295,8 +295,7 @@ feature {} -- remote vault management
                             p_ref.set_item(p)
                          end (?, pass))
                if pass.item /= Void then
-                  Result.add_last(once "-u")
-                  Result.add_last(("#(1):#(2)" # conf(config_key_login) # pass.item).out)
+                  Result := once "#(1) -u #(2):#(3)" # Result # conf(config_key_login) # pass.item
                end
             end
          end
@@ -307,11 +306,10 @@ feature {} -- remote vault management
       local
          proc: PROCESS; arg: like curl_arguments
       do
-         arg := curl_arguments(once "-T", vault.out)
+         arg := curl_arguments(once "-T", vault)
          if arg /= Void then
-            direct_output := True
             std_output.put_line(once "[32mPlease wait...[0m")
-            proc := execute(once "curl", arg)
+            proc := processor.execute(once "curl", arg)
             if proc.is_connected then
                proc.wait
             end
@@ -326,9 +324,8 @@ feature {} -- remote vault management
          -- shut the daemon down
          send("stop")
 
-         direct_output := True
          std_output.put_line(once "[32mPlease wait...[0m")
-         proc := execute(once "curl", curl_arguments(once "-o", vault.out))
+         proc := processor.execute(once "curl", curl_arguments(once "-o", vault))
          if proc.is_connected then
             proc.wait
          end
@@ -345,9 +342,8 @@ feature {} -- remote vault management
          merge_pass: STRING
          proc: PROCESS
       do
-         direct_output := True
          std_output.put_line(once "[32mPlease wait...[0m")
-         proc := execute(once "curl", curl_arguments(once "-o", merge_vault.out))
+         proc := processor.execute(once "curl", curl_arguments(once "-o", merge_vault))
          if proc.is_connected then
             proc.wait
          end
@@ -381,8 +377,7 @@ feature {} -- helpers
       local
          proc: PROCESS
       do
-         direct_output := True
-         proc := execute_command_line(once "less -R")
+         proc := processor.execute(once "less", once "-R")
          if proc.is_connected then
             proc.input.put_string(string)
             proc.input.flush

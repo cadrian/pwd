@@ -17,23 +17,13 @@ class DAEMON
 inherit
    JOB
       undefine
-         default_create
+    default_create
       end
 
 insert
    LOGGING
-      undefine
-         default_create
-      end
-   PROCESS_FACTORY
    ARGUMENTS
-      undefine
-         default_create
-      end
    FILE_TOOLS
-      undefine
-         default_create
-      end
 
 create {}
    main
@@ -90,7 +80,7 @@ feature {LOOP_ITEM}
                if command.count >= 1 then
                   file := command.first
                   command.remove_first
-                  vault.menu(file, command)
+                  vault.menu(file, channel.last_string.substring(5, channel.last_string.upper)) --| **** TODO: ugly, please read args from conf file
                else
                   log.warning.put_line(once "Invalid menu file name")
                end
@@ -180,6 +170,8 @@ feature {LOOP_ITEM}
       end
 
 feature {}
+   processor: PROCESSOR
+
    channel: TEXT_FILE_READ_WRITE
          -- there must be at least one writer for the fifo to be blocking in select(2)
          -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo
@@ -211,26 +203,26 @@ feature {}
          conf: STRING_INPUT_STREAM
       do
          create conf.from_string(("[
-                                   log configuration
+               log configuration
 
-                                   root DAEMON
+               root DAEMON
 
-                                   output
-                                      default is file "#(1)"
-                                         rotated each day keeping 3
-                                         end
+               output
+                  default is file "#(1)"
+                  rotated each day keeping 3
+                  end
 
-                                   logger
-                                      DAEMON is
-                                         output default
-                                         level info
-                                         end
+               logger
+                  DAEMON is
+                  output default
+                  level info
+                  end
 
-                                   end
+               end
 
-                                   ]"
-                                  # argument(3)
-                                 ).out)
+               ]"
+              # argument(3)
+             ).out)
          logconf.load(conf, Void, Void, in_log)
       end
 
@@ -251,8 +243,7 @@ feature {}
          proc: PROCESS
       do
          if detach then
-            proc := create_process
-            proc.duplicate
+            proc := processor.fork
             if proc.is_child then
                do_log(agent run_in_child)
             else
@@ -274,10 +265,6 @@ feature {}
             die_with_code(1)
          end
 
-         default_create
-         direct_input := True
-         direct_output := True
-         direct_error := True
          fifo := argument(1).intern
          fifo_factory.make(fifo)
 
