@@ -58,11 +58,11 @@ feature {ANY}
    tmp: FIXED_STRING is
          -- create a temporary directory
       local
-         p: POINTER; s: STRING
+         t, p: POINTER; shared: SHARED
       do
+         t := (once "#(1)/.pwd.XXXXXX" # shared.tmp_dir).out.to_external
          c_inline_c("[
-                     char template[] = "/tmp/.pwd.XXXXXX";
-                     _p = mkdtemp(template);
+                     _p = mkdtemp((char*)_t);
 
                      ]")
          if not p.is_default then

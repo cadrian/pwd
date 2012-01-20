@@ -15,13 +15,6 @@
 expanded class CONFIGURABLE
 
 feature {ANY}
-   shared_conf (key: ABSTRACT_STRING): FIXED_STRING is
-      require
-         key /= Void
-      do
-         Result := configuration.get(once "shared", key)
-      end
-
    conf (key: ABSTRACT_STRING): FIXED_STRING is
       require
          key /= Void
