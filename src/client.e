@@ -105,7 +105,7 @@ feature {}
          if proc.is_connected then
             proc.wait
             fifo.wait_for(server_fifo)
-            fifo.sleep(50)
+            fifo.sleep(250)
          end
       ensure
          fifo.exists(server_fifo)
