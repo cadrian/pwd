@@ -45,7 +45,7 @@ feature {ANY}
          create vault_file.connect_to(file)
          if vault_file.is_connected then
             set_environment_variable(once "VAULT_MASTER", pass)
-            proc := processor.execute(once "openssl", once "bf -d -a -pass env:VAULT_MASTER")
+            proc := processor.execute_redirect(once "openssl", once "bf -d -a -pass env:VAULT_MASTER")
             if proc.is_connected then
                fifo.splice(vault_file, proc.input)
                proc.input.disconnect
@@ -148,7 +148,7 @@ feature {}
          proc: PROCESS
       do
          if dirty then
-            proc := processor.execute(once "openssl", once "bf -a -pass env:VAULT_MASTER")
+            proc := processor.execute_redirect(once "openssl", once "bf -a -pass env:VAULT_MASTER")
             if proc.is_connected then
                print_all_keys(proc.input)
                proc.input.flush
@@ -167,7 +167,7 @@ feature {}
          proc: PROCESS
       do
          --| **** TODO: it's stupid to let the client send arguments when read from the same configuration file
-         proc := processor.execute(once "dmenu", args)
+         proc := processor.execute_redirect(once "dmenu", args)
          if proc.is_connected then
             print_all_names(proc.input)
             proc.input.disconnect
