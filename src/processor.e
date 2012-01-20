@@ -105,6 +105,8 @@ feature {}
          word := once ""
          word.clear_count
          var := once ""
+         var.clear_count
+
          from
             i := arguments.lower
          until
@@ -124,7 +126,6 @@ feature {}
                   when '%"' then
                      state := State_double_quote
                   when '$' then
-                     var.clear_count
                      state := State_simple_variable
                   when '\' then
                      if i = arguments.upper then
@@ -147,7 +148,6 @@ feature {}
                when '%"' then
                   state := State_double_quote
                when '$' then
-                  var.clear_count
                   state := State_simple_variable
                when '\' then
                   if i = arguments.upper then
@@ -218,6 +218,7 @@ feature {}
                      var.extend(c)
                   else
                      append_var(word, var)
+                     var.clear_count
                      i := i - 1
                      if state = State_simple_variable then
                         state := State_word
@@ -236,6 +237,7 @@ feature {}
                      state := State_double_quote
                   end
                   append_var(word, var)
+                  var.clear_count
                else
                   var.extend(c)
                end
@@ -246,6 +248,9 @@ feature {}
             std_error.put_line(once "Syntax error while parsing arguments:%N#(1)" # arguments)
             die_with_code(1)
          else
+            if not var.is_empty then
+               append_var(word, var)
+            end
             Result.add_last(word)
          end
       ensure
