@@ -118,7 +118,7 @@ feature {} -- master phrase
       local
          proc: PROCESS
       do
-         proc := processor.execute(once "zenity", zenity_args(text))
+         proc := processor.execute_redirect(once "zenity", zenity_args(text))
          if proc.is_connected then
             proc.output.read_line
             Result := proc.output.last_string
