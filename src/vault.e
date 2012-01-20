@@ -46,7 +46,7 @@ feature {ANY}
          create vault_file.connect_to(file)
          if vault_file.is_connected then
             set_environment_variable(once "VAULT_MASTER", pass)
-            proc := processor.execute_redirect(once "openssl", once "bf -d -a -pass env:VAULT_MASTER")
+            proc := processor.execute_redirect(once "openssl", once "#(1) -d -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
             if proc.is_connected then
                fifo.splice(vault_file, proc.input)
                proc.input.disconnect
@@ -66,10 +66,10 @@ feature {ANY}
    close is
       do
          if is_open then
-            log.info.put_line(once "close vault")
             data.clear_count
             set_environment_variable(once "VAULT_MASTER", once "")
             is_open := False
+            log.info.put_line(once "Vault closed: #(1)" # file)
          end
       ensure
          not is_open
@@ -154,7 +154,7 @@ feature {}
          proc: PROCESS
       do
          if dirty then
-            proc := processor.execute_redirect(once "openssl", once "bf -a -pass env:VAULT_MASTER")
+            proc := processor.execute_redirect(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
             if proc.is_connected then
                print_all_keys(proc.input)
                proc.input.flush
@@ -180,11 +180,6 @@ feature {}
             display_or_add_key(proc.output.last_string.intern, stream)
             proc.wait
          end
-      end
-
-   config_dmenu_arguments: FIXED_STRING is
-      once
-         Result := "dmenu.arguments".intern
       end
 
    do_get (stream:  OUTPUT_STREAM; name: STRING) is
@@ -476,6 +471,16 @@ feature {}
    fifo: FIFO
 
    processor: PROCESSOR
+
+   config_dmenu_arguments: FIXED_STRING is
+      once
+         Result := "dmenu.arguments".intern
+      end
+
+   config_openssl_cipher: FIXED_STRING is
+      once
+         Result := "openssl.cipher".intern
+      end
 
 feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]
