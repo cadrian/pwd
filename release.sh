@@ -3,7 +3,7 @@
 dir=$(dirname $(readlink -f $0))
 cd $dir
 
-make
+make -j$(cat /proc/cpuinfo | grep ^processor | wc -l)
 
 release_dir=$dir/target/release
 test -d $release_dir && rm -rf $release_dir
