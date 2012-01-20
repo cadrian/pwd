@@ -18,6 +18,7 @@ insert
    LOGGING
    FILE_TOOLS
    SYSTEM
+   CONFIGURABLE
 
 create {ANY}
    make
@@ -55,8 +56,10 @@ feature {ANY}
             end
             vault_file.disconnect
          end
-         if not is_open then
-            log.error.put_line(once "VAULT NOT OPEN!")
+         if is_open then
+            log.info.put_line(once "Vault open: #(1)" # file)
+         else
+            log.error.put_line(once "VAULT NOT OPEN! #(1)" # file)
          end
       end
 
@@ -90,10 +93,10 @@ feature {ANY}
          run_open(filename, agent do_save)
       end
 
-   menu (filename, args: STRING) is
+   menu (filename: STRING) is
       do
          log.info.put_line(once "#(1): menu" # filename)
-         run_open(filename, agent do_menu(?, args))
+         run_open(filename, agent do_menu)
       end
 
    get (filename, name: STRING) is
@@ -162,15 +165,14 @@ feature {}
          end
       end
 
-   do_menu (stream: OUTPUT_STREAM; args: STRING) is
+   do_menu (stream: OUTPUT_STREAM) is
       require
          is_open
          stream.is_connected
       local
          proc: PROCESS
       do
-         --| **** TODO: it's stupid to let the client send arguments when read from the same configuration file
-         proc := processor.execute_redirect(once "dmenu", args)
+         proc := processor.execute_redirect(once "dmenu", conf(config_dmenu_arguments))
          if proc.is_connected then
             print_all_names(proc.input)
             proc.input.disconnect
@@ -178,6 +180,11 @@ feature {}
             display_or_add_key(proc.output.last_string.intern, stream)
             proc.wait
          end
+      end
+
+   config_dmenu_arguments: FIXED_STRING is
+      once
+         Result := "dmenu.arguments".intern
       end
 
    do_get (stream:  OUTPUT_STREAM; name: STRING) is

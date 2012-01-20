@@ -33,7 +33,7 @@ feature {}
          tfr: TEXT_FILE_READ
       do
          fifo.make(client_fifo)
-         send(once "menu #(1) #(2)" # client_fifo # menu_args)
+         send(once "menu #(1)" # client_fifo)
          fifo.wait_for(client_fifo)
          create tfr.connect_to(client_fifo)
          if tfr.is_connected then
@@ -43,16 +43,6 @@ feature {}
             tfr.disconnect
             delete(client_fifo)
          end
-      end
-
-   config_dmenu_arguments: FIXED_STRING is
-      once
-         Result := "dmenu.arguments".intern
-      end
-
-   menu_args: FIXED_STRING is
-      do
-         Result := conf(config_dmenu_arguments)
       end
 
 end

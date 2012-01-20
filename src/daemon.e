@@ -17,7 +17,7 @@ class DAEMON
 inherit
    JOB
       undefine
-    default_create
+         default_create
       end
 
 insert
@@ -77,10 +77,9 @@ feature {LOOP_ITEM}
                   log.warning.put_line(once "Invalid list file name")
                end
             when "menu" then
-               if command.count >= 1 then
-                  file := command.first
-                  command.remove_first
-                  vault.menu(file, channel.last_string.substring(5, channel.last_string.upper)) --| **** TODO: ugly, please read args from conf file
+               if command.count = 1 then
+                  file := command.last
+                  vault.menu(file)
                else
                   log.warning.put_line(once "Invalid menu file name")
                end
@@ -203,26 +202,26 @@ feature {}
          conf: STRING_INPUT_STREAM
       do
          create conf.from_string(("[
-               log configuration
+                                   log configuration
 
-               root DAEMON
+                                   root DAEMON
 
-               output
-                  default is file "#(1)"
-                  rotated each day keeping 3
-                  end
+                                   output
+                                      default is file "#(1)"
+                                      rotated each day keeping 3
+                                      end
 
-               logger
-                  DAEMON is
-                  output default
-                  level info
-                  end
+                                   logger
+                                      DAEMON is
+                                      output default
+                                      level info
+                                      end
 
-               end
+                                   end
 
-               ]"
-              # argument(3)
-             ).out)
+                                                         ]"
+                                   # argument(3)
+                                   ).out)
          logconf.load(conf, Void, Void, in_log)
       end
 
@@ -260,8 +259,8 @@ feature {}
       local
          fifo_factory: FIFO; detach: BOOLEAN
       do
-         if not argument_count.in_range(3, 4) then
-            std_error.put_line(once "Usage: #(1) <fifo> <vault> <log> [-no_detach]" # command_name)
+         if not argument_count.in_range(4, 5) then
+            std_error.put_line(once "Usage: #(1) <fifo> <vault> <log> <conf> [-no_detach]" # command_name)
             die_with_code(1)
          end
 
@@ -275,12 +274,12 @@ feature {}
 
          create command.with_capacity(16, 0)
 
-         if argument_count = 3 then
+         if argument_count = 4 then
             detach := True
-         elseif argument(4).is_equal(once "-no_detach") then
+         elseif argument(5).is_equal(once "-no_detach") then
             check not detach end
          else
-            log.error.put_line(once "Unknown argument: #(1)" # argument(4))
+            log.error.put_line(once "Unknown argument: #(1)" # argument(5))
             die_with_code(1)
          end
 

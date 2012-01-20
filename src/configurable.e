@@ -20,7 +20,7 @@ feature {ANY}
          key /= Void
       do
          if specific_section = Void then
-            specific_section := generating_type.intern
+            specific_section := generating_type.as_lower.intern
          end
          Result := configuration.get(specific_section, key)
       end
@@ -30,6 +30,11 @@ feature {ANY}
          key /= Void
       do
          Result := conf(key) /= Void
+      end
+
+   conf_filename: FIXED_STRING is
+      do
+         Result := configuration.filename
       end
 
 feature {}

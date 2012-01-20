@@ -34,6 +34,11 @@ feature {ANY}
          end
       end
 
+   filename: FIXED_STRING is
+      once
+         Result := argument(4).intern
+      end
+
 feature {}
    set (section, key, value: ABSTRACT_STRING) is
       require
@@ -63,7 +68,7 @@ feature {}
       local
          tfr: TEXT_FILE_READ; section: FIXED_STRING
       once
-         create tfr.connect_to(argument(4))
+         create tfr.connect_to(filename)
          if not tfr.is_connected then
             std_error.put_line(once "Could not read configuration file")
             die_with_code(1)
