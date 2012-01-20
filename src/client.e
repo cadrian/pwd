@@ -103,7 +103,7 @@ feature {}
       local
          proc: PROCESS
       do
-         proc := processor.execute_to_dev_null(once "nohup", once "daemon '#(1)'" # conf_filename)
+         proc := processor.execute_to_dev_null(once "start_daemon", once "'#(1)'" # conf_filename)
          if proc.is_connected then
             proc.wait
             fifo.wait_for(server_fifo)

@@ -1,0 +1,10 @@
+#!/usr/env/bin bash
+
+export fifo
+cleanup() {
+    test -H "$fifo" && rm -f "$fifo"
+}
+
+trap cleanup INT TERM QUIT
+fifo=$(nohup $(dirname $(readlink -f $0))/daemon 2>/dev/null)
+cleanup
