@@ -5,7 +5,7 @@ COMMON_FILES = src/fifo.e src/configurable.e src/configuration.e
 all: exe/daemon exe/menu exe/console
 
 clean:
-	rm -rf exe *.ace
+	rm -f exe/daemon exe/menu exe/console *.ace
 
 exe/daemon: exe daemon.ace src/daemon.e src/key.e src/vault.e
 	se c daemon.ace

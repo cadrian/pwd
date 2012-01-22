@@ -20,25 +20,25 @@ insert
 
 feature {ANY}
    daemon_fifo: FIXED_STRING is
-      do
-         Result := mandatory_key(config_daemon_fifo)
+      once
+         Result := eval(mandatory_key(config_daemon_fifo))
       end
 
    vault_file: FIXED_STRING is
-      do
-         Result := mandatory_key(config_vault_file)
+      once
+         Result := eval(mandatory_key(config_vault_file))
       end
 
    log_file (tag: ABSTRACT_STRING): FIXED_STRING is
       require
          tag /= Void
       do
-         Result := processor.split_arguments(once "#(1)/#(2).log" # mandatory_key(config_log_dir) # tag).first.intern
+         Result := eval(once "#(1)/#(2).log" # mandatory_key(config_log_dir) # tag)
       end
 
    tmp_dir: FIXED_STRING is
-      do
-         Result := processor.split_arguments(mandatory_key(config_tmp_fifo_dir)).first.intern
+      once
+         Result := eval(mandatory_key(config_tmp_fifo_dir))
       end
 
 feature {}
@@ -49,13 +49,21 @@ feature {}
          Result := conf(key)
          if Result = Void then
             std_error.put_line(once "Missing [shared]#(1)" # key)
+            sedb_breakpoint
             die_with_code(1)
          end
       ensure
          Result /= Void
       end
 
-   processor: PROCESSOR
+   eval (string: ABSTRACT_STRING): FIXED_STRING is
+      require
+         string /= Void
+      local
+         processor: PROCESSOR
+      do
+         Result := processor.split_arguments(string).first.intern
+      end
 
    config_daemon_fifo: FIXED_STRING is
       once

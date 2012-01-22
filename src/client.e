@@ -86,11 +86,16 @@ feature {}
    check_server is
       do
          if not file_exists(shared.vault_file) then
+            check
+               not fifo.exists(server_fifo)
+            end
+            log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
             read_new_master(once "This is a new vault")
             create_vault
             start_server
             send_master
          elseif not fifo.exists(server_fifo) then
+            log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
             start_server
             master_pass.copy(read_master(once "Please enter your encryption phrase%Nto open the password vault."))
             send_master
@@ -101,11 +106,20 @@ feature {}
       require
          not fifo.exists(server_fifo)
       local
-         proc: PROCESS
+         proc: PROCESS; arg: ABSTRACT_STRING
       do
-         proc := processor.execute_to_dev_null(once "start_daemon", once "'#(1)'" # conf_filename)
+         log.info.put_line(once "starting...")
+         arg := once "daemon '#(1)'" # conf_filename
+         proc := processor.execute_to_dev_null(once "nohup", arg)
          if proc.is_connected then
             proc.wait
+            if proc.status = 0 then
+               log.info.put_line(once "started.")
+            else
+               log.info.put_line(once "not started! (exit=#(1))" # &proc.status)
+               sedb_breakpoint
+               die_with_code(proc.status)
+            end
             fifo.wait_for(server_fifo)
             fifo.sleep(250)
          end
@@ -125,6 +139,10 @@ feature {} -- master phrase
             proc.output.read_line
             Result := proc.output.last_string
             proc.wait
+            if proc.status /= 0 then
+               std_error.put_line(once "Cancelled.")
+               die_with_code(1)
+            end
          end
       end
 

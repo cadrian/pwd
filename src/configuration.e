@@ -35,7 +35,7 @@ feature {ANY}
       end
 
    filename: FIXED_STRING is
-      once
+      do
          Result := argument(1).intern
       end
 

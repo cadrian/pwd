@@ -73,9 +73,13 @@ feature {}
          factory: PROCESS_FACTORY
          args: FAST_ARRAY[STRING]
       do
+         log.info.put_string(command)
          if arguments /= Void then
             args := parse_arguments(arguments.intern)
+            args.do_all(agent (s: STRING) is do log.info.put_character(' '); log.info.put_string(s) end)
          end
+         log.info.put_new_line
+
          factory.set_direct_output(direct_output)
          factory.set_direct_error(direct_error)
          Result := factory.execute(command, args)
@@ -251,7 +255,7 @@ feature {}
             if not var.is_empty then
                append_var(word, var)
             end
-            Result.add_last(word)
+            Result.add_last(word.twin)
          end
       ensure
          Result /= Void

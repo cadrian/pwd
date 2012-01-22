@@ -38,7 +38,11 @@ feature {ANY}
       end
 
 feature {}
-   configuration: CONFIGURATION
+   configuration: CONFIGURATION is
+      once
+         create Result
+      end
+
    specific_section: FIXED_STRING
 
 end

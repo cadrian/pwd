@@ -48,7 +48,8 @@ feature {ANY}
 
                      ]")
          if sts /= 0 then
-            log.error.put_line(once "Error #(2) while creating #(3)" # sts.out # fifo)
+            log.error.put_line(once "Error #(1) while creating #(2)" # sts.out # fifo)
+            crash
             die_with_code(1)
          end
       ensure
@@ -58,9 +59,10 @@ feature {ANY}
    tmp: FIXED_STRING is
          -- create a temporary directory
       local
-         t, p: POINTER; shared: SHARED
+         t, p: POINTER; shared: SHARED; template: STRING
       do
-         t := (once "#(1)/.pwd.XXXXXX" # shared.tmp_dir).out.to_external
+         template := (once "#(1)/.pwd.XXXXXX" # shared.tmp_dir).out
+         t := template.to_external
          c_inline_c("[
                      _p = mkdtemp((char*)_t);
 

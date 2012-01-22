@@ -28,13 +28,13 @@ feature {}
          Result := args.command_name.intern
       end
 
-   do_log (in_log: PROCEDURE[TUPLE]) is
-      require
-         in_log /= Void
+   make is
       local
          logconf: LOG_CONFIGURATION
          config: STRING_INPUT_STREAM
       do
+         preload
+
          create config.from_string(("[
                                      log configuration
 
@@ -57,13 +57,8 @@ feature {}
                                                            ]"
                                      # generating_type # shared.log_file(generating_type.as_lower)
                                      ).out)
-         logconf.load(config, Void, Void, in_log)
-      end
 
-   make is
-      do
-         preload
-         do_log(agent main)
+         logconf.load(config, Void, Void, agent main)
       end
 
    preload is

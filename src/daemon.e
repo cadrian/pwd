@@ -157,7 +157,14 @@ feature {LOOP_ITEM}
 
    restart is
       do
-         fifo.make(fifo_filename)
+         if not fifo.exists(fifo_filename) then
+            fifo.make(fifo_filename)
+            if not fifo.exists(fifo_filename) then
+               log.error.put_line(once "Error while opening fifo #(1)" # fifo_filename)
+               die_with_code(1)
+            end
+         end
+
          create channel.connect_to(fifo_filename)
       end
 
@@ -170,10 +177,11 @@ feature {LOOP_ITEM}
 
 feature {}
    processor: PROCESSOR
+   exceptions: EXCEPTIONS
 
    channel: TEXT_FILE_READ_WRITE
          -- there must be at least one writer for the fifo_filename to be blocking in select(2)
-         -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo_filename
+         -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo
 
    vault: VAULT
 
@@ -189,18 +197,30 @@ feature {}
       local
          loop_stack: LOOP_STACK
       do
+         create vault.make(shared.vault_file)
          create loop_stack.make
          loop_stack.add_job(Current)
          restart
-         log.info.put_line("Starting main loop.")
+         log.info.put_line(once "Starting main loop.")
          loop_stack.run
-         log.info.put_line("Terminated.")
+         log.info.put_line(once "Terminated.")
          delete(fifo_filename)
+      rescue
+         if exceptions.is_signal then
+            log.info.put_line(once "Killed by signal #(1)." # exceptions.signal_number.out)
+            if vault.is_open then
+               vault.close
+            end
+            delete(fifo_filename)
+            die_with_code(1)
+         else
+            crash
+         end
       end
 
    run_in_parent (proc: PROCESS) is
       do
-         log.info.put_line("Process id is #(1)" # &proc.id)
+         log.info.put_line("Process id is #(1)" # proc.id.out)
          die_with_code(0)
       end
 
@@ -213,8 +233,8 @@ feature {}
             die_with_code(1)
          end
 
-         if not fifo.exists(fifo_filename) then
-            log.error.put_line(once "Error while opening fifo_filename #(1)" # fifo_filename)
+         if fifo.exists(fifo_filename) then
+            std_error.put_line(once "Fifo already exists, not starting daemon")
             die_with_code(1)
          end
 
@@ -242,10 +262,9 @@ feature {}
                run_in_parent(proc)
             end
          else
+            log.info.put_line(once "Running not detached.")
             run_in_child
          end
-      rescue
-         retry
       end
 
    detach: BOOLEAN
