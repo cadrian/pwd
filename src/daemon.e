@@ -213,8 +213,6 @@ feature {}
             end
             delete(fifo_filename)
             die_with_code(1)
-         else
-            crash
          end
       end
 

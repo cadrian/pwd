@@ -137,7 +137,9 @@ feature {} -- master phrase
          proc := processor.execute_redirect(once "zenity", zenity_args(text))
          if proc.is_connected then
             proc.output.read_line
-            Result := proc.output.last_string
+            if not proc.end_of_input then
+               Result := proc.output.last_string
+            end
             proc.wait
             if proc.status /= 0 then
                std_error.put_line(once "Cancelled.")
