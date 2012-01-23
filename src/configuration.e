@@ -36,7 +36,7 @@ feature {ANY}
 
    filename: FIXED_STRING is
       do
-         Result := argument(1).intern
+         Result := filename_ref.item
       end
 
 feature {}
@@ -64,11 +64,31 @@ feature {}
          parse_conf
       end
 
+   available_file_locations: FAST_ARRAY[FIXED_STRING] is
+      local
+         sys: SYSTEM
+      once
+         Result := {FAST_ARRAY[FIXED_STRING] <<
+                                               "/etc/pwdmgr.rc".intern,
+                                               ("#(1)/.pwdmgr/config" # sys.get_environment_variable("HOME")).intern,
+                                               argument(1).intern
+                                             >> }
+      end
+
    parse_conf is
       local
-         tfr: TEXT_FILE_READ; section: FIXED_STRING
+         tfr: TEXT_FILE_READ; i: INTEGER; section: FIXED_STRING
       once
-         create tfr.connect_to(filename)
+         from
+            create tfr.make
+            i := available_file_locations.lower
+         until
+            tfr.is_connected or else i > available_file_locations.upper
+         loop
+            filename_ref.set_item(available_file_locations.item(i))
+            tfr.connect_to(filename)
+            i := i + 1
+         end
          if not tfr.is_connected then
             std_error.put_line(once "Could not read configuration file")
             die_with_code(1)
@@ -160,6 +180,11 @@ feature {}
          create Result.make
       ensure
          Result /= Void
+      end
+
+   filename_ref: REFERENCE[FIXED_STRING] is
+      once
+         create Result
       end
 
 end
