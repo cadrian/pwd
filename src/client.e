@@ -26,11 +26,9 @@ feature {}
    restart: BOOLEAN
 
    preload is
-      local
-         args: ARGUMENTS
       do
-         if args.argument_count /= 1 then
-            std_error.put_line("Usage: #(1) <conf>")
+         if configuration.argument_count /= 1 then
+            std_error.put_line("Usage: #(1) <fallback conf>")
             die_with_code(1)
          end
 
@@ -109,7 +107,7 @@ feature {}
          proc: PROCESS; arg: ABSTRACT_STRING
       do
          log.info.put_line(once "starting...")
-         arg := once "daemon '#(1)'" # conf_filename
+         arg := once "daemon '#(1)'" # configuration.argument(1)
          proc := processor.execute_to_dev_null(once "nohup", arg)
          if proc.is_connected then
             proc.wait
@@ -137,7 +135,7 @@ feature {} -- master phrase
          proc := processor.execute_redirect(once "zenity", zenity_args(text))
          if proc.is_connected then
             proc.output.read_line
-            if not proc.end_of_input then
+            if not proc.output.end_of_input then
                Result := proc.output.last_string
             end
             proc.wait
