@@ -175,7 +175,7 @@ feature {} -- local vault commands
             else
                io.put_line(once "[1mError:[0m unrecognized last argument '#(1)'" # command.last)
             end
-         else
+         elseif not command.is_empty then
             cmd := once "set #(1) #(2)" # client_fifo # command.first
          end
          if cmd /= Void then
@@ -234,10 +234,10 @@ feature {} -- help
          less(once "[
                     [1;32mKnown commands[0m
 
-                    [33madd <key> [how][0m   Add a new password. Needs at least a key.
-                                       If [how] is either not specified or "generated" then
+                    [33madd <key> [how][0m    Add a new password. Needs at least a key.
+                                       If [33m[how][0m is either not specified or "generated" then
                                        the password is randomly generated.
-                                       If [how] is "prompt" then the password is asked.
+                                       If [33m[how][0m is "prompt" then the password is asked.
                                        If the password already exists it is changed.
                                        In all cases the password is stored in the clipboard.
 
