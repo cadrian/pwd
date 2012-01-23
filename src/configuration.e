@@ -42,9 +42,9 @@ feature {ANY}
 feature {}
    set (section, key, value: ABSTRACT_STRING) is
       require
-         section /= Void
-         key /= Void
-         value /= Void
+         not section.is_empty
+         not key.is_empty
+         not value.is_empty
       local
          section_conf: HASHED_DICTIONARY[FIXED_STRING, FIXED_STRING]
       do
@@ -99,10 +99,13 @@ feature {}
             when '*', '#', ';' then
                -- ignore comment
             when '[' then
-               if line.last /= ']' then
+               if line.count <= 2 or else line.last /= ']' then
                   std_error.put_line(once "Invalid configuration line (invalid section):%N#(1)" # line)
                else
                   Result := line.substring(line.lower + 1, line.upper - 1).intern
+                  check
+                     not Result.is_empty
+                  end
                end
             else
                if section = Void then
@@ -116,6 +119,9 @@ feature {}
                end
 
                key := decode_config(once "key", line)
+               check
+                  by_construction_of_regexp: not key.is_empty
+               end
                if get(section, key) /= Void then
                   std_error.put_line(once "Duplicate key: #(1) in section [#(2)]" # key # section)
                   die_with_code(1)
@@ -123,7 +129,9 @@ feature {}
 
                value := decode_config(once "value", line)
 
-               set(section, key, value)
+               if not value.is_empty then
+                  set(section, key, value)
+               end
             end
          end
       end
