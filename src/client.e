@@ -95,7 +95,7 @@ feature {}
          elseif not fifo.exists(server_fifo) then
             log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
             start_server
-            master_pass.copy(read_master(once "Please enter your encryption phrase%Nto open the password vault."))
+            master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
             send_master
          end
       end
@@ -128,7 +128,9 @@ feature {}
 feature {} -- master phrase
    master_pass: STRING is ""
 
-   read_master (text: ABSTRACT_STRING): STRING is
+   read_password (text: ABSTRACT_STRING; on_cancel: PROCEDURE[TUPLE]): STRING is
+      require
+         text /= Void
       local
          proc: PROCESS
       do
@@ -140,8 +142,13 @@ feature {} -- master phrase
             end
             proc.wait
             if proc.status /= 0 then
-               std_error.put_line(once "Cancelled.")
-               die_with_code(1)
+               if on_cancel /= Void then
+                  on_cancel.call([])
+                  Result := Void
+               else
+                  std_error.put_line(once "Cancelled.")
+                  die_with_code(1)
+               end
             end
          end
       end
@@ -218,9 +225,9 @@ feature {} -- create a brand new vault
             pass1 /= Void
          loop
             pass1 := once ""
-            pass1.copy(read_master(text))
+            pass1.copy(read_password(text, Void))
             text := once "Please enter the same encryption phrase again." # reason
-            pass2 := read_master(text)
+            pass2 := read_password(text, Void)
             if not pass1.is_equal(pass2) then
                text := once "Your phrases did not match.%N#(1),%Nplease enter an encryption phrase." # reason
                pass1 := Void

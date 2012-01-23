@@ -160,30 +160,43 @@ feature {} -- local vault commands
    run_add is
          -- add key
       local
-         cmd: ABSTRACT_STRING
+         cmd: ABSTRACT_STRING; pass: STRING
       do
          if command.count > 1 then
-            cmd := once "set #(1) #(2) #(3)" # client_fifo # command.first # command.last
+            inspect
+               command.last
+            when "generated" then
+               cmd := once "set #(1) #(2)" # client_fifo # command.first
+            when "prompt" then
+               pass := read_password(once "Please enter the new password for #(1)" # command.first, on_cancel)
+               if pass /= Void then
+                  cmd := once "set #(1) #(2) #(3)" # client_fifo # command.first # pass
+               end
+            else
+               io.put_line(once "[1mError:[0m unrecognized last argument '#(1)'" # command.last)
+            end
          else
             cmd := once "set #(1) #(2)" # client_fifo # command.first
          end
-         get_data(cmd,
-                  agent (stream: INPUT_STREAM) is
-                     do
-                        stream.read_line
-                        if not stream.end_of_input then
-                           data.clear_count
-                           stream.last_string.split_in(data)
-                           if data.count = 2 then
-                              xclip(data.last)
-                           else
-                              check data.count = 1 end
-                              xclip(once "")
-                              io.put_line(once "[1mError[0m") -- ???
+         if cmd /= Void then
+            get_data(cmd,
+                     agent (stream: INPUT_STREAM) is
+                        do
+                           stream.read_line
+                           if not stream.end_of_input then
+                              data.clear_count
+                              stream.last_string.split_in(data)
+                              if data.count = 2 then
+                                 xclip(data.last)
+                              else
+                                 check data.count = 1 end
+                                 xclip(once "")
+                                 io.put_line(once "[1mError[0m") -- ???
+                              end
                            end
-                        end
-                     end)
-         send_save
+                        end)
+            send_save
+         end
       end
 
    run_rem is
@@ -221,8 +234,10 @@ feature {} -- help
          less(once "[
                     [1;32mKnown commands[0m
 
-                    [33madd <key> [pass][0m   Add a new password. Needs at least a key.
-                                       If the password is not specified it is randomly generated.
+                    [33madd <key> [how][0m   Add a new password. Needs at least a key.
+                                       If [how] is either not specified or "generated" then
+                                       the password is randomly generated.
+                                       If [how] is "prompt" then the password is asked.
                                        If the password already exists it is changed.
                                        In all cases the password is stored in the clipboard.
 
@@ -336,10 +351,15 @@ feature {} -- remote vault management
          restart := True
       end
 
+   on_cancel: PROCEDURE[TUPLE] is
+      once
+         Result := agent is do std_output.put_line(once "[1mCancelled.[0m") end
+      end
+
    run_merge is
          -- merge from remote
       local
-         merge_pass: STRING
+         merge_pass0, merge_pass: STRING
          proc: PROCESS
       do
          std_output.put_line(once "[32mPlease wait...[0m")
@@ -348,23 +368,28 @@ feature {} -- remote vault management
             proc.wait
          end
 
-         merge_pass := once ""
-         merge_pass.copy(read_master(once "Please enter the encryption phrase%Nto the remote vault%N(enter if the same as the current vault's)"))
-         if merge_pass.is_empty then
-            merge_pass := master_pass
+         merge_pass0 := read_password(once "Please enter the encryption phrase%Nto the remote vault%N(just leave empty if the same as the current vault's)", on_cancel)
+         if merge_pass0 = Void then
+            -- cancelled
+         else
+            if merge_pass0.is_empty then
+               merge_pass := master_pass
+            else
+               merge_pass := once ""
+               merge_pass.copy(merge_pass0)
+            end
+            get_data("merge #(1) #(2) #(3)" # client_fifo # merge_vault # merge_pass,
+                     agent (stream: INPUT_STREAM) is
+                        do
+                           stream.read_line
+                           if not stream.end_of_input then
+                              xclip(once "")
+                              io.put_line(once "[1mDone[0m")
+                           end
+                        end)
+            delete(merge_vault)
+            send_save
          end
-
-         get_data("merge #(1) #(2) #(3)" # client_fifo # merge_vault # merge_pass,
-                  agent (stream: INPUT_STREAM) is
-                     do
-                        stream.read_line
-                        if not stream.end_of_input then
-                           xclip(once "")
-                           io.put_line(once "[1mDone[0m")
-                        end
-                     end)
-         delete(merge_vault)
-         send_save
       end
 
 feature {} -- helpers
