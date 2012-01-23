@@ -223,11 +223,9 @@ feature {}
       end
 
    preload is
-      local
-         args: ARGUMENTS
       do
-         if not args.argument_count.in_range(1, 2) then
-            std_error.put_line(once "Usage: #(1) <conf> [-no_detach]" # command_name)
+         if not configuration.argument_count.in_range(1, 2) then
+            std_error.put_line(once "Usage: #(1) <fallback conf> [-no_detach]" # command_name)
             die_with_code(1)
          end
 
@@ -238,12 +236,12 @@ feature {}
 
          create command.with_capacity(16, 0)
 
-         if args.argument_count = 1 then
+         if configuration.argument_count = 1 then
             detach := True
-         elseif args.argument(2).is_equal(once "-no_detach") then
+         elseif configuration.argument(2).is_equal(once "-no_detach") then
             check not detach end
          else
-            log.error.put_line(once "Unknown argument: #(1)" # args.argument(2))
+            log.error.put_line(once "Unknown argument: #(1)" # configuration.argument(2))
             die_with_code(1)
          end
       end
