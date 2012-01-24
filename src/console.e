@@ -94,7 +94,7 @@ feature {} -- command management
          when "help" then
             run_help
          when "stop" then
-            log.info.put_line(once "stopping daemon.")
+            log.info.put_line(once "stopping server.")
             send("stop")
             fifo.sleep(100)
             stop := True
@@ -107,7 +107,7 @@ feature {} -- command management
       end
 
    get_data (cmd: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
-         -- communication with the daemon
+         -- communication with the server
       require
          not fifo.exists(client_fifo)
       local
@@ -259,7 +259,7 @@ feature {} -- help
                     [33mmaster[0m             Change the master password.
                                        [1m(not yet implemented)[0m
 
-                    [33mstop[0m               Stop the daemon and closes the administration console.
+                    [33mstop[0m               Stop the server and closes the administration console.
 
                     [33mhelp[0m               Show this screen :-)
 
@@ -337,7 +337,7 @@ feature {} -- remote vault management
       local
          proc: PROCESS
       do
-         -- shut the daemon down
+         -- shut the server down
          send("stop")
 
          std_output.put_line(once "[32mPlease wait...[0m")
@@ -348,7 +348,7 @@ feature {} -- remote vault management
 
          -- stop the inner command loop
          stop := True
-         -- ask the main client loop to start again (will restart the daemon)
+         -- ask the main client loop to start again (will restart the server)
          restart := True
       end
 

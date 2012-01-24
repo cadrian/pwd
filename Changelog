@@ -4,6 +4,7 @@
         * #2 - Creation of missing empty directories
         * #4 - Ensure that passwords are never visible; provide a suitable way to enter a known password at "add" time
         * #9 - Configuration: ignore keys with empty values
+        * #14 - renamed daemon as pwdsrv
 
 0.0.3 (released 2012-01-22)
 

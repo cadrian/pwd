@@ -37,7 +37,7 @@ feature {}
          config: STRING_INPUT_STREAM
       do
          preload
-         ensure_directory_of(shared.daemon_fifo)
+         ensure_directory_of(shared.server_fifo)
          ensure_directory_of(shared.vault_file)
          ensure_directory_of(log_file)
 
@@ -103,13 +103,13 @@ feature {}
                             **************** STARTUP ****************
 
                             Configuration file is #(1)
-                            Daemon fifo is #(2)
+                            Server fifo is #(2)
                             Vault is #(3)
                             Log file is #(4)
 
                             ]"
                            # configuration.filename
-                           # shared.daemon_fifo
+                           # shared.server_fifo
                            # shared.vault_file
                            # log_file)
 

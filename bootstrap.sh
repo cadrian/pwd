@@ -3,7 +3,7 @@
 dir=$(dirname $(readlink -f $0))
 cd $dir
 
-EXE="daemon menu console"
+EXE="pwdsrv menu console"
 
 bootstrap_dir=$dir/target/bootstrap
 test -d $bootstrap_dir && rm -rf $bootstrap_dir

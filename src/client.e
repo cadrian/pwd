@@ -89,7 +89,7 @@ feature {}
 
    server_fifo: FIXED_STRING is
       do
-         Result := shared.daemon_fifo
+         Result := shared.server_fifo
       end
 
    check_server is
@@ -104,7 +104,7 @@ feature {}
             start_server
             send_master
          elseif not fifo.exists(server_fifo) then
-            log.info.put_line(once "Starting daemon using vault: #(1)" # shared.vault_file)
+            log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
             start_server
             master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
             send_master
@@ -117,19 +117,19 @@ feature {}
       local
          proc: PROCESS; arg: ABSTRACT_STRING
       do
-         log.info.put_line(once "starting daemon...")
+         log.info.put_line(once "starting server...")
          if configuration.argument_count = 1 then
-            arg := once "daemon '#(1)'" # configuration.argument(1)
+            arg := once "pwdsrv '#(1)'" # configuration.argument(1)
          else
-            arg := once "daemon"
+            arg := once "pwdsrv"
          end
          proc := processor.execute_to_dev_null(once "nohup", arg)
          if proc.is_connected then
             proc.wait
             if proc.status = 0 then
-               log.info.put_line(once "daemon started.")
+               log.info.put_line(once "server started.")
             else
-               log.error.put_line(once "daemon not started! (exit=#(1))" # proc.status.out)
+               log.error.put_line(once "server not started! (exit=#(1))" # proc.status.out)
                sedb_breakpoint
                die_with_code(proc.status)
             end
@@ -197,7 +197,7 @@ feature {} -- master phrase
             tfw.put_line(string)
             tfw.flush
 
-            -- give time to the OS and the daemon to get the message before closing the connection
+            -- give time to the OS and the server to get the message before closing the connection
             fifo.sleep(50)
 
             tfw.disconnect

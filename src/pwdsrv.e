@@ -12,7 +12,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
-class DAEMON
+class PWDSRV
 
 inherit
    JOB
@@ -187,7 +187,7 @@ feature {}
 
    fifo_filename: FIXED_STRING is
       do
-         Result := shared.daemon_fifo
+         Result := shared.server_fifo
       end
 
    command: RING_ARRAY[STRING]
@@ -264,7 +264,7 @@ feature {}
          proc: PROCESS
       do
          if fifo.exists(fifo_filename) then
-            log.error.put_line(once "Fifo already exists, not starting daemon")
+            log.error.put_line(once "Fifo already exists, not starting server")
             die_with_code(1)
          end
 

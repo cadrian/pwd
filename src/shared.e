@@ -19,9 +19,9 @@ insert
    LOGGING
 
 feature {ANY}
-   daemon_fifo: FIXED_STRING is
+   server_fifo: FIXED_STRING is
       once
-         Result := eval(mandatory_key(config_daemon_fifo))
+         Result := eval(mandatory_key(config_server_fifo))
       end
 
    vault_file: FIXED_STRING is
@@ -65,9 +65,9 @@ feature {}
          Result := processor.split_arguments(string).first.intern
       end
 
-   config_daemon_fifo: FIXED_STRING is
+   config_server_fifo: FIXED_STRING is
       once
-         Result := "daemon.fifo".intern
+         Result := "server.fifo".intern
       end
 
    config_log_dir: FIXED_STRING is

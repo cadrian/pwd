@@ -2,14 +2,14 @@
 
 COMMON_FILES = src/fifo.e src/configurable.e src/configuration.e
 
-all: exe/daemon exe/menu exe/console
+all: exe/pwdsrv exe/menu exe/console
 
 clean:
-	rm -f exe/daemon exe/menu exe/console *.ace
+	rm -f exe/pwdsrv exe/menu exe/console *.ace
 
-exe/daemon: exe daemon.ace src/daemon.e src/key.e src/vault.e
-	se c daemon.ace
-	mv daemon.exe $@
+exe/pwdsrv: exe pwdsrv.ace src/pwdsrv.e src/key.e src/vault.e
+	se c pwdsrv.ace
+	mv pwdsrv.exe $@
 
 exe/menu: exe menu.ace src/client.e src/menu.e $(COMMON_FILES)
 	se c menu.ace
