@@ -224,24 +224,42 @@ feature {}
 
    preload is
       do
-         if not configuration.argument_count.in_range(1, 2) then
-            std_error.put_line(once "Usage: #(1) <fallback conf> [-no_detach]" # command_name)
+         create command.with_capacity(16, 0)
+
+         inspect
+            configuration.argument_count
+         when 0 then
+            detach := True
+         when 1 then
+            if configuration.argument(1).is_equal(once "-no_detach") then
+               check not detach end
+            else
+               detach := True
+               configuration.parse_extra_conf(configuration.argument(1))
+            end
+         when 2 then
+            if configuration.argument(1).is_equal(once "-no_detach") then
+               check not detach end
+               configuration.parse_extra_conf(configuration.argument(2))
+            elseif configuration.argument(2).is_equal(once "-no_detach") then
+               check not detach end
+               configuration.parse_extra_conf(configuration.argument(1))
+            else
+               std_error.put_line("One argument must be %"-no_detach%" and the other, the extra configuration file")
+               die_with_code(1)
+            end
+         else
+            std_error.put_line(once "Usage: #(1) [<fallback conf>] [-no_detach]" # command_name)
+            die_with_code(1)
+         end
+
+         if configuration.filename = Void then
+            std_error.put_line(once "Could not find any valid configuration file")
             die_with_code(1)
          end
 
          if fifo.exists(fifo_filename) then
             std_error.put_line(once "Fifo already exists, not starting daemon")
-            die_with_code(1)
-         end
-
-         create command.with_capacity(16, 0)
-
-         if configuration.argument_count = 1 then
-            detach := True
-         elseif configuration.argument(2).is_equal(once "-no_detach") then
-            check not detach end
-         else
-            log.error.put_line(once "Unknown argument: #(1)" # configuration.argument(2))
             die_with_code(1)
          end
       end

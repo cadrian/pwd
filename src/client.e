@@ -27,8 +27,19 @@ feature {}
 
    preload is
       do
-         if configuration.argument_count /= 1 then
-            std_error.put_line("Usage: #(1) <fallback conf>")
+         inspect
+            configuration.argument_count
+         when 0 then
+            -- OK
+         when 1 then
+            configuration.parse_extra_conf(configuration.argument(1))
+         else
+            std_error.put_line("Usage: #(1) [<fallback conf>]")
+            die_with_code(1)
+         end
+
+         if configuration.filename = Void then
+            std_error.put_line(once "Could not find any valid configuration file")
             die_with_code(1)
          end
 
@@ -93,7 +104,7 @@ feature {}
             start_server
             send_master
          elseif not fifo.exists(server_fifo) then
-            log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
+            log.info.put_line(once "Starting daemon using vault: #(1)" # shared.vault_file)
             start_server
             master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
             send_master
@@ -106,15 +117,19 @@ feature {}
       local
          proc: PROCESS; arg: ABSTRACT_STRING
       do
-         log.info.put_line(once "starting...")
-         arg := once "daemon '#(1)'" # configuration.argument(1)
+         log.info.put_line(once "starting daemon...")
+         if configuration.argument_count = 1 then
+            arg := once "daemon '#(1)'" # configuration.argument(1)
+         else
+            arg := once "daemon"
+         end
          proc := processor.execute_to_dev_null(once "nohup", arg)
          if proc.is_connected then
             proc.wait
             if proc.status = 0 then
-               log.info.put_line(once "started.")
+               log.info.put_line(once "daemon started.")
             else
-               log.info.put_line(once "not started! (exit=#(1))" # &proc.status)
+               log.error.put_line(once "daemon not started! (exit=#(1))" # proc.status.out)
                sedb_breakpoint
                die_with_code(proc.status)
             end

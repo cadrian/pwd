@@ -58,6 +58,23 @@ feature {}
          get(section, key) = value.intern
       end
 
+feature {ANY}
+   parse_extra_conf (a_conf_file: ABSTRACT_STRING) is
+      require
+         a_conf_file /= Void
+      local
+         tfr: TEXT_FILE_READ
+      do
+         if filename = Void then
+            create tfr.connect_to(a_conf_file.out)
+            if tfr.is_connected then
+               filename_ref.set_item(a_conf_file.intern)
+               do_parse_conf(tfr)
+               tfr.disconnect
+            end
+         end
+      end
+
 feature {}
    default_create is
       do
@@ -69,15 +86,14 @@ feature {}
          sys: SYSTEM
       once
          Result := {FAST_ARRAY[FIXED_STRING] <<
-                                               "/etc/pwdmgr.rc".intern,
                                                ("#(1)/.pwdmgr/config" # sys.get_environment_variable("HOME")).intern,
-                                               argument(1).intern
+                                               "/etc/pwdmgr.rc".intern
                                              >> }
       end
 
    parse_conf is
       local
-         tfr: TEXT_FILE_READ; i: INTEGER; section: FIXED_STRING
+         tfr: TEXT_FILE_READ; i: INTEGER
       once
          from
             create tfr.make
@@ -89,11 +105,23 @@ feature {}
             tfr.connect_to(filename)
             i := i + 1
          end
-         if not tfr.is_connected then
-            std_error.put_line(once "Could not read configuration file")
-            die_with_code(1)
+         if tfr.is_connected then
+            do_parse_conf(tfr)
+            tfr.disconnect
+         else
+            filename_ref.set_item(Void)
          end
+      end
+
+   do_parse_conf (tfr: TEXT_FILE_READ) is
+      require
+         tfr.is_connected
+         filename /= Void
+      local
+         section: FIXED_STRING
+      do
          from
+            io.put_line(once "Reading conf: #(1)" # filename)
             tfr.read_line
          until
             tfr.end_of_input
@@ -102,7 +130,6 @@ feature {}
             tfr.read_line
          end
          section := add_conf(tfr.last_string, section)
-         tfr.disconnect
       end
 
    add_conf (line: STRING; section: FIXED_STRING): FIXED_STRING is

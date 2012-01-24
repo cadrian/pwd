@@ -36,11 +36,10 @@ feature {}
          logconf: LOG_CONFIGURATION
          config: STRING_INPUT_STREAM
       do
+         preload
          ensure_directory_of(shared.daemon_fifo)
          ensure_directory_of(shared.vault_file)
          ensure_directory_of(log_file)
-
-         preload
 
          create config.from_string(("[
                                      log configuration
