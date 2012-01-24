@@ -94,9 +94,10 @@ feature {} -- command management
          when "help" then
             run_help
          when "stop" then
+            log.info.put_line(once "stopping daemon.")
             send("stop")
             fifo.sleep(100)
-            die_with_code(0)
+            stop := True
          else
             command.add_first(cmd) -- yes, add it again... it's a ring array so no harm done
             run_get
