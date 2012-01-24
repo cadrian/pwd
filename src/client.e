@@ -42,18 +42,18 @@ feature {}
             std_error.put_line(once "Could not find any valid configuration file")
             die_with_code(1)
          end
-
-         tmpdir := fifo.tmp
-         if tmpdir = Void then
-            std_error.put_line("#(1): could not create tmp directory!" # command_name)
-            die_with_code(1)
-         end
-
-         client_fifo := ("#(1)/fifo" # tmpdir).intern
       end
 
    main is
       do
+         tmpdir := fifo.tmp
+         if tmpdir = Void then
+            log.error.put_line("#(1): could not create tmp directory!" # command_name)
+            die_with_code(1)
+         end
+
+         client_fifo := ("#(1)/fifo" # tmpdir).intern
+
          from
             restart := True
          until

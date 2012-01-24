@@ -257,17 +257,17 @@ feature {}
             std_error.put_line(once "Could not find any valid configuration file")
             die_with_code(1)
          end
-
-         if fifo.exists(fifo_filename) then
-            std_error.put_line(once "Fifo already exists, not starting daemon")
-            die_with_code(1)
-         end
       end
 
    main is
       local
          proc: PROCESS
       do
+         if fifo.exists(fifo_filename) then
+            log.error.put_line(once "Fifo already exists, not starting daemon")
+            die_with_code(1)
+         end
+
          if detach then
             proc := processor.fork
             if proc.is_child then
