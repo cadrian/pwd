@@ -61,7 +61,7 @@ feature {ANY}
       local
          t, p: POINTER; shared: SHARED; template: STRING
       do
-         template := (once "#(1)/.pwd.XXXXXX" # shared.tmp_dir).out
+         template := (once "#(1)/XXXXXX" # shared.tmp_dir).out
          t := template.to_external
          c_inline_c("[
                      _p = mkdtemp((char*)_t);

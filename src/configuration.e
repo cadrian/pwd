@@ -86,7 +86,7 @@ feature {}
          sys: SYSTEM
       once
          Result := {FAST_ARRAY[FIXED_STRING] <<
-                                               ("#(1)/.pwdmgr/config" # sys.get_environment_variable("HOME")).intern,
+                                               ("#(1)/.pwdmgr/config.rc" # sys.get_environment_variable("HOME")).intern,
                                                "/usr/local/etc/pwdmgr.rc".intern,
                                                "/etc/pwdmgr.rc".intern
                                              >> }
