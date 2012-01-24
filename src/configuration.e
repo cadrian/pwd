@@ -83,10 +83,12 @@ feature {}
 
    available_file_locations: FAST_ARRAY[FIXED_STRING] is
       local
-         sys: SYSTEM
+         sys: SYSTEM; home: STRING
       once
+         home := sys.get_environment_variable("HOME")
          Result := {FAST_ARRAY[FIXED_STRING] <<
-                                               ("#(1)/.pwdmgr/config.rc" # sys.get_environment_variable("HOME")).intern,
+                                               ("#(1)/.pwdmgr/config.rc" # home).intern,
+                                               ("#(1)/.local/etc/pwdmgr.rc" # home).intern,
                                                "/usr/local/etc/pwdmgr.rc".intern,
                                                "/etc/pwdmgr.rc".intern
                                              >> }

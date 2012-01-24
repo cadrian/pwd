@@ -1,7 +1,6 @@
 #!/bin/bash
 
-dist=$(dirname $(dirname $(readlink -f $0)))
-export PATH=$dist/exe:$PATH
+dist=$(dirname $(dirname $(readlink -f $0))); exe=$dist/exe; prop=$dist/conf/pwdmgr.properties
+export PATH=$exe:$PATH
 umask 077
-export TMPDIR=${TMPDIR:-/tmp}
-exec menu $dist/conf/pwdmgr.properties
+exec menu $prop
