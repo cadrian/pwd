@@ -124,7 +124,6 @@ feature {}
          section: FIXED_STRING
       do
          from
-            io.put_line(once "Reading conf: #(1)" # filename)
             tfr.read_line
          until
             tfr.end_of_input

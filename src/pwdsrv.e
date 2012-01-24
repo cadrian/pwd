@@ -75,13 +75,6 @@ feature {LOOP_ITEM}
                else
                   log.warning.put_line(once "Invalid list file name")
                end
-            when "menu" then
-               if command.count = 1 then
-                  file := command.last
-                  vault.menu(file)
-               else
-                  log.warning.put_line(once "Invalid menu file name")
-               end
             when "get" then
                if command.count = 2 then
                   file := command.first

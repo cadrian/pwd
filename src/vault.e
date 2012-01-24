@@ -93,12 +93,6 @@ feature {ANY}
          run_open(filename, agent do_save)
       end
 
-   menu (filename: STRING) is
-      do
-         log.info.put_line(once "#(1): menu" # filename)
-         run_open(filename, agent do_menu)
-      end
-
    get (filename, name: STRING) is
       require
          filename /= Void
@@ -162,23 +156,6 @@ feature {}
                fifo.splice(proc.output, stream)
                proc.wait
             end
-         end
-      end
-
-   do_menu (stream: OUTPUT_STREAM) is
-      require
-         is_open
-         stream.is_connected
-      local
-         proc: PROCESS
-      do
-         proc := processor.execute_redirect(once "dmenu", conf(config_dmenu_arguments))
-         if proc.is_connected then
-            print_all_names(proc.input)
-            proc.input.disconnect
-            proc.output.read_line
-            display_or_add_key(proc.output.last_string.intern, stream)
-            proc.wait
          end
       end
 
@@ -471,11 +448,6 @@ feature {}
    fifo: FIFO
 
    processor: PROCESSOR
-
-   config_dmenu_arguments: FIXED_STRING is
-      once
-         Result := "dmenu.arguments".intern
-      end
 
    config_openssl_cipher: FIXED_STRING is
       once

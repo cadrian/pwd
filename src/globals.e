@@ -39,6 +39,7 @@ feature {}
          preload
          ensure_directory_of(shared.server_fifo)
          ensure_directory_of(shared.vault_file)
+         ensure_directory_of(("#(1)/XXXXXX" # shared.tmp_dir).intern)
          ensure_directory_of(log_file)
 
          create config.from_string(("[
@@ -101,16 +102,17 @@ feature {}
       do
          log.info.put_line("[
                             **************** STARTUP ****************
-
-                            Configuration file is #(1)
-                            Server fifo is #(2)
-                            Vault is #(3)
-                            Log file is #(4)
+                            Configuration file:  #(1)
+                            Server fifo:         #(2)
+                            Vault is:            #(3)
+                            Temporary directory: #(4)
+                            Log file:            #(5)
 
                             ]"
                            # configuration.filename
                            # shared.server_fifo
                            # shared.vault_file
+                           # shared.tmp_dir
                            # log_file)
 
          main

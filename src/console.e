@@ -52,11 +52,6 @@ feature {} -- command management
          create Result.with_capacity(16, 0)
       end
 
-   data: RING_ARRAY[STRING] is
-      once
-         create Result.with_capacity(16, 0)
-      end
-
    read_command is
       do
          command.clear_count
@@ -106,56 +101,15 @@ feature {} -- command management
          not fifo.exists(client_fifo)
       end
 
-   get_data (cmd: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
-         -- communication with the server
-      require
-         not fifo.exists(client_fifo)
-      local
-         tfr: TEXT_FILE_READ
+feature {} -- local vault commands
+   unknown_key (key: ABSTRACT_STRING) is
       do
-         fifo.make(client_fifo)
-         send(cmd)
-         fifo.wait_for(client_fifo)
-         create tfr.connect_to(client_fifo)
-         if tfr.is_connected then
-            action.call([tfr])
-            tfr.disconnect
-            delete(client_fifo)
-         end
-      ensure
-         not fifo.exists(client_fifo)
+         io.put_line(once "[1mUnknown password:[0m #(1)" # key)
       end
 
-feature {} -- local vault commands
    run_get is
       do
-         do_get(command.first, agent xclip)
-      end
-
-   get_back (stream: INPUT_STREAM; key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]) is
-      require
-         callback /= Void
-      do
-         stream.read_line
-         if not stream.end_of_input then
-            data.clear_count
-            stream.last_string.split_in(data)
-            if data.count = 2 then
-               callback.call([data.last])
-            else
-               check data.count = 1 end
-               io.put_line(once "[1mUnknown password:[0m #(1)" # key)
-            end
-         end
-      end
-
-   do_get (key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]) is
-         -- get key
-      require
-         callback /= Void
-      do
-         get_data(once "get #(1) #(2)" # client_fifo # key,
-                  agent get_back(?, key, callback))
+         do_get(command.first, agent xclip, agent unknown_key)
       end
 
    run_add is
@@ -180,22 +134,22 @@ feature {} -- local vault commands
             cmd := once "set #(1) #(2)" # client_fifo # command.first
          end
          if cmd /= Void then
-            get_data(cmd,
-                     agent (stream: INPUT_STREAM) is
-                        do
-                           stream.read_line
-                           if not stream.end_of_input then
-                              data.clear_count
-                              stream.last_string.split_in(data)
-                              if data.count = 2 then
-                                 xclip(data.last)
-                              else
-                                 check data.count = 1 end
-                                 xclip(once "")
-                                 io.put_line(once "[1mError[0m") -- ???
+            call_server(cmd,
+                        agent (stream: INPUT_STREAM) is
+                           do
+                              stream.read_line
+                              if not stream.end_of_input then
+                                 data.clear_count
+                                 stream.last_string.split_in(data)
+                                 if data.count = 2 then
+                                    xclip(data.last)
+                                 else
+                                    check data.count = 1 end
+                                    xclip(once "")
+                                    io.put_line(once "[1mError[0m") -- ???
+                                 end
                               end
-                           end
-                        end)
+                           end)
             send_save
          end
       end
@@ -203,30 +157,30 @@ feature {} -- local vault commands
    run_rem is
          -- remove key
       do
-         get_data(once "unset #(1) #(2)" # client_fifo # command.first,
-                  agent (stream: INPUT_STREAM) is
-                     do
-                        stream.read_line
-                        if not stream.end_of_input then
-                           xclip(once "")
-                           io.put_line(once "[1mDone[0m")
-                        end
-                     end)
+         call_server(once "unset #(1) #(2)" # client_fifo # command.first,
+                     agent (stream: INPUT_STREAM) is
+                        do
+                           stream.read_line
+                           if not stream.end_of_input then
+                              xclip(once "")
+                              io.put_line(once "[1mDone[0m")
+                           end
+                        end)
          send_save
       end
 
    run_list is
          -- list known keys
       do
-         get_data(once "list #(1)" # client_fifo,
-                  agent (stream: INPUT_STREAM) is
-                     local
-                        str: STRING_OUTPUT_STREAM
-                     do
-                        create str.make
-                        fifo.splice(stream, str)
-                        less(str.to_string)
-                     end)
+         call_server(once "list #(1)" # client_fifo,
+                     agent (stream: INPUT_STREAM) is
+                        local
+                           str: STRING_OUTPUT_STREAM
+                        do
+                           create str.make
+                           fifo.splice(stream, str)
+                           less(str.to_string)
+                        end)
       end
 
 feature {} -- help
@@ -309,7 +263,8 @@ feature {} -- remote vault management
                       agent (p: STRING; p_ref: REFERENCE[STRING]) is
                          do
                             p_ref.set_item(p)
-                         end (?, pass))
+                         end (?, pass),
+                      agent unknown_key)
                if pass.item /= Void then
                   Result := once "#(1) -u #(2):#(3)" # Result # conf(config_key_login) # pass.item
                end
@@ -379,15 +334,15 @@ feature {} -- remote vault management
                merge_pass := once ""
                merge_pass.copy(merge_pass0)
             end
-            get_data("merge #(1) #(2) #(3)" # client_fifo # merge_vault # merge_pass,
-                     agent (stream: INPUT_STREAM) is
-                        do
-                           stream.read_line
-                           if not stream.end_of_input then
-                              xclip(once "")
-                              io.put_line(once "[1mDone[0m")
-                           end
-                        end)
+            call_server("merge #(1) #(2) #(3)" # client_fifo # merge_vault # merge_pass,
+                        agent (stream: INPUT_STREAM) is
+                           do
+                              stream.read_line
+                              if not stream.end_of_input then
+                                 xclip(once "")
+                                 io.put_line(once "[1mDone[0m")
+                              end
+                           end)
             delete(merge_vault)
             send_save
          end

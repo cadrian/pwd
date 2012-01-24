@@ -140,6 +140,61 @@ feature {}
          fifo.exists(server_fifo)
       end
 
+   call_server (cmd: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
+         -- communication with the server
+      require
+         fifo.exists(server_fifo)
+         not fifo.exists(client_fifo)
+      local
+         tfr: TEXT_FILE_READ
+      do
+         fifo.make(client_fifo)
+         send(cmd)
+         fifo.wait_for(client_fifo)
+         create tfr.connect_to(client_fifo)
+         if tfr.is_connected then
+            action.call([tfr])
+            tfr.disconnect
+            delete(client_fifo)
+         end
+      ensure
+         not fifo.exists(client_fifo)
+      end
+
+feature {} -- get a password from the server
+   data: RING_ARRAY[STRING] is
+      once
+         create Result.with_capacity(16, 0)
+      end
+
+   get_back (stream: INPUT_STREAM; key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]; when_unknown: PROCEDURE[TUPLE[ABSTRACT_STRING]]) is
+      require
+         callback /= Void
+         when_unknown /= Void
+      do
+         stream.read_line
+         if not stream.end_of_input then
+            data.clear_count
+            stream.last_string.split_in(data)
+            if data.count = 2 then
+               callback.call([data.last])
+            else
+               check data.count = 1 end
+               when_unknown.call([key])
+            end
+         end
+      end
+
+   do_get (key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]; when_unknown: PROCEDURE[TUPLE[ABSTRACT_STRING]]) is
+         -- get key
+      require
+         callback /= Void
+         when_unknown /= Void
+      do
+         call_server(once "get #(1) #(2)" # client_fifo # key,
+                     agent get_back(?, key, callback, when_unknown))
+      end
+
 feature {} -- master phrase
    master_pass: STRING is ""
 
