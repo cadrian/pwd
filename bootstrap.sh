@@ -10,9 +10,11 @@ test -d $bootstrap_dir && rm -rf $bootstrap_dir
 mkdir -p $bootstrap_dir/bin
 mkdir -p $bootstrap_dir/c
 
-for script in pwdmgr_*
+for src in bin/pwdmgr_*
 do
-    cp bin/$script $bootstrap_dir/bin/
+    tgt=$bootstrap_dir/bin/$(basename $src)
+    sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/share/pwdmgr|;s| \$prop$||g' < $src > $tgt
+    chmod a+x $tgt
 done
 
 for d in conf COPYING README.md
@@ -24,8 +26,11 @@ MAKEFILE_BOOT=$bootstrap_dir/Makefile
 cat > $MAKEFILE_BOOT <<EOF
 #!/usr/bin/env make -f
 
-.PHONY: all clean
+.PHONY: all clean install
 .SILENT:
+
+PREFIX   ?= /usr/local
+LINKFLAGS = -lm
 
 all: $EXE
 EOF
@@ -40,7 +45,7 @@ do
     {
         echo
         echo "exe/$exe: exe c/$exe.[ch]"
-        printf '\t%s\n' '$(CC) -o $@ $<'
+        printf '\t$(CC) -o $@ $< $(LINKFLAGS)\n'
     } >> $MAKEFILE_BOOT
 
     ace=$exe.ace
@@ -57,6 +62,18 @@ done
     echo
     echo "clean:"
     printf '\t%s\n' 'rm -rf exe'
+    echo
+    echo "install:"
+    printf '\tinstall -d $(PREFIX)\n'
+    printf '\tinstall -d $(PREFIX)/bin\n'
+    printf '\tinstall -d $(PREFIX)/share\n'
+    printf '\tinstall -d $(PREFIX)/share/pwdmgr\n'
+    printf '\tinstall -d $(PREFIX)/etc\n'
+    for exe in $EXE
+    do
+        printf '\tinstall -m555 exe/%s $(PREFIX)/share/pwdmgr/\n' $exe
+    done
+    printf '\tinstall conf/pwdmgr.properties $(PREFIX)/etc/pwdmgr.rc\n'
 } >> $MAKEFILE_BOOT
 
 chmod +x $MAKEFILE_BOOT
