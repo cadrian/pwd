@@ -63,17 +63,24 @@ done
     echo "clean:"
     printf '\t%s\n' 'rm -rf exe'
     echo
-    echo "install:"
+    echo "install: all"
     printf '\tinstall -d $(PREFIX)\n'
     printf '\tinstall -d $(PREFIX)/bin\n'
     printf '\tinstall -d $(PREFIX)/share\n'
     printf '\tinstall -d $(PREFIX)/share/pwdmgr\n'
+    printf '\tinstall -d $(PREFIX)/share/doc\n'
+    printf '\tinstall -d $(PREFIX)/share/doc/pwdmgr\n'
     printf '\tinstall -d $(PREFIX)/etc\n'
     for exe in $EXE
     do
         printf '\tinstall -m555 exe/%s $(PREFIX)/share/pwdmgr/\n' $exe
     done
-    printf '\tinstall conf/pwdmgr.properties $(PREFIX)/etc/pwdmgr.rc\n'
+    printf '\tinstall -m444 conf/pwdmgr-remote.properties $(PREFIX)/etc/pwdmgr.rc\n'
+    printf '\tinstall -m444 conf/pwdmgr-local.properties $(PREFIX)/share/doc/pwdmgr/sample-local-pwdmgr.rc\n'
+    printf '\tinstall -m444 conf/pwdmgr-remote-curl.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-curl-pwdmgr.rc\n'
+    printf '\tinstall -m444 conf/pwdmgr-remote-scp.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-scp-pwdmgr.rc\n'
+    printf '\tinstall -m444 README.md $(PREFIX)/share/doc/pwdmgr/\n'
+    printf '\tinstall -m444 COPYING $(PREFIX)/share/doc/pwdmgr/\n'
 } >> $MAKEFILE_BOOT
 
 chmod +x $MAKEFILE_BOOT
