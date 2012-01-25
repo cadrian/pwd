@@ -17,6 +17,8 @@ An *administration console* is also provided.
 
  - **xclip** (mandatory)
  - **openssl** (mandatory)
+ - **less** (almost mandatory, for the *list* command and all kinds of
+     help)
  - either **curl** or **scp** (optional, but useful if you want to
    keep your vault in the cloud)
  - **dmenu** (optional, but useful if you don't want to use the
@@ -40,7 +42,7 @@ Some sample files are available in the documentation section of your
 package (the default install places those files in
 `/usr/local/share/doc/pwdmgr/`). Look at the `sample-*.rc` files.
 
-THose files are auto-documented. Just open them and read the comments
+Those files are auto-documented. Just open them and read the comments
 to find how to modify them.
 
 # Features details
