@@ -201,12 +201,11 @@ feature {}
          delete(fifo_filename)
       rescue
          if exceptions.is_signal then
-            log.info.put_line(once "Killed by signal #(1)." # exceptions.signal_number.out)
+            log.info.put_line(once "Killed by signal #(1), exitting gracefully." # exceptions.signal_number.out)
             if vault.is_open then
                vault.close
             end
             delete(fifo_filename)
-            die_with_code(1)
          end
       end
 
