@@ -8,6 +8,7 @@
         * #8 - Moved dmenu handling in the menu client instead of being managed by the server
         * #11 - Modified the generated Makefile for the C bootstrap package
         * #7 - Provide remote vault backup via either curl or scp
+        * #5 - Documentation
 
 0.0.3 (released 2012-01-22)
 
