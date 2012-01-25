@@ -5,8 +5,9 @@
         * #4 - Ensure that passwords are never visible; provide a suitable way to enter a known password at "add" time
         * #9 - Configuration: ignore keys with empty values
         * #14 - Renamed daemon as pwdsrv (aka "the server")
-        * #8 - moved dmenu handling in the menu client instead of being managed by the server
+        * #8 - Moved dmenu handling in the menu client instead of being managed by the server
         * #11 - Modified the generated Makefile for the C bootstrap package
+        * #7 - Provide remote vault backup via either curl or scp
 
 0.0.3 (released 2012-01-22)
 
