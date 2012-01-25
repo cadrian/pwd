@@ -195,6 +195,25 @@ feature {} -- get a password from the server
                      agent get_back(?, key, callback, when_unknown))
       end
 
+   unknown_key (key: ABSTRACT_STRING) is
+      deferred
+      end
+
+feature {REMOTE}
+   get_password (key: ABSTRACT_STRING): STRING is
+      local
+         pass: REFERENCE[STRING]
+      do
+         create pass
+         do_get(key,
+                agent (p: STRING; p_ref: REFERENCE[STRING]) is
+                   do
+                      p_ref.set_item(p)
+                   end (?, pass),
+                agent unknown_key)
+         Result := pass.item
+      end
+
 feature {} -- master phrase
    master_pass: STRING is ""
 
@@ -253,7 +272,7 @@ feature {} -- master phrase
             tfw.flush
 
             -- give time to the OS and the server to get the message before closing the connection
-            fifo.sleep(50)
+            fifo.sleep(100)
 
             tfw.disconnect
          end

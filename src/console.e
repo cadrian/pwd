@@ -25,6 +25,8 @@ feature {} -- the CLIENT interface
 
    run is
       do
+         set_remote
+
          from
             stop := False
             io.put_string(once "[
@@ -202,7 +204,7 @@ feature {} -- help
 
                     [33msave[0m               Save the password vault upto the server.
 
-                    [33mload[0m               Replace the local vault with the server's version.
+                    [33mload[0m               [1mReplace[0m the local vault with the server's version.
                                        Note: in that case you will be asked for the new vault
                                        password (the previous vault is closed).
 
@@ -224,87 +226,34 @@ feature {} -- help
       end
 
 feature {} -- remote vault management
-   config_key_login: FIXED_STRING is
-      once
-         Result := "remote.login".intern
-      end
-
-   config_key_password: FIXED_STRING is
-      once
-         Result := "remote.password".intern
-      end
-
-   config_key_vault_url: FIXED_STRING is
-      once
-         Result := "remote.vault_url".intern
-      end
-
-   is_anonymous: BOOLEAN is
-      do
-         Result := not has_conf(config_key_login) or else not has_conf(config_key_password)
-      end
-
-   curl_arguments (option, file: ABSTRACT_STRING): ABSTRACT_STRING is
-      require
-         option.is_equal(once "-T") or else option.is_equal(once "-o")
-         file /= Void
-      local
-         pass: REFERENCE[STRING]
-         url: FIXED_STRING
-      do
-         url := conf(config_key_vault_url)
-         if url = Void then
-            std_output.put_line(once "[1mMissing vault url![0m")
-         else
-            Result := once "-\# #(1) '#(2)' '#(3)'" # option # file # url
-            if not is_anonymous then
-               create pass
-               do_get(conf(config_key_password),
-                      agent (p: STRING; p_ref: REFERENCE[STRING]) is
-                         do
-                            p_ref.set_item(p)
-                         end (?, pass),
-                      agent unknown_key)
-               if pass.item /= Void then
-                  Result := once "#(1) -u #(2):#(3)" # Result # conf(config_key_login) # pass.item
-               end
-            end
-         end
-      end
-
    run_save is
          -- save to remote
-      local
-         proc: PROCESS; arg: like curl_arguments
       do
-         arg := curl_arguments(once "-T", shared.vault_file)
-         if arg /= Void then
+         if remote = Void then
+            std_output.put_line(once "[1mNo remote method![0m")
+         else
             std_output.put_line(once "[32mPlease wait...[0m")
-            proc := processor.execute(once "curl", arg)
-            if proc.is_connected then
-               proc.wait
-            end
+            remote.save(shared.vault_file)
          end
       end
 
    run_load is
          -- load from remote
-      local
-         proc: PROCESS
       do
-         -- shut the server down
-         send("stop")
+         if remote = Void then
+            std_output.put_line(once "[1mNo remote method![0m")
+         else
+            -- shut the server down
+            send("stop")
 
-         std_output.put_line(once "[32mPlease wait...[0m")
-         proc := processor.execute(once "curl", curl_arguments(once "-o", shared.vault_file))
-         if proc.is_connected then
-            proc.wait
+            std_output.put_line(once "[32mPlease wait...[0m")
+            remote.load(shared.vault_file)
+
+            -- stop the inner command loop
+            stop := True
+            -- ask the main client loop to start again (will restart the server)
+            restart := True
          end
-
-         -- stop the inner command loop
-         stop := True
-         -- ask the main client loop to start again (will restart the server)
-         restart := True
       end
 
    on_cancel: PROCEDURE[TUPLE] is
@@ -316,35 +265,37 @@ feature {} -- remote vault management
          -- merge from remote
       local
          merge_pass0, merge_pass: STRING
-         proc: PROCESS
       do
-         std_output.put_line(once "[32mPlease wait...[0m")
-         proc := processor.execute(once "curl", curl_arguments(once "-o", merge_vault))
-         if proc.is_connected then
-            proc.wait
-         end
-
-         merge_pass0 := read_password(once "Please enter the encryption phrase%Nto the remote vault%N(just leave empty if the same as the current vault's)", on_cancel)
-         if merge_pass0 = Void then
-            -- cancelled
+         if remote = Void then
+            std_output.put_line(once "[1mNo remote method![0m")
          else
-            if merge_pass0.is_empty then
-               merge_pass := master_pass
+            std_output.put_line(once "[32mPlease wait...[0m")
+            remote.load(merge_vault)
+
+            merge_pass0 := read_password(once "Please enter the encryption phrase%Nto the remote vault%N(just leave empty if the same as the current vault's)", on_cancel)
+            if merge_pass0 = Void then
+               -- cancelled
             else
-               merge_pass := once ""
-               merge_pass.copy(merge_pass0)
+               if merge_pass0.is_empty then
+                  merge_pass := master_pass
+               else
+                  merge_pass := once ""
+                  merge_pass.copy(merge_pass0)
+               end
+               call_server("merge #(1) #(2) #(3)" # client_fifo # merge_vault # merge_pass,
+                           agent (stream: INPUT_STREAM) is
+                              do
+                                 stream.read_line
+                                 if not stream.end_of_input then
+                                    xclip(once "")
+                                    io.put_line(once "[1mDone[0m")
+                                 end
+                              end)
+               send_save
+               remote.save(shared.vault_file)
             end
-            call_server("merge #(1) #(2) #(3)" # client_fifo # merge_vault # merge_pass,
-                        agent (stream: INPUT_STREAM) is
-                           do
-                              stream.read_line
-                              if not stream.end_of_input then
-                                 xclip(once "")
-                                 io.put_line(once "[1mDone[0m")
-                              end
-                           end)
+
             delete(merge_vault)
-            send_save
          end
       end
 
@@ -365,6 +316,33 @@ feature {} -- helpers
             proc.input.disconnect
             proc.wait
          end
+      end
+
+   remote: REMOTE
+
+   set_remote is
+      require
+         remote = Void
+      local
+         remote_method: FIXED_STRING
+      do
+         remote_method := conf("remote.method".intern)
+         if remote_method = Void or else remote_method.is_empty then
+            -- OK, no remote
+         else
+            inspect
+               remote_method.out
+            when "curl" then
+               create {CURL} remote.make(Current)
+            when "scp" then
+               --create {SCP} remote.make
+            else
+               log.error.put_line("Unknown method #(1)" # remote_method)
+               die_with_code(1)
+            end
+         end
+      ensure
+         remote /= Void
       end
 
 end

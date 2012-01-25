@@ -88,4 +88,9 @@ feature {}
          Result := "dmenu.arguments".intern
       end
 
+   unknown_key (key: ABSTRACT_STRING) is
+      do
+         check False end
+      end
+
 end
