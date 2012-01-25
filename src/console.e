@@ -36,7 +36,7 @@ feature {} -- the CLIENT interface
                                 [32mpwdmgr Copyright (C) 2012 Cyril Adrian <cyril.adrian@gmail.com>
                                 This program comes with ABSOLUTELY NO WARRANTY; for details type [33mshow w[32m.
                                 This is free software, and you are welcome to redistribute it
-                                under certain conditions; type [33mshow c[32m for details.
+                                under certain conditions; type [33mshow c[32m for details.[0m
 
                                 Type [33mhelp[0m for details on available options.
                                 Just hit [33m<enter>[0m to exit.
