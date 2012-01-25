@@ -55,7 +55,7 @@ feature {}
          file, host, user: FIXED_STRING
       do
          file := conf(config_key_remote_file)
-         if url = Void then
+         if file = Void then
             std_output.put_line(once "[1mMissing remote vault path![0m")
          else
             host := conf(config_key_remote_host)

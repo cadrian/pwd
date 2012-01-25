@@ -38,7 +38,7 @@ A system-wide configuration file may be found at `/etc/pwdmgr.rc`.
 
 Some sample files are available in the documentation section of your
 package (the default install places those files in
-`/usr/local/share/doc/pwdmgr/`). Look at the `pwdmgr-*.properties` files.
+`/usr/local/share/doc/pwdmgr/`). Look at the `sample-*.rc` files.
 
 THose files are auto-documented. Just open them and read the comments
 to find how to modify them.
