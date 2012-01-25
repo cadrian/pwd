@@ -227,10 +227,10 @@ feature {} -- help
 
                     [33mhelp[0m               Show this screen :-)
 
-                    [32mpwdmgr Copyright (C) 2012 Cyril Adrian <cyril.adrian@gmail.com>
-                    This program comes with ABSOLUTELY NO WARRANTY; for details type [33mshow w[32m.
-                    This is free software, and you are welcome to redistribute it
-                    under certain conditions; type [33mshow c[32m for details.[0m
+                    [32mpwdmgr Copyright (C) 2012 Cyril Adrian <cyril.adrian@gmail.com>[0m
+                    [32mThis program comes with ABSOLUTELY NO WARRANTY; for details type [33mshow w[32m.[0m
+                    [32mThis is free software, and you are welcome to redistribute it[0m
+                    [32munder certain conditions; type [33mshow c[32m for details.[0m
 
                     Any other input is understood as a password request using the given key.
                     If that key exists the password is stored in the clipboard.
