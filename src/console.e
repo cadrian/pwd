@@ -335,7 +335,7 @@ feature {} -- helpers
             when "curl" then
                create {CURL} remote.make(Current)
             when "scp" then
-               --create {SCP} remote.make
+               create {SCP} remote.make
             else
                log.error.put_line("Unknown method #(1)" # remote_method)
                die_with_code(1)
