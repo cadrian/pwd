@@ -385,8 +385,7 @@ feature {}
       local
          i: INTEGER; p: POINTER
       do
-         Result := once ""
-         Result.clear_count
+         Result := ""
          c_inline_c("_p = fopen(%"/dev/random%", %"rb%");%N")
 
          from
