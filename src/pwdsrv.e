@@ -37,6 +37,7 @@ feature {LOOP_ITEM}
             log.info.put_line(once "Awaiting connection.")
             events.expect(channel.event_can_read)
          else
+            log.info.put_line(once "Channel not connected!")
             events.expect(t.timeout(0))
          end
       end
@@ -46,14 +47,18 @@ feature {LOOP_ITEM}
          if events.event_occurred(channel.event_can_read) then
             channel.read_line
             Result := not channel.end_of_input and then not channel.last_string.is_empty
+            if Result then
+               log.info.put_line(once "Connection received")
+            end
          end
-         log.info.put_line(once "Connection received")
       end
 
    continue is
       local
          cmd, file, name: STRING; merge_vault: VAULT
       do
+         log.info.put_line(once "Received command")
+
          command.clear_count
          channel.last_string.split_in(command)
          if not command.is_empty then
@@ -190,22 +195,40 @@ feature {}
          -- the main loop
       local
          loop_stack: LOOP_STACK
+         tfw: TEXT_FILE_WRITE
+         pid: INTEGER
+         is_killed: BOOLEAN
       do
-         create vault.make(shared.vault_file)
-         create loop_stack.make
-         loop_stack.add_job(Current)
-         restart
-         log.info.put_line(once "Starting main loop.")
-         loop_stack.run
-         log.info.put_line(once "Terminated.")
+         if not is_killed then
+            pid := processor.pid
+            log.info.put_line(once "Starting server (#(1))." # pid.out)
+
+            create tfw.connect_to(shared.server_pidfile)
+            if tfw.is_connected then
+               tfw.put_integer(pid)
+               tfw.put_new_line
+               tfw.disconnect
+            end
+
+            create vault.make(shared.vault_file)
+            create loop_stack.make
+            loop_stack.add_job(Current)
+            restart
+            log.info.put_line(once "Starting main loop.")
+            loop_stack.run
+         end
+
+         if vault.is_open then
+            vault.close
+         end
          delete(fifo_filename)
       rescue
          if exceptions.is_signal then
             log.info.put_line(once "Killed by signal #(1), exitting gracefully." # exceptions.signal_number.out)
-            if vault.is_open then
-               vault.close
-            end
-            delete(fifo_filename)
+            is_killed := True
+            retry
+         else
+            log.info.put_line(once "Killed by exception #(1)." # exceptions.exception_name)
          end
       end
 
@@ -265,12 +288,14 @@ feature {}
             proc := processor.fork
             if proc.is_child then
                run_in_child
+               log.info.put_line(once "Terminated.")
             else
                run_in_parent(proc)
             end
          else
             log.info.put_line(once "Running not detached.")
             run_in_child
+            log.info.put_line(once "Terminated.")
          end
       end
 

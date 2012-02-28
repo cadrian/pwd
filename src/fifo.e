@@ -60,7 +60,7 @@ feature {ANY}
    tmp: FIXED_STRING is
          -- create a temporary directory
       local
-         t, p: POINTER; shared: SHARED; template: STRING
+         t, p: POINTER; template: STRING
       do
          template := (once "#(1)/XXXXXX" # shared.tmp_dir).out
          t := template.to_external
@@ -131,5 +131,64 @@ feature {ANY}
          output.put_string(input.last_string)
          output.flush
       end
+
+   server_running: BOOLEAN is
+         -- True if the server is running and healthy; False if the server does not run or was killed
+      local
+         tfr: TEXT_FILE_READ; pid_string: STRING; pid: INTEGER
+         ft: FILE_TOOLS
+      do
+         check
+            exists(shared.server_fifo)
+         end
+         if ft.file_exists(shared.server_pidfile) then
+            create tfr.connect_to(shared.server_pidfile)
+            if tfr.is_connected then
+               tfr.read_line
+               if tfr.last_string.is_integer then
+                  pid := tfr.last_string.to_integer
+                  if process_running(pid) then
+                     Result := True
+                  end
+               end
+               tfr.disconnect
+            end
+
+            if not Result then
+               ft.delete(shared.server_pidfile)
+            end
+         end
+
+         if not Result then
+            ft.delete(shared.server_fifo)
+         end
+      end
+
+   process_running (pid: INTEGER): BOOLEAN is
+      require
+         pid > 0
+      local
+         proc: STRING
+         p: POINTER; sts: INTEGER
+      do
+         proc := once "                "
+         proc.copy(once "/proc/")
+         pid.append_in(proc)
+         p := proc.to_external
+         c_inline_c("[
+                     struct stat s;
+                     int r = stat((const char*)_p, &s);
+                     if (r == 0) {
+                        _sts = S_ISDIR(s.st_mode) && s.st_uid == getuid();
+                     } else {
+                        _sts = 0;
+                     }
+
+                     ]")
+         Result := sts /= 0
+      end
+
+feature {}
+   shared: SHARED
 
 end

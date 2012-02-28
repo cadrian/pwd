@@ -93,23 +93,41 @@ feature {}
          Result := shared.server_fifo
       end
 
+   server_pidfile: FIXED_STRING is
+      do
+         Result := shared.server_pidfile
+      end
+
    check_server is
       do
          if not file_exists(shared.vault_file) then
             check
                not fifo.exists(server_fifo)
+               not file_exists(server_pidfile)
             end
-            log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
-            read_new_master(once "This is a new vault")
-            create_vault
-            start_server
-            send_master
+            server_bootstrap
          elseif not fifo.exists(server_fifo) then
-            log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
-            start_server
-            master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
-            send_master
+            server_restart
+         elseif not fifo.server_running then
+            server_restart
          end
+      end
+
+   server_bootstrap is
+      do
+         log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
+         read_new_master(once "This is a new vault")
+         create_vault
+         start_server
+         send_master
+      end
+
+   server_restart is
+      do
+         log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
+         start_server
+         master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
+         send_master
       end
 
    start_server is

@@ -66,6 +66,13 @@ feature {ANY}
          Result /= Void
       end
 
+   pid: INTEGER is
+      do
+         c_inline_c("[
+                     R = getpid();
+                     ]")
+      end
+
 feature {}
    execute_ (command: STRING; arguments: ABSTRACT_STRING; direct_output, direct_error: BOOLEAN): PROCESS is
       require

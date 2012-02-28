@@ -105,13 +105,15 @@ feature {}
                             **************** STARTUP ****************
                             Configuration file:  #(1)
                             Server fifo:         #(2)
-                            Vault is:            #(3)
-                            Temporary directory: #(4)
-                            Log file:            #(5)
+                            Server pid file:     #(3)
+                            Vault is:            #(4)
+                            Temporary directory: #(5)
+                            Log file:            #(6)
 
                             ]"
                            # configuration.filename
                            # shared.server_fifo
+                           # shared.server_pidfile
                            # shared.vault_file
                            # shared.tmp_dir
                            # log_file)

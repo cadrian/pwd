@@ -25,6 +25,11 @@ feature {ANY}
          Result := eval(mandatory_key(config_server_fifo))
       end
 
+   server_pidfile: FIXED_STRING is
+      once
+         Result := eval(mandatory_key(config_server_pidfile))
+      end
+
    vault_file: FIXED_STRING is
       once
          Result := eval(mandatory_key(config_vault_file))
@@ -69,6 +74,11 @@ feature {}
    config_server_fifo: FIXED_STRING is
       once
          Result := "server.fifo".intern
+      end
+
+   config_server_pidfile: FIXED_STRING is
+      once
+         Result := "server.pidfile".intern
       end
 
    config_log_dir: FIXED_STRING is
