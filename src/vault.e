@@ -132,6 +132,14 @@ feature {ANY}
          run_open(filename, agent do_merge(?, other))
       end
 
+   ping (filename: STRING) is
+      require
+         filename /= Void
+      do
+         log.info.put_line(once "#(1): ping" # filename)
+         reply_pong(filename)
+      end
+
 feature {}
    do_list (stream: OUTPUT_STREAM) is
       require
@@ -231,6 +239,19 @@ feature {}
             end
          else
             reply_not_open(filename)
+         end
+      end
+
+   reply_pong (filename: STRING) is
+      require
+         filename /= Void
+      local
+         tfw: TEXT_FILE_WRITE
+      do
+         create tfw.connect_to(filename)
+         if tfw.is_connected then
+            tfw.put_line(once "pong")
+            tfw.disconnect
          end
       end
 

@@ -66,9 +66,10 @@ feature {LOOP_ITEM}
             command.remove_first
             inspect
                cmd
-            when "nop" then
-               -- no-operation, used to settle the fifo at startup
-               log.info.put_line(once "no-op")
+            when "ping" then
+               -- operation used to settle the fifos at startup
+               file := command.last
+               vault.ping(file)
             when "master" then
                vault.close
                if command.count = 1 then

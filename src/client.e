@@ -218,6 +218,19 @@ feature {} -- get a password from the server
       deferred
       end
 
+   do_ping is
+      do
+         call_server(once "ping #(1)" # client_fifo,
+                     agent (in: INPUT_STREAM) is
+                        do
+                           in.read_line
+                           check
+                              in.last_string.is_equal(once "pong")
+                           end
+                           log.info.put_line(once "ping: #(1)" # in.last_string)
+                        end)
+      end
+
 feature {REMOTE}
    get_password (key: ABSTRACT_STRING): STRING is
       local
@@ -270,9 +283,11 @@ feature {} -- master phrase
       require
          fifo.exists(server_fifo)
       do
-         send(once "nop")
-         send(once "nop")
-         send(once "nop")
+         log.info.put_line(once "Pinging server to settle queues")
+         do_ping
+         do_ping
+         do_ping
+         log.info.put_line(once "Sending master password")
          send(once "master #(1)" # master_pass)
       end
 
