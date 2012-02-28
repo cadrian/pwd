@@ -108,10 +108,11 @@ feature {ANY}
    wait_for (name: FIXED_STRING) is
       do
          from
+            sleep(100)
          until
             exists(name)
          loop
-            sleep(10)
+            sleep(100)
          end
       end
 

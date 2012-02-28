@@ -66,6 +66,9 @@ feature {LOOP_ITEM}
             command.remove_first
             inspect
                cmd
+            when "nop" then
+               -- no-operation, used to settle the fifo at startup
+               log.info.put_line(once "no-op")
             when "master" then
                vault.close
                if command.count = 1 then

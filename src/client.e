@@ -153,7 +153,7 @@ feature {}
                die_with_code(proc.status)
             end
             fifo.wait_for(server_fifo)
-            fifo.sleep(250)
+            fifo.sleep(500)
          end
       ensure
          fifo.exists(server_fifo)
@@ -270,6 +270,9 @@ feature {} -- master phrase
       require
          fifo.exists(server_fifo)
       do
+         send(once "nop")
+         send(once "nop")
+         send(once "nop")
          send(once "master #(1)" # master_pass)
       end
 
