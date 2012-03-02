@@ -28,7 +28,7 @@ do
 done
 
 cp exe/* $EXE/
-cp COPYING README.md $DOC/
+cp COPYING README.md Changelog $DOC/
 cp conf/pwdmgr-local.properties $DOC/sample-local-pwdmgr.rc
 cp conf/pwdmgr-remote-curl.properties $DOC/sample-remote-curl-pwdmgr.rc
 cp conf/pwdmgr-remote-scp.properties $DOC/sample-remote-scp-pwdmgr.rc
