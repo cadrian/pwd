@@ -40,17 +40,21 @@ cat >$release_dir/install.sh <<EOF
 if [ \$(id -u) -eq 0 ]; then
     echo Installing as root
     PREFIX=\${1:-\${PREFIX:-/usr/local}}
+    binmod=555
 else
     echo Installing as \$USER
     PREFIX=\${1:-\${PREFIX:-\$HOME/.local}}
-    mkdir -p \$PREFIX
+    for dir in bin etc share; do
+        mkdir -p \$PREFIX/\$dir
+    done
+    binmod=500
 fi
 
 for src in bin/*
 do
     tgt=\$PREFIX/bin/\$(basename \$src)
     sed 's|^exe=.*$|exe='"\$PREFIX"'/share/pwdmgr|' < \$src > \$tgt
-    chmod a+x \$tgt
+    chmod \$binmod \$tgt
 done
 
 for tgt in \$(find share -type d -name pwdmgr) etc/*
@@ -67,6 +71,8 @@ if [ \$(id -u) -ne 0 ]; then
     dir=\$HOME/.pwdmgr
     test -d \$dir || mkdir \$dir
     test -e \$dir/config.rc || cp \$PREFIX/etc/pwdmgr.rc \$dir/config.rc # should we ln -s instead?
+    chmod u+w \$dir/config.rc
 fi
 EOF
+
 chmod a+x $release_dir/install.sh
