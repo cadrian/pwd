@@ -43,7 +43,7 @@ feature {ANY}
          arg := arguments
          if arg /= Void then
             arg := once "#(1) #(2)" # arg # local_file
-            proc := processor.execute(once "scp", arg)
+            proc := processor.execute_direct(once "scp", arg)
             if proc.is_connected then
                proc.wait
             end

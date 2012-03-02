@@ -23,7 +23,7 @@ feature {ANY}
       require
          command /= Void
       do
-         Result := execute_(command, arguments, True, True)
+         Result := execute_(command, arguments, False, True, True)
       ensure
          Result /= Void
       end
@@ -32,7 +32,7 @@ feature {ANY}
       require
          command /= Void
       do
-         Result := execute_(command, arguments, False, True)
+         Result := execute_(command, arguments, False, False, True)
       ensure
          Result /= Void
       end
@@ -41,7 +41,16 @@ feature {ANY}
       require
          command /= Void
       do
-         Result := execute_(command, arguments, False, False)
+         Result := execute_(command, arguments, False, False, False)
+      ensure
+         Result /= Void
+      end
+
+   execute_direct (command: STRING; arguments: ABSTRACT_STRING): PROCESS is
+      require
+         command /= Void
+      do
+         Result := execute_(command, arguments, True, True, True)
       ensure
          Result /= Void
       end
@@ -74,7 +83,7 @@ feature {ANY}
       end
 
 feature {}
-   execute_ (command: STRING; arguments: ABSTRACT_STRING; direct_output, direct_error: BOOLEAN): PROCESS is
+   execute_ (command: STRING; arguments: ABSTRACT_STRING; direct_input, direct_output, direct_error: BOOLEAN): PROCESS is
       require
          command /= Void
       local
@@ -88,6 +97,7 @@ feature {}
          end
          log.info.put_new_line
 
+         factory.set_direct_input(direct_input)
          factory.set_direct_output(direct_output)
          factory.set_direct_error(direct_error)
          Result := factory.execute(command, args)
