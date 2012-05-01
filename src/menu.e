@@ -60,7 +60,7 @@ feature {}
       local
          proc: PROCESS; proc_input: OUTPUT_STREAM; entry: STRING
       do
-         proc := processor.execute_redirect(once "dmenu", conf(config_dmenu_arguments))
+         proc := processor.execute_redirect(conf(config_command), conf(config_arguments))
          if proc.is_connected then
             proc_input := proc.input
             list.do_all(agent display(?, proc_input))
@@ -84,9 +84,14 @@ feature {}
          output.put_line(line)
       end
 
-   config_dmenu_arguments: FIXED_STRING is
+   config_command: FIXED_STRING is
       once
-         Result := "dmenu.arguments".intern
+         Result := "command".intern
+      end
+
+   config_arguments: FIXED_STRING is
+      once
+         Result := "arguments".intern
       end
 
    unknown_key (key: ABSTRACT_STRING) is

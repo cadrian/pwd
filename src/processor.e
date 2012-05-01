@@ -19,7 +19,7 @@ insert
    LOGGING
 
 feature {ANY}
-   execute (command: STRING; arguments: ABSTRACT_STRING): PROCESS is
+   execute (command, arguments: ABSTRACT_STRING): PROCESS is
       require
          command /= Void
       do
@@ -28,7 +28,7 @@ feature {ANY}
          Result /= Void
       end
 
-   execute_redirect (command: STRING; arguments: ABSTRACT_STRING): PROCESS is
+   execute_redirect (command, arguments: ABSTRACT_STRING): PROCESS is
       require
          command /= Void
       do
@@ -37,7 +37,7 @@ feature {ANY}
          Result /= Void
       end
 
-   execute_to_dev_null (command: STRING; arguments: ABSTRACT_STRING): PROCESS is
+   execute_to_dev_null (command, arguments: ABSTRACT_STRING): PROCESS is
       require
          command /= Void
       do
@@ -46,7 +46,7 @@ feature {ANY}
          Result /= Void
       end
 
-   execute_direct (command: STRING; arguments: ABSTRACT_STRING): PROCESS is
+   execute_direct (command, arguments: ABSTRACT_STRING): PROCESS is
       require
          command /= Void
       do
@@ -83,7 +83,7 @@ feature {ANY}
       end
 
 feature {}
-   execute_ (command: STRING; arguments: ABSTRACT_STRING; direct_input, direct_output, direct_error: BOOLEAN): PROCESS is
+   execute_ (command, arguments: ABSTRACT_STRING; direct_input, direct_output, direct_error: BOOLEAN): PROCESS is
       require
          command /= Void
       local
@@ -100,7 +100,7 @@ feature {}
          factory.set_direct_input(direct_input)
          factory.set_direct_output(direct_output)
          factory.set_direct_error(direct_error)
-         Result := factory.execute(command, args)
+         Result := factory.execute(command.out, args)
       ensure
          Result /= Void
       end
