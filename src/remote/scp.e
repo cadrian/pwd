@@ -13,7 +13,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
-class CURL
+class SCP
 
 inherit
    REMOTE
@@ -26,9 +26,10 @@ feature {ANY}
       local
          proc: PROCESS; arg: like arguments
       do
-         arg := arguments(once "-T", local_file)
+         arg := arguments
          if arg /= Void then
-            proc := processor.execute(once "curl", arg)
+            arg := once "#(1) #(2)" # local_file # arg
+            proc := processor.execute(once "scp", arg)
             if proc.is_connected then
                proc.wait
             end
@@ -38,10 +39,13 @@ feature {ANY}
    load (local_file: ABSTRACT_STRING) is
       local
          proc: PROCESS; arg: like arguments
+         sys: SYSTEM
       do
-         arg := arguments(once "-o", local_file)
+         arg := arguments
          if arg /= Void then
-            proc := processor.execute(once "curl", arg)
+            arg := once "#(1) #(2)" # arg # local_file
+            sys.set_environment_variable(once "SSH_ASKPASS", once "true")
+            proc := processor.execute(once "scp", arg)
             if proc.is_connected then
                proc.wait
             end
@@ -49,31 +53,29 @@ feature {ANY}
       end
 
 feature {}
-   arguments (option, file: ABSTRACT_STRING): ABSTRACT_STRING is
-      require
-         option.is_equal(once "-T") or else option.is_equal(once "-o")
-         file /= Void
+   arguments: ABSTRACT_STRING is
       local
-         pass: STRING
-         url: FIXED_STRING
+         file, host, user: FIXED_STRING
       do
-         url := conf(config_key_remote_url)
-         if url = Void then
-            std_output.put_line(once "[1mMissing vault url![0m")
+         file := conf(config_key_remote_file)
+         if file = Void then
+            std_output.put_line(once "[1mMissing remote vault path![0m")
          else
-            Result := once "-\# #(1) '#(2)' '#(3)'" # option # file # url
-            if not is_anonymous then
-               pass := client.get_password(conf(config_key_remote_pass))
-               if pass /= Void then
-                  Result := once "#(1) -u #(2):#(3)" # Result # conf(config_key_remote_user) # pass
-               end
-            end
-         end
-      end
+            host := conf(config_key_remote_host)
+            user := conf(config_key_remote_user)
 
-   is_anonymous: BOOLEAN is
-      do
-         Result := not has_conf(config_key_remote_user) or else not has_conf(config_key_remote_pass)
+            Result := file
+            if host /= Void then
+               Result := once "#(1):#(2)" # host # Result
+               if user /= Void then
+                  Result := once "#(1)@#(2)" # user # Result
+               end
+            elseif user /= Void then
+               std_output.put_line(once "[1mSpecified user without host, ignored[0m")
+            end
+
+            Result := once "#(1) #(2)" # conf(config_key_remote_options) # Result
+         end
       end
 
    config_key_remote_user: FIXED_STRING is
@@ -81,29 +83,24 @@ feature {}
          Result := "remote.user".intern
       end
 
-   config_key_remote_pass: FIXED_STRING is
+   config_key_remote_host: FIXED_STRING is
       once
-         Result := "remote.pass".intern
+         Result := "remote.host".intern
       end
 
-   config_key_remote_url: FIXED_STRING is
+   config_key_remote_file: FIXED_STRING is
       once
-         Result := "remote.url".intern
+         Result := "remote.file".intern
+      end
+
+   config_key_remote_options: FIXED_STRING is
+      once
+         Result := "remote.options".intern
       end
 
 feature {}
-   make (a_client: like client) is
-      require
-         a_client /= Void
+   make is
       do
-         client := a_client
-      ensure
-         client = a_client
       end
-
-   client: CLIENT
-
-invariant
-   client /= Void
 
 end
