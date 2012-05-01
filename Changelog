@@ -1,4 +1,9 @@
-0.0.4 (not yet released)
+0.0.5 (not yet released)
+        * #18 - Client/server handshake
+        * #15 - Install in user mode
+        * #19 - Pour the Changelog in the release
+
+0.0.4 (released 2012-01-25)
 
         * #10, #12, #13 - Packaging: standard layout
         * #2 - Creation of missing empty directories
