@@ -74,8 +74,18 @@ feature {}
                std_output.put_line(once "[1mSpecified user without host, ignored[0m")
             end
 
-            Result := once "#(1) #(2)" # conf(config_key_remote_options) # Result
+            Result := once "#(1) #(2)" # remote_options # Result
          end
+      end
+
+   remote_options: ABSTRACT_STRING is
+      do
+         Result := conf(config_key_remote_options)
+         if Result = Void then
+            Result := once ""
+         end
+      ensure
+         Result /= Void
       end
 
    config_key_remote_user: FIXED_STRING is
