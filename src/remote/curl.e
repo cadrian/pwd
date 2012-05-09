@@ -106,12 +106,15 @@ feature {}
       end
 
 feature {}
-   make (a_client: like client) is
+   make (a_specific_section: ABSTRACT_STRING; a_client: like client) is
       require
+         a_specific_section /= Void
          a_client /= Void
       do
+         specific_section:= a_specific_section.intern
          client := a_client
       ensure
+         specific_section = a_specific_section.intern
          client = a_client
       end
 

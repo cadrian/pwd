@@ -99,8 +99,13 @@ feature {}
       end
 
 feature {}
-   make is
+   make (a_specific_section: ABSTRACT_STRING) is
+      require
+         a_specific_section /= Void
       do
+         specific_section := a_specific_section.intern
+      ensure
+         specific_section = a_specific_section.intern
       end
 
 end

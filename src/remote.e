@@ -34,4 +34,7 @@ feature {ANY}
 feature {}
    processor: PROCESSOR
 
+invariant
+   specific_section /= Void
+
 end

@@ -933,25 +933,11 @@ feature {} -- helpers
       require
          remote = Void
       local
-         remote_method: FIXED_STRING
+         remote_section: FIXED_STRING
+         remote_factory: REMOTE_FACTORY
       do
-         remote_method := conf("remote.method".intern)
-         if remote_method = Void or else remote_method.is_empty then
-            -- OK, no remote
-         else
-            inspect
-               remote_method.out
-            when "curl" then
-               create {CURL} remote.make(Current)
-            when "scp" then
-               create {SCP} remote.make
-            else
-               log.error.put_line("Unknown method #(1)" # remote_method)
-               die_with_code(1)
-            end
-         end
-      ensure
-         remote /= Void
+         remote_section := conf("remote.section".intern)
+         remote := remote_factory.new_remote(remote_section, Current)
       end
 
 end
