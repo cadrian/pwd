@@ -60,7 +60,7 @@ feature {}
       local
          proc: PROCESS; proc_input: OUTPUT_STREAM; entry: STRING
       do
-         proc := processor.execute_redirect(conf(config_command), conf(config_arguments))
+         proc := processor.execute_redirect(conf(config_command), conf_no_eval(config_arguments))
          if proc.is_connected then
             proc_input := proc.input
             list.do_all(agent display(?, proc_input))
