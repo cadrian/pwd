@@ -22,7 +22,7 @@ default
     verbose(no)
 
 cluster
-    pwdmgr: "src"
+    pwdmgr: "src/loadpath.se"
     liberty: "\${path_liberty}src/loadpath.se"
 
 generate
