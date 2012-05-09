@@ -2,6 +2,7 @@
         * #18 - Client/server handshake
         * #15 - Install in user mode
         * #19 - Pour the Changelog in the release
+        * Now allowing more than one remotes (in that case, the requested remote must be selected in the load/save/merge commands)
 
 0.0.4 (released 2012-01-25)
 

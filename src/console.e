@@ -17,16 +17,25 @@ class CONSOLE
 
 inherit
    CLIENT
+      redefine
+         make
+      end
 
 create {}
    make
 
 feature {} -- the CLIENT interface
+   make is
+      do
+         create remote_map.make
+         Precursor
+      end
+
    stop: BOOLEAN
 
    run is
       do
-         set_remote
+         fill_remote_map
 
          from
             stop := False
@@ -220,6 +229,12 @@ feature {} -- help
                                        Keep the most recent keys and save the merged version
                                        back to the server.
 
+                                       The load, save, and merge commands require an extra argument
+                                       if there is more than one available remotes; in that case,
+                                       the argument is the remote to select.
+
+                                       #(1)
+
                     [33mmaster[0m             Change the master password.
                                        [1m(not yet implemented)[0m
 
@@ -235,7 +250,7 @@ feature {} -- help
                     Any other input is understood as a password request using the given key.
                     If that key exists the password is stored in the clipboard.
 
-                    ]")
+                    ]" # help_list_remotes)
       end
 
    run_show is
@@ -837,10 +852,11 @@ copy of the Program in return for a fee.
 feature {} -- remote vault management
    run_save is
          -- save to remote
+      local
+         remote: REMOTE
       do
-         if remote = Void then
-            std_output.put_line(once "[1mNo remote method![0m")
-         else
+         remote := selected_remote
+         if remote /= Void then
             std_output.put_line(once "[32mPlease wait...[0m")
             remote.save(shared.vault_file)
          end
@@ -848,10 +864,11 @@ feature {} -- remote vault management
 
    run_load is
          -- load from remote
+      local
+         remote: REMOTE
       do
-         if remote = Void then
-            std_output.put_line(once "[1mNo remote method![0m")
-         else
+         remote := selected_remote
+         if remote /= Void then
             -- shut the server down
             send("stop")
 
@@ -874,10 +891,10 @@ feature {} -- remote vault management
          -- merge from remote
       local
          merge_pass0, merge_pass: STRING
+         remote: REMOTE
       do
-         if remote = Void then
-            std_output.put_line(once "[1mNo remote method![0m")
-         else
+         remote := selected_remote
+         if remote /= Void then
             std_output.put_line(once "[32mPlease wait...[0m")
             remote.load(merge_vault)
 
@@ -927,17 +944,97 @@ feature {} -- helpers
          end
       end
 
-   remote: REMOTE
+   remote_map: LINKED_HASHED_DICTIONARY[REMOTE, FIXED_STRING]
 
-   set_remote is
-      require
-         remote = Void
+   add_remote (section: FIXED_STRING) is
       local
-         remote_section: FIXED_STRING
+         remote: REMOTE
          remote_factory: REMOTE_FACTORY
       do
-         remote_section := conf("remote.section".intern)
-         remote := remote_factory.new_remote(remote_section, Current)
+         remote := remote_factory.new_remote(section, Current)
+         if remote /= Void then
+            remote_map.add(remote, section)
+         end
       end
+
+   fill_remote_map is
+      local
+         remote_sections: FIXED_STRING
+         start, next: INTEGER
+      do
+         remote_sections := conf("remote.sections".intern)
+         if remote_sections /= Void then
+            from
+               start := remote_sections.lower
+               next := remote_sections.first_index_of(',')
+            until
+               not remote_sections.valid_index(next)
+            loop
+               add_remote(remote_sections.substring(start, next - 1))
+               start := next + 1
+               next := remote_sections.index_of(',', start)
+            end
+            add_remote(remote_sections.substring(start, remote_sections.upper))
+         end
+      end
+
+   list_remotes: STRING is
+      local
+         i: INTEGER
+      do
+         Result := once ""
+         Result.clear_count
+         from
+            i := remote_map.lower
+         until
+            i > remote_map.upper
+         loop
+            if i > remote_map.lower then
+               Result.append(once ", ")
+            end
+            Result.append(remote_map.key(i))
+            i := i + 1
+         end
+      end
+
+   selected_remote: REMOTE is
+      do
+         if remote_map.is_empty then
+            std_output.put_line(once "[1mNo remote defined![0m")
+         else
+            if remote_map.count = 1 then
+               if not command.is_empty then
+                  std_output.put_line(once "[1mRemote argument ignored (only one remote)[0m")
+               end
+               Result := remote_map.first
+            else
+               if command.is_empty then
+                  std_output.put_line(once "[1mPlease specify the remote to use (#(1))[0m" # list_remotes)
+               else
+                  if command.count > 1 then
+                     std_output.put_line(once "[1mAll arguments but the first one are ignored[0m")
+                  end
+                  Result := remote_map.reference_at(command.first.intern)
+                  if Result = Void then
+                     std_output.put_line(once "[1mUnknown remote: #(1)[0m" # command.first)
+                  end
+               end
+            end
+         end
+      end
+
+   help_list_remotes: ABSTRACT_STRING is
+      do
+         if remote_map.is_empty then
+            Result := once "There are no remotes defined."
+         elseif remote_map.count = 1 then
+            Result := once "There is only one remote defined: [1m#(1)[0m" # remote_map.key(remote_map.lower)
+         else
+            Result := once "The defined remotes are:%N                   [1m#(1)[0m" # list_remotes
+         end
+      end
+
+invariant
+   remote_map /= Void
 
 end
