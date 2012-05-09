@@ -962,7 +962,7 @@ feature {} -- helpers
          remote_sections: FIXED_STRING
          start, next: INTEGER
       do
-         remote_sections := conf("remote.sections".intern)
+         remote_sections := conf(config_remote_sections)
          if remote_sections /= Void then
             from
                start := remote_sections.lower
@@ -1032,6 +1032,11 @@ feature {} -- helpers
          else
             Result := once "The defined remotes are:%N                   [1m#(1)[0m" # list_remotes
          end
+      end
+
+   config_remote_sections: FIXED_STRING is
+      once
+         Result := "remote.sections".intern
       end
 
 invariant

@@ -23,7 +23,7 @@ feature {ANY}
          if specific_section = Void then
             specific_section := generating_type.as_lower.intern
          end
-         Result := configuration.get(specific_section, key)
+         Result := eval(configuration.get(specific_section, key))
       end
 
    has_conf (key: ABSTRACT_STRING): BOOLEAN is
@@ -36,6 +36,17 @@ feature {ANY}
    conf_filename: FIXED_STRING is
       do
          Result := configuration.filename
+      end
+
+feature {}
+   eval (string: ABSTRACT_STRING): FIXED_STRING is
+         -- takes care of environment variables etc.
+      local
+         processor: PROCESSOR
+      do
+         if string /= Void then
+            Result := processor.split_arguments(string).first.intern
+         end
       end
 
 feature {}

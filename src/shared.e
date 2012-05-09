@@ -22,29 +22,29 @@ insert
 feature {ANY}
    server_fifo: FIXED_STRING is
       once
-         Result := eval(mandatory_key(config_server_fifo))
+         Result := mandatory_key(config_server_fifo)
       end
 
    server_pidfile: FIXED_STRING is
       once
-         Result := eval(mandatory_key(config_server_pidfile))
+         Result := mandatory_key(config_server_pidfile)
       end
 
    vault_file: FIXED_STRING is
       once
-         Result := eval(mandatory_key(config_vault_file))
+         Result := mandatory_key(config_vault_file)
       end
 
    log_file (tag: ABSTRACT_STRING): FIXED_STRING is
       require
          tag /= Void
       do
-         Result := eval(once "#(1)/#(2).log" # mandatory_key(config_log_dir) # tag)
+         Result := (once "#(1)/#(2).log" # mandatory_key(config_log_dir) # tag).intern
       end
 
    tmp_dir: FIXED_STRING is
       once
-         Result := eval(mandatory_key(config_tmp_fifo_dir))
+         Result := mandatory_key(config_tmp_fifo_dir)
       end
 
 feature {}
@@ -60,15 +60,6 @@ feature {}
          end
       ensure
          Result /= Void
-      end
-
-   eval (string: ABSTRACT_STRING): FIXED_STRING is
-      require
-         string /= Void
-      local
-         processor: PROCESSOR
-      do
-         Result := processor.split_arguments(string).first.intern
       end
 
    config_server_fifo: FIXED_STRING is
