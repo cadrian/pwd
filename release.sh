@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                                                        #
+# Make a pwdmgr binary release                                           #
+#                                                                        #
+# See also: bootstrap.sh, deploy.sh                                      #
+#                                                                        #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
 dir=$(dirname $(readlink -f $0))
 cd $dir
 

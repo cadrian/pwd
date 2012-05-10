@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                                                        #
+# Prepare both bootstrap and binary packages of pwdmgr                   #
+# (with the correct version number)                                      #
+#                                                                        #
+# See also: bootstrap.sh, release.sh                                     #
+#                                                                        #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
 dir=$(dirname $(readlink -f $0))
 cd $dir
 

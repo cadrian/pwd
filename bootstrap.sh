@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                                                        #
+# Build a C-generated source package to help package maintainers to      #
+# install pwdmgr without having to install LibertyEiffel first           #
+#                                                                        #
+# See also: release.sh, deploy.sh                                        #
+#                                                                        #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
 dir=$(dirname $(readlink -f $0))
 cd $dir
 

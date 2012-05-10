@@ -17,12 +17,13 @@ An *administration console* is also provided.
 
  - **xclip** (mandatory)
  - **openssl** (mandatory)
+ - **zenity** (mandatory)
  - **less** (almost mandatory, for the *list* command and all kinds of
      help)
  - either **curl** or **scp** (optional, but useful if you want to
-   keep your vault in the cloud)
+     keep your vault in the cloud)
  - **dmenu** (optional, but useful if you don't want to use the
-     console for nominal use case)
+     console for nominal use case -- you may also use zenity)
  - **xterm** (optional, but useful to let the console open itself in
      graphical environments)
 
@@ -68,7 +69,7 @@ To close the vault, just type `stop` in the administration console
 
 The menu is a very quick and efficient way of getting a password. Just
 enter the key of the password you need; the password is made available
-in the X clipboard, just type `ctrl-C` or click the middle button of
+in the X clipboard, just type `ctrl-V` or click the middle button of
 your mouse to paste it in a password form.
 
 The most typical use is all the web login sites (google, facebook,
@@ -84,6 +85,17 @@ For instance, `add foo` will generate a unique random password and
 store it in the vault using the key *foo*. The password is also made
 available to the X clipboard for pasting in the form of the new
 account you are just creating `:-)`
+
+You may also specify a *recipe* for the password generation; for
+instance, type `add foo generate 6n` to generate a 6 figures
+password. The recipe grammar is:
+
+    recipe     <- mix ('+' mix)*         # all the ingredients will be mixed
+    mix        <- quantity ingredient+   # n times the ingredients
+    quantity   <- [0-9]*                 # default 1
+    ingredient <- 'a'                    # alphabetic
+                / 'n'                    # numeric
+                / 's'                    # symbols
 
 Another usage is `add foo prompt`. In that case, the password is not
 generated, but you will need to enter it in the dialog that pops
