@@ -242,7 +242,7 @@ feature {}
                if_open.call([tfw])
                tfw.disconnect
             else
-               log.info.put_line(once "fifo #(1) not found" # filename)
+               log.info.put_line(once "fifo #(1) not found!" # filename)
             end
          else
             reply_not_open(filename)
@@ -284,7 +284,7 @@ feature {}
          actual_pass: STRING; key: KEY
       do
          if pass = Void then
-            actual_pass := generate_pass
+            actual_pass := generate_pass(once "an+s+14ansanansaan")
          else
             actual_pass := pass
          end
@@ -411,58 +411,23 @@ feature {}
          log.info.put_line(once "vault data read.")
       end
 
-   generate_pass: STRING is
+   generate_pass (recipe: STRING): STRING is
+      require
+         recipe /= Void
       local
-         i: INTEGER; p: POINTER
+         g: PASS_GENERATOR
       do
-         log.trace.put_line(once "generating random pass")
+         log.trace.put_line(once "generating random pass (may take time, depending on the system entropy)")
 
          Result := ""
-         c_inline_c("_p = fopen(%"/dev/random%", %"rb%");%N")
-
-         from
-            extend_pass(p, letters, Result)
-            extend_pass(p, symbols, Result)
-            i := 2
-         until
-            i > 16
-         loop
-            extend_pass(p, pass_string, Result)
-            i := i + 1
+         create g.parse(recipe)
+         if g.is_valid then
+            Result := g.generated
+         else
+            log.warning.put_line(once "Invalid recipe: #(1)" # recipe)
          end
-
-         c_inline_c("fclose((FILE*)_p);%N")
       ensure
          Result /= Void
-      end
-
-   extend_pass (random: POINTER; range: FIXED_STRING; pass: STRING) is
-      require
-         not random.is_default
-         range.count.in_range(1, 16383)
-         pass /= Void
-      local
-         int: INTEGER_32
-      do
-         c_inline_c("_int=(((int)io_getc((FILE*)a1) & 0x7f) << 8) | (int)io_getc((FILE*)a1);%N") -- >>
-         pass.extend(range.item(int \\ range.count + range.lower))
-      ensure
-         pass.count = old pass.count + 1
-      end
-
-   pass_string: FIXED_STRING is
-      once
-         Result := ("#(1)#(2)#(1)#(1)#(2)#(1)#(1)" # letters # symbols).intern
-      end
-
-   letters: FIXED_STRING is
-      once
-         Result := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".intern
-      end
-
-   symbols: FIXED_STRING is
-      once
-         Result := "(-_)~#{[|^@]}+=<>,?./!§".intern
       end
 
 feature {}

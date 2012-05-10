@@ -1,0 +1,60 @@
+-- This file is part of pwdmgr.
+-- Copyright (C) 2012 Cyril Adrian <cyril.adrian@gmail.com>
+--
+-- pwdmgr is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, version 3 of the License.
+--
+-- pwdmgr is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
+--
+class PASS_GENERATOR
+
+insert
+   LOGGING
+
+create {VAULT}
+   parse
+
+feature {ANY}
+   is_valid: BOOLEAN
+
+   generated: STRING is
+      require
+         is_valid
+      local
+         p: POINTER
+      do
+         Result := ""
+         c_inline_c("_p = fopen(%"/dev/random%", %"rb%");%N")
+         recipe.do_all(agent {PASS_GENERATOR_MIX}.extend(p, Result))
+         c_inline_c("fclose((FILE*)_p);%N")
+      ensure
+         not Result.is_empty
+      end
+
+feature {}
+   recipe: FAST_ARRAY[PASS_GENERATOR_MIX]
+
+   parse (a_recipe: STRING) is
+      require
+         a_recipe /= Void
+      local
+         parser: PASS_GENERATOR_PARSER
+      do
+         create parser.parse(a_recipe)
+         if parser.parsed then
+            is_valid := True
+            recipe := parser.recipe
+         end
+      end
+
+invariant
+   is_valid implies not recipe.is_empty
+
+end

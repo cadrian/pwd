@@ -1,0 +1,138 @@
+-- This file is part of pwdmgr.
+-- Copyright (C) 2012 Cyril Adrian <cyril.adrian@gmail.com>
+--
+-- pwdmgr is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, version 3 of the License.
+--
+-- pwdmgr is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
+--
+class PASS_GENERATOR_PARSER
+
+create {PASS_GENERATOR}
+   parse
+
+feature {PASS_GENERATOR}
+   recipe: FAST_ARRAY[PASS_GENERATOR_MIX] is
+      require
+         is_valid
+      attribute
+      end
+
+   parsed: BOOLEAN
+
+feature {}
+   last_quantity: INTEGER
+   last_ingredient: STRING
+   index: INTEGER
+   source: ABSTRACT_STRING
+
+   parse (a_source: like source) is
+      require
+         a_source /= Void
+      do
+         create recipe.with_capacity(4)
+         source := a_source
+         index := a_source.lower
+         parsed := parse_recipe
+      end
+
+   parse_recipe: BOOLEAN is
+      require
+         source.valid_index(index)
+      do
+         from
+            Result := True
+         until
+            not Result
+               or else not source.valid_index(index)
+         loop
+            Result := parse_mix
+         end
+      end
+
+   parse_mix: BOOLEAN is
+      require
+         source.valid_index(index)
+      do
+         if parse_quantity and then parse_ingredient then
+            recipe.add_last(create {PASS_GENERATOR_MIX}.make(last_quantity, last_ingredient.intern))
+            Result := True
+         end
+      end
+
+   parse_quantity: BOOLEAN is
+      require
+         source.valid_index(index)
+      do
+         from
+            last_quantity := 0
+         until
+            not source.valid_index(index)
+               or else not source.item(index).is_digit
+         loop
+            last_quantity := last_quantity * 10 + source.item(index).value
+            index := index + 1
+         end
+         if last_quantity = 0 then
+            last_quantity := 1
+         end
+         Result := source.valid_index(index)
+      end
+
+   parse_ingredient: BOOLEAN is
+      require
+         source.valid_index(index)
+      do
+         from
+            Result := True
+            last_ingredient := once ""
+            last_ingredient.clear_count
+         until
+            not Result
+               or else not source.valid_index(index)
+               or else source.item(index) = '+'
+         loop
+            inspect
+               source.item(index)
+            when 'a' then
+               last_ingredient.append(letters)
+            when 'n' then
+               last_ingredient.append(figures)
+            when 's' then
+               last_ingredient.append(symbols)
+            else
+               Result := False
+            end
+            index := index + 1
+         end
+         if Result and then source.valid_index(index) then
+            index := index + 1
+         end
+      end
+
+   letters: FIXED_STRING is
+      once
+         Result := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".intern
+      end
+
+   figures: FIXED_STRING is
+      once
+         Result := "0123456789".intern
+      end
+
+   symbols: FIXED_STRING is
+      once
+         Result := "(-_)~#{[|^@]}+=<>,?./!§".intern
+      end
+
+invariant
+   is_valid implies not recipe.is_empty
+
+end
