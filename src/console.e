@@ -136,7 +136,11 @@ feature {} -- local vault commands
       local
          cmd: ABSTRACT_STRING; pass: STRING
       do
-         if command.count > 1 then
+         inspect
+            command.count
+         when 1 then
+            cmd := once "set #(1) #(2)" # client_fifo # command.first
+         when 2 then
             inspect
                command.last
             when "generated" then
@@ -149,8 +153,8 @@ feature {} -- local vault commands
             else
                io.put_line(once "[1mError:[0m unrecognized last argument '#(1)'" # command.last)
             end
-         elseif not command.is_empty then
-            cmd := once "set #(1) #(2)" # client_fifo # command.first
+         else
+            io.put_line(once "[1mError:[0m bad number of arguments")
          end
          if cmd /= Void then
             call_server(cmd,

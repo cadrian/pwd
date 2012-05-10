@@ -319,20 +319,28 @@ feature {} -- xclip
    xclip (string: ABSTRACT_STRING) is
       require
          string /= Void
+      local
+         procs: FAST_ARRAY[PROCESS]
       do
-         xclipboards.do_all(agent xclip_select(string, ?))
+         create procs.with_capacity(xclipboards.count)
+         xclipboards.do_all(agent xclip_select(string, ?, procs))
+         procs.do_all(agent {PROCESS}.wait)
       end
 
-   xclip_select (string: ABSTRACT_STRING; selection: STRING) is
+   xclip_select (string: ABSTRACT_STRING; selection: STRING; procs: FAST_ARRAY[PROCESS]) is
+      require
+         procs /= Void
       local
          proc: PROCESS
       do
-         proc := processor.execute(once "xclip", once "-selection #(1) -loops 3" # selection)
+         proc := processor.execute(once "xclip", once "-selection #(1)" # selection)
          if proc.is_connected then
             proc.input.put_line(string)
             proc.input.disconnect
-            proc.wait
+            procs.add_last(proc)
          end
+      ensure
+         procs.count = old procs.count + 1
       end
 
    xclipboards: FAST_ARRAY[STRING] is

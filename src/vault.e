@@ -108,7 +108,11 @@ feature {ANY}
          filename /= Void
          name /= Void
       do
-         log.info.put_line(once "#(1): set #(2)" # filename # name)
+         if pass = Void then
+            log.info.put_line(once "#(1): set #(2)" # filename # name)
+         else
+            log.info.put_line(once "#(1): set #(2) ****" # filename # name)
+         end
          run_open(filename, agent do_set(?, name, pass))
       end
 
@@ -234,8 +238,11 @@ feature {}
          if is_open then
             create {TEXT_FILE_WRITE} tfw.connect_to(filename)
             if tfw.is_connected then
+               log.trace.put_line(once "found fifo #(1)" # filename)
                if_open.call([tfw])
                tfw.disconnect
+            else
+               log.info.put_line(once "fifo #(1) not found" # filename)
             end
          else
             reply_not_open(filename)
@@ -344,8 +351,10 @@ feature {}
       do
          key := data.reference_at(name)
          if key /= Void and then not key.is_deleted then
+            log.trace.put_line(once "found key '#(1)'" # name)
             display_key(key, stream)
          else
+            log.info.put_line(once "key '#(1)' not fount" # name)
             stream.put_line(name)
          end
       end
@@ -406,6 +415,8 @@ feature {}
       local
          i: INTEGER; p: POINTER
       do
+         log.trace.put_line(once "generating random pass")
+
          Result := ""
          c_inline_c("_p = fopen(%"/dev/random%", %"rb%");%N")
 

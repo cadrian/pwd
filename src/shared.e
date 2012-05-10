@@ -47,6 +47,14 @@ feature {ANY}
          Result := mandatory_key(config_tmp_fifo_dir)
       end
 
+   log_level: FIXED_STRING is
+      once
+         Result := conf(config_log_level)
+         if Result = Void then
+            Result := "info".intern
+         end
+      end
+
 feature {}
    mandatory_key (key: FIXED_STRING): FIXED_STRING is
       require
@@ -75,6 +83,11 @@ feature {}
    config_log_dir: FIXED_STRING is
       once
          Result := "log.dir".intern
+      end
+
+   config_log_level: FIXED_STRING is
+      once
+         Result := "log.level".intern
       end
 
    config_vault_file: FIXED_STRING is

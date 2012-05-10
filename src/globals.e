@@ -58,7 +58,7 @@ feature {}
                                      logger
                                         #(1) is
                                            output default
-                                           level info
+                                           level #(4)
                                         end
 
                                      end
@@ -67,6 +67,7 @@ feature {}
                                        # generating_type
                                        # log_file
                                        # command_name
+                                       # shared.log_level
                                      ).out)
 
          logconf.load(config, Void, Void, agent start_main)
