@@ -13,7 +13,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
-class PWDSRV
+class SERVER
 
 inherit
    JOB
@@ -30,46 +30,33 @@ create {}
 
 feature {LOOP_ITEM}
    prepare (events: EVENTS_SET) is
-      local
-         t: TIME_EVENTS
       do
-         if channel /= Void and then channel.is_connected then
-            log.info.put_line(once "Awaiting connection.")
-            events.expect(channel.event_can_read)
-         else
-            log.info.put_line(once "Channel not connected!")
-            events.expect(t.timeout(0))
-         end
+         channel.prepare(events)
       end
 
    is_ready (events: EVENTS_SET): BOOLEAN is
       do
-         if events.event_occurred(channel.event_can_read) then
-            channel.read_line
-            Result := not channel.end_of_input and then not channel.last_string.is_empty
-            if Result then
-               log.info.put_line(once "Connection received")
-            end
-         end
+         Result := channel.is_ready(events)
       end
 
    continue is
       local
          cmd, file, name, setcmd: STRING; merge_vault: VAULT
+         command: RING_ARRAY[STRING]
       do
-         log.info.put_line(once "Received command")
+         channel.continue
+         command := channel.command
 
-         command.clear_count
-         channel.last_string.split_in(command)
          if not command.is_empty then
             cmd := command.first
             command.remove_first
             inspect
                cmd
+
             when "ping" then
-               -- operation used to settle the fifos at startup
                file := command.last
                vault.ping(file)
+
             when "master" then
                vault.close
                if command.count = 1 then
@@ -78,6 +65,7 @@ feature {LOOP_ITEM}
                if not vault.is_open then
                   log.warning.put_line(once "Invalid master password -- vault not open")
                end
+
             when "list" then
                if command.count = 1 then
                   file := command.last
@@ -85,6 +73,7 @@ feature {LOOP_ITEM}
                else
                   log.warning.put_line(once "Invalid list file name")
                end
+
             when "get" then
                if command.count = 2 then
                   file := command.first
@@ -93,6 +82,7 @@ feature {LOOP_ITEM}
                else
                   log.warning.put_line(once "Invalid get file name")
                end
+
             when "set" then
                if command.count >= 2 then
                   file := command.first
@@ -125,6 +115,7 @@ feature {LOOP_ITEM}
                else
                   log.warning.put_line(once "Invalid set file name")
                end
+
             when "unset" then
                if command.count = 2 then
                   file := command.first
@@ -133,6 +124,7 @@ feature {LOOP_ITEM}
                else
                   log.warning.put_line(once "Invalid unset file name")
                end
+
             when "save" then
                if command.count = 1 then
                   file := command.last
@@ -140,6 +132,7 @@ feature {LOOP_ITEM}
                else
                   log.warning.put_line(once "Invalid save file name")
                end
+
             when "merge" then
                if command.count = 3 then
                   file := command.first
@@ -157,14 +150,17 @@ feature {LOOP_ITEM}
                else
                   log.warning.put_line(once "Invalid merge file name")
                end
+
             when "close" then
                vault.close
                collect_garbage
+
             when "stop" then
                vault.close
                log.info.put_line(once "Terminating...")
                collect_garbage
                channel.disconnect
+
             else
                log.warning.put_line(once "Unknown command: #(1)" # command.first)
             end
@@ -173,20 +169,12 @@ feature {LOOP_ITEM}
 
    done: BOOLEAN is
       do
-         Result := channel = Void or else not channel.is_connected
+         Result := channel.done
       end
 
    restart is
       do
-         if not fifo.exists(fifo_filename) then
-            fifo.make(fifo_filename)
-            if not fifo.exists(fifo_filename) then
-               log.error.put_line(once "Error while opening fifo #(1)" # fifo_filename)
-               die_with_code(1)
-            end
-         end
-
-         create channel.connect_to(fifo_filename)
+         channel.restart
       end
 
    collect_garbage is
@@ -199,19 +187,8 @@ feature {LOOP_ITEM}
 feature {}
    processor: PROCESSOR
    exceptions: EXCEPTIONS
-
-   channel: TEXT_FILE_READ_WRITE
-         -- there must be at least one writer for the fifo_filename to be blocking in select(2)
-         -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo
-
+   channel: SERVER_CHANNEL
    vault: VAULT
-
-   fifo_filename: FIXED_STRING is
-      do
-         Result := shared.server_fifo
-      end
-
-   command: RING_ARRAY[STRING]
 
    run_in_child is
          -- the main loop
@@ -243,7 +220,7 @@ feature {}
          if vault.is_open then
             vault.close
          end
-         delete(fifo_filename)
+         channel.cleanup
       rescue
          if exceptions.is_signal then
             log.info.put_line(once "Killed by signal #(1), exitting gracefully." # exceptions.signal_number.out)
@@ -262,8 +239,6 @@ feature {}
 
    preload is
       do
-         create command.with_capacity(16, 0)
-
          inspect
             configuration.argument_count
          when 0 then
@@ -300,11 +275,9 @@ feature {}
    main is
       local
          proc: PROCESS
+         channel_factory: CHANNEL_FACTORY
       do
-         if fifo.exists(fifo_filename) then
-            log.error.put_line(once "Fifo already exists, not starting server")
-            die_with_code(1)
-         end
+         channel := channel_factory.new_server_channel
 
          if detach then
             proc := processor.fork
@@ -328,6 +301,5 @@ invariant
    vault /= Void
    fifo_filename /= Void
    channel /= Void
-   command /= Void
 
 end

@@ -2,14 +2,14 @@
 
 COMMON_FILES = src/*.e src/config/*.e
 
-all: exe/pwdsrv exe/menu exe/console
+all: exe/server exe/menu exe/console
 
 clean:
-	rm -f exe/pwdsrv exe/menu exe/console *.ace
+	rm -f exe/server exe/menu exe/console *.ace
 
-exe/pwdsrv: exe pwdsrv.ace src/server/*.e src/generator/*.e $(COMMON_FILES)
-	se c pwdsrv.ace
-	mv pwdsrv.exe $@
+exe/server: exe server.ace src/server/*.e src/generator/*.e $(COMMON_FILES)
+	se c server.ace
+	mv server.exe $@
 
 exe/menu: exe menu.ace src/client/menu.e src/client/client.e $(COMMON_FILES)
 	se c menu.ace

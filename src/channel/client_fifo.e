@@ -22,7 +22,7 @@ insert
    CONFIGURABLE
    FILE_TOOLS
 
-create {ANY}
+create {CHANNEL_FACTORY}
    make
 
 feature {CLIENT}
@@ -87,13 +87,11 @@ feature {}
    fifo: FIFO
    shared: SHARED
 
-   make (a_client_fifo: like client_fifo) is
+   make (tmpdir: ABSTRACT_STRING) is
       require
-         a_client_fifo /= Void
+         tmpdir /= Void
       do
-         client_fifo := a_client_fifo
-      ensure
-         client_fifo = a_client_fifo
+         client_fifo := ("#(1)/fifo" # tmpdir).intern
       end
 
    server_fifo: FIXED_STRING is

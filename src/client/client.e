@@ -46,6 +46,8 @@ feature {}
       end
 
    main is
+      local
+         channel_factory: CHANNEL_FACTORY
       do
          tmpdir := fifo.tmp
          if tmpdir = Void then
@@ -53,7 +55,7 @@ feature {}
             die_with_code(1)
          end
 
-         create {CLIENT_FIFO} channel.make(("#(1)/fifo" # tmpdir).intern)
+         channel := channel_factory.new_client_channel(tmpdir)
 
          from
             restart := True
@@ -135,9 +137,9 @@ feature {}
       do
          log.info.put_line(once "starting server...")
          if configuration.argument_count = 1 then
-            arg := once "pwdsrv '#(1)'" # configuration.argument(1)
+            arg := once "server '#(1)'" # configuration.argument(1)
          else
-            arg := once "pwdsrv"
+            arg := once "server"
          end
          proc := processor.execute_to_dev_null(once "nohup", arg)
          if proc.is_connected then
@@ -209,7 +211,7 @@ feature {} -- get a password from the server
                            check
                               in.last_string.is_equal(once "pong")
                            end
-                           log.info.put_line(once "ping: #(1)" # in.last_string)
+                           log.trace.put_line(once "ping: #(1)" # in.last_string)
                         end)
       end
 

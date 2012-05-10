@@ -63,6 +63,14 @@ feature {ANY}
          end
       end
 
+   channel_method: FIXED_STRING is
+      once
+         Result := conf(config_channel_method)
+         if Result = Void then
+            Result := "fifo".intern -- default is named fifo
+         end
+      end
+
 feature {}
    mandatory_key (key: FIXED_STRING): FIXED_STRING is
       require
@@ -111,6 +119,11 @@ feature {}
    config_default_recipe: FIXED_STRING is
       once
          Result := "default_recipe".intern
+      end
+
+   config_channel_method: FIXED_STRING is
+      once
+         Result := "channel.method".intern
       end
 
 end
