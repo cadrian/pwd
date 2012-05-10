@@ -28,12 +28,15 @@ feature {ANY}
       require
          is_valid
       local
-         p: POINTER
+         bfr: BINARY_FILE_READ
       do
          Result := ""
-         c_inline_c("_p = fopen(%"/dev/random%", %"rb%");%N")
-         recipe.do_all(agent {PASS_GENERATOR_MIX}.extend(p, Result))
-         c_inline_c("fclose((FILE*)_p);%N")
+         create bfr.with_buffer_size(2)
+         bfr.connect_to(once "/dev/random")
+         if bfr.is_connected then
+            recipe.do_all(agent {PASS_GENERATOR_MIX}.extend(bfr, Result))
+            bfr.disconnect
+         end
       ensure
          not Result.is_empty
       end

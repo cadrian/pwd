@@ -22,9 +22,9 @@ create {PASS_GENERATOR_PARSER}
    make
 
 feature {PASS_GENERATOR}
-   extend (file: POINTER; pass: STRING) is
+   extend (file: BINARY_FILE_READ; pass: STRING) is
       require
-         not file.is_default
+         file.is_connected
          pass /= Void
       do
          (1 |..| quantity).do_all(agent extend_pass(file, pass))
@@ -38,14 +38,18 @@ feature {}
    ingredient: FIXED_STRING
 
 feature {}
-   extend_pass (file: POINTER; pass: STRING) is
+   extend_pass (file: BINARY_FILE_READ; pass: STRING) is
       require
-         not file.is_default
+         file.is_connected
          pass /= Void
       local
-         int: INTEGER_32
+         int, b1, b2: INTEGER_32
       do
-         c_inline_c("_int=(((int)io_getc((FILE*)a1) & 0x7f) << 8) | (int)io_getc((FILE*)a1);%N") -- >>
+         file.read_byte
+         b1 := file.last_byte
+         file.read_byte
+         b2 := file.last_byte
+         int := (b1 & 0x7f) |<< 8 + b2
          pass.extend(ingredient.item(int \\ ingredient.count + ingredient.lower))
       ensure
          pass.count = old pass.count + 1
