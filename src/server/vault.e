@@ -103,16 +103,23 @@ feature {ANY}
          run_open(filename, agent do_get(?, name))
       end
 
+   set_random (filename, name: STRING; recipe: ABSTRACT_STRING) is
+      require
+         filename /= Void
+         name /= Void
+         recipe /= Void
+      do
+         log.info.put_line(once "#(1): set random #(2) using recipe: #(3)" # filename # name # recipe)
+         run_open(filename, agent do_set_random(?, name, recipe))
+      end
+
    set (filename, name, pass: STRING) is
       require
          filename /= Void
          name /= Void
+         pass /= Void
       do
-         if pass = Void then
-            log.info.put_line(once "#(1): set #(2)" # filename # name)
-         else
-            log.info.put_line(once "#(1): set #(2) ****" # filename # name)
-         end
+         log.info.put_line(once "#(1): set #(2) using given password" # filename # name)
          run_open(filename, agent do_set(?, name, pass))
       end
 
@@ -186,8 +193,19 @@ feature {}
          is_open
          stream.is_connected
          name /= Void
+         pass /= Void
       do
          set_key(name, pass, stream)
+      end
+
+   do_set_random (stream: OUTPUT_STREAM; name: STRING; recipe: ABSTRACT_STRING) is
+      require
+         is_open
+         stream.is_connected
+         name /= Void
+         recipe /= Void
+      do
+         set_random_key(name, recipe, stream)
       end
 
    do_unset (stream: OUTPUT_STREAM; name: STRING) is
@@ -279,26 +297,33 @@ feature {}
       end
 
 feature {}
-   set_key (name: ABSTRACT_STRING; pass: STRING; stream: OUTPUT_STREAM) is
-      local
-         actual_pass: STRING; key: KEY
+   set_random_key (name, recipe: ABSTRACT_STRING; stream: OUTPUT_STREAM) is
+      require
+         name /= Void
+         recipe /= Void
+         stream.is_connected
       do
-         if pass = Void then
-            actual_pass := generate_pass(once "an+s+14ansanansaan")
-         else
-            actual_pass := pass
-         end
+         set_key(name, generate_pass(recipe), stream)
+      end
 
+   set_key (name: ABSTRACT_STRING; pass: STRING; stream: OUTPUT_STREAM) is
+      require
+         name /= Void
+         pass /= Void
+         stream.is_connected
+      local
+         key: KEY
+      do
          key := data.reference_at(name.intern)
          if key = Void then
-            create key.new(name, actual_pass)
+            create key.new(name, pass)
             data.add(key, key.name)
          else
-            key.set_pass(actual_pass)
+            key.set_pass(pass)
          end
 
          check
-            key.pass = actual_pass
+            key.pass = pass
             not key.is_deleted
          end
 
@@ -411,7 +436,7 @@ feature {}
          log.info.put_line(once "vault data read.")
       end
 
-   generate_pass (recipe: STRING): STRING is
+   generate_pass (recipe: ABSTRACT_STRING): STRING is
       require
          recipe /= Void
       local

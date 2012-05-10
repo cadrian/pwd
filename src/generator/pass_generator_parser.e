@@ -19,11 +19,8 @@ create {PASS_GENERATOR}
    parse
 
 feature {PASS_GENERATOR}
-   recipe: FAST_ARRAY[PASS_GENERATOR_MIX] is
-      require
-         is_valid
-      attribute
-      end
+   recipe: FAST_ARRAY[PASS_GENERATOR_MIX]
+   total_quantity: INTEGER
 
    parsed: BOOLEAN
 
@@ -31,14 +28,15 @@ feature {}
    last_quantity: INTEGER
    last_ingredient: STRING
    index: INTEGER
-   source: ABSTRACT_STRING
+   source: FIXED_STRING
 
-   parse (a_source: like source) is
+   parse (a_source: ABSTRACT_STRING) is
       require
          a_source /= Void
       do
          create recipe.with_capacity(4)
-         source := a_source
+         total_quantity := 0
+         source := a_source.intern
          index := a_source.lower
          parsed := parse_recipe
       end
@@ -63,6 +61,7 @@ feature {}
       do
          if parse_quantity and then parse_ingredient then
             recipe.add_last(create {PASS_GENERATOR_MIX}.make(last_quantity, last_ingredient.intern))
+            total_quantity := total_quantity + last_quantity
             Result := True
          end
       end
@@ -133,6 +132,7 @@ feature {}
       end
 
 invariant
-   is_valid implies not recipe.is_empty
+   parsed implies not recipe.is_empty
+   parsed implies total_quantity > 0
 
 end

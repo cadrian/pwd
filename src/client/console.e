@@ -134,24 +134,34 @@ feature {} -- local vault commands
    run_add is
          -- add key
       local
-         cmd: ABSTRACT_STRING; pass: STRING
+         cmd: ABSTRACT_STRING; pass, recipe: STRING
       do
          inspect
             command.count
          when 1 then
-            cmd := once "set #(1) #(2)" # client_fifo # command.first
+            cmd := once "set #(1) #(2) random #(3)" # client_fifo # command.first # shared.default_recipe
          when 2 then
             inspect
                command.last
-            when "generated" then
-               cmd := once "set #(1) #(2)" # client_fifo # command.first
+            when "generate" then
+               cmd := once "set #(1) #(2) random #(3)" # client_fifo # command.first # shared.default_recipe
             when "prompt" then
                pass := read_password(once "Please enter the new password for #(1)" # command.first, on_cancel)
                if pass /= Void then
-                  cmd := once "set #(1) #(2) #(3)" # client_fifo # command.first # pass
+                  cmd := once "set #(1) #(2) given #(3)" # client_fifo # command.first # pass
                end
             else
-               io.put_line(once "[1mError:[0m unrecognized last argument '#(1)'" # command.last)
+               io.put_line(once "[1mError:[0m unrecognized argument '#(1)'" # command.last)
+            end
+         when 3 then
+            recipe := command.last
+            command.remove_last
+            inspect
+               command.last
+            when "generate" then
+               cmd := once "set #(1) #(2) random #(3)" # client_fifo # command.first # recipe
+            else
+               io.put_line(once "[1mError:[0m unrecognized argument '#(1)'" # command.last)
             end
          else
             io.put_line(once "[1mError:[0m bad number of arguments")
@@ -213,8 +223,11 @@ feature {} -- help
                     [1;32mKnown commands[0m
 
                     [33madd <key> [how][0m    Add a new password. Needs at least a key.
-                                       If [33m[how][0m is either not specified or "generated" then
+                                       If [33m[how][0m is either not specified or "generate" then
                                        the password is randomly generated.
+                                       If [33m[how][0m is "generate" with an extra argument then
+                                       the extra argument represents a "recipe" used to generate
+                                       the password (*).
                                        If [33m[how][0m is "prompt" then the password is asked.
                                        If the password already exists it is changed.
                                        In all cases the password is stored in the clipboard.
@@ -246,13 +259,21 @@ feature {} -- help
 
                     [33mhelp[0m               Show this screen :-)
 
+                    Any other input is understood as a password request using the given key.
+                    If that key exists the password is stored in the clipboard.
+
+                    --------
+                    (*) A recipe is a series of "ingredients" separated by a '+'. Each "ingredient"
+                    is an optional quantity (default 1) followed by a series of 'a' (alphanumeric),
+                    'n' (numeric) and 's' (symbol).
+                    The password is generated using the recipe to randomly select characters,
+                    and mixing them.
+
+                    --------
                     [32mpwdmgr Copyright (C) 2012 Cyril Adrian <cyril.adrian@gmail.com>[0m
                     [32mThis program comes with ABSOLUTELY NO WARRANTY; for details type [33mshow w[32m.[0m
                     [32mThis is free software, and you are welcome to redistribute it[0m
                     [32munder certain conditions; type [33mshow c[32m for details.[0m
-
-                    Any other input is understood as a password request using the given key.
-                    If that key exists the password is stored in the clipboard.
 
                     ]" # help_list_remotes)
       end

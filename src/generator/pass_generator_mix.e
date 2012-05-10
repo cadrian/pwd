@@ -43,14 +43,15 @@ feature {}
          file.is_connected
          pass /= Void
       local
-         int, b1, b2: INTEGER_32
+         int, b1, b2, index: INTEGER_32
       do
          file.read_byte
          b1 := file.last_byte
          file.read_byte
          b2 := file.last_byte
-         int := (b1 & 0x7f) |<< 8 + b2
-         pass.extend(ingredient.item(int \\ ingredient.count + ingredient.lower))
+         int := ((b1 & 0x7f) |<< 8 + b2) \\ ingredient.count + ingredient.lower
+         index := file.last_byte \\ (pass.count + 1) + pass.lower -- extra mix
+         pass.insert_character(ingredient.item(int), index)
       ensure
          pass.count = old pass.count + 1
       end

@@ -55,6 +55,14 @@ feature {ANY}
          end
       end
 
+   default_recipe: FIXED_STRING is
+      once
+         Result := conf(config_default_recipe)
+         if Result = Void then
+            Result := "an+s+14ansanansaan".intern -- default is 16 chars long, with at least one alphanumeric and one symbol
+         end
+      end
+
 feature {}
    mandatory_key (key: FIXED_STRING): FIXED_STRING is
       require
@@ -98,6 +106,11 @@ feature {}
    config_tmp_fifo_dir: FIXED_STRING is
       once
          Result := "tmp.fifo.dir".intern
+      end
+
+   config_default_recipe: FIXED_STRING is
+      once
+         Result := "default_recipe".intern
       end
 
 end

@@ -31,7 +31,7 @@ feature {ANY}
          bfr: BINARY_FILE_READ
       do
          Result := ""
-         create bfr.with_buffer_size(2)
+         create bfr.with_buffer_size(3 * length) -- 3 bytes read for each random character (two bytes to select a character, one byte to select its position)
          bfr.connect_to(once "/dev/random")
          if bfr.is_connected then
             recipe.do_all(agent {PASS_GENERATOR_MIX}.extend(bfr, Result))
@@ -43,8 +43,9 @@ feature {ANY}
 
 feature {}
    recipe: FAST_ARRAY[PASS_GENERATOR_MIX]
+   length: INTEGER
 
-   parse (a_recipe: STRING) is
+   parse (a_recipe: ABSTRACT_STRING) is
       require
          a_recipe /= Void
       local
@@ -54,6 +55,7 @@ feature {}
          if parser.parsed then
             is_valid := True
             recipe := parser.recipe
+            length := parser.total_quantity
          end
       end
 

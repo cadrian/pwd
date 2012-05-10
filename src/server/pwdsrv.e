@@ -55,7 +55,7 @@ feature {LOOP_ITEM}
 
    continue is
       local
-         cmd, file, name: STRING; merge_vault: VAULT
+         cmd, file, name, setcmd: STRING; merge_vault: VAULT
       do
          log.info.put_line(once "Received command")
 
@@ -100,9 +100,27 @@ feature {LOOP_ITEM}
                   name := command.first
                   command.remove_first
                   if command.is_empty then
-                     vault.set(file, name, Void)
+                     vault.set_random(file, name, shared.default_recipe)
                   else
-                     vault.set(file, name, command.first)
+                     setcmd := command.first
+                     command.remove_first
+                     inspect
+                        setcmd
+                     when "random" then
+                        if command.is_empty then
+                           vault.set_random(file, name, shared.default_recipe)
+                        else
+                           vault.set_random(file, name, command.first)
+                        end
+                     when "given" then
+                        if command.is_empty then
+                           log.warning.put_line(once "Missing given password")
+                        else
+                           vault.set(file, name, command.first)
+                        end
+                     else
+                        log.warning.put_line(once "Invalid set command")
+                     end
                   end
                else
                   log.warning.put_line(once "Invalid set file name")
