@@ -81,7 +81,7 @@ feature {} -- command management
    run_command is
       require
          not command.is_empty
-         not fifo.exists(client_fifo)
+         channel.is_ready
       local
          cmd: STRING
       do
@@ -117,7 +117,7 @@ feature {} -- command management
             run_get
          end
       ensure
-         not fifo.exists(client_fifo)
+         channel.is_ready
       end
 
 feature {} -- local vault commands
@@ -139,16 +139,16 @@ feature {} -- local vault commands
          inspect
             command.count
          when 1 then
-            cmd := once "set #(1) #(2) random #(3)" # client_fifo # command.first # shared.default_recipe
+            cmd := once "#(1) random #(2)" # command.first # shared.default_recipe
          when 2 then
             inspect
                command.last
             when "generate" then
-               cmd := once "set #(1) #(2) random #(3)" # client_fifo # command.first # shared.default_recipe
+               cmd := once "#(1) random #(2)" # command.first # shared.default_recipe
             when "prompt" then
                pass := read_password(once "Please enter the new password for #(1)" # command.first, on_cancel)
                if pass /= Void then
-                  cmd := once "set #(1) #(2) given #(3)" # client_fifo # command.first # pass
+                  cmd := once "#(1) given #(2)" # command.first # pass
                end
             else
                io.put_line(once "[1mError:[0m unrecognized argument '#(1)'" # command.last)
@@ -159,7 +159,7 @@ feature {} -- local vault commands
             inspect
                command.last
             when "generate" then
-               cmd := once "set #(1) #(2) random #(3)" # client_fifo # command.first # recipe
+               cmd := once "#(1) random #(2)" # command.first # recipe
             else
                io.put_line(once "[1mError:[0m unrecognized argument '#(1)'" # command.last)
             end
@@ -167,7 +167,7 @@ feature {} -- local vault commands
             io.put_line(once "[1mError:[0m bad number of arguments")
          end
          if cmd /= Void then
-            call_server(cmd,
+            call_server(once "set", cmd,
                         agent (stream: INPUT_STREAM) is
                            do
                               stream.read_line
@@ -190,7 +190,7 @@ feature {} -- local vault commands
    run_rem is
          -- remove key
       do
-         call_server(once "unset #(1) #(2)" # client_fifo # command.first,
+         call_server(once "unset", command.first,
                      agent (stream: INPUT_STREAM) is
                         do
                            stream.read_line
@@ -205,7 +205,7 @@ feature {} -- local vault commands
    run_list is
          -- list known keys
       do
-         call_server(once "list #(1)" # client_fifo,
+         call_server(once "list", Void,
                      agent (stream: INPUT_STREAM) is
                         local
                            str: STRING_OUTPUT_STREAM
@@ -933,7 +933,7 @@ feature {} -- remote vault management
                   merge_pass := once ""
                   merge_pass.copy(merge_pass0)
                end
-               call_server("merge #(1) #(2) #(3)" # client_fifo # merge_vault # merge_pass,
+               call_server(once "merge", once "#(1) #(2)" # merge_vault # merge_pass,
                            agent (stream: INPUT_STREAM) is
                               do
                                  stream.read_line

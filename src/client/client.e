@@ -23,7 +23,7 @@ feature {}
    processor: PROCESSOR
 
    tmpdir: FIXED_STRING
-   client_fifo: FIXED_STRING
+   channel: CLIENT_CHANNEL
    restart: BOOLEAN
 
    preload is
@@ -53,7 +53,7 @@ feature {}
             die_with_code(1)
          end
 
-         client_fifo := ("#(1)/fifo" # tmpdir).intern
+         create {CLIENT_FIFO} channel.make(("#(1)/fifo" # tmpdir).intern)
 
          from
             restart := True
@@ -73,15 +73,12 @@ feature {}
 
    cleanup is
       do
-         if fifo.exists(client_fifo) then
-            delete(client_fifo)
-         end
-         delete(client_fifo.substring(client_fifo.lower, client_fifo.upper - 5)) -- "/fifo".count
+         channel.cleanup
       end
 
    run is
       require
-         not fifo.exists(client_fifo)
+         channel.is_ready
       deferred
       end
 
@@ -159,25 +156,10 @@ feature {}
          fifo.exists(server_fifo)
       end
 
-   call_server (cmd: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
+   call_server (verb, arguments: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
          -- communication with the server
-      require
-         fifo.exists(server_fifo)
-         not fifo.exists(client_fifo)
-      local
-         tfr: TEXT_FILE_READ
       do
-         fifo.make(client_fifo)
-         send(cmd)
-         fifo.wait_for(client_fifo)
-         create tfr.connect_to(client_fifo)
-         if tfr.is_connected then
-            action.call([tfr])
-            tfr.disconnect
-            delete(client_fifo)
-         end
-      ensure
-         not fifo.exists(client_fifo)
+         channel.call(verb, arguments, action)
       end
 
 feature {} -- get a password from the server
@@ -210,7 +192,7 @@ feature {} -- get a password from the server
          callback /= Void
          when_unknown /= Void
       do
-         call_server(once "get #(1) #(2)" # client_fifo # key,
+         call_server(once "get", key,
                      agent get_back(?, key, callback, when_unknown))
       end
 
@@ -220,7 +202,7 @@ feature {} -- get a password from the server
 
    do_ping is
       do
-         call_server(once "ping #(1)" # client_fifo,
+         call_server(once "ping", Void,
                      agent (in: INPUT_STREAM) is
                         do
                            in.read_line
@@ -297,22 +279,8 @@ feature {} -- master phrase
       end
 
    send (string: ABSTRACT_STRING) is
-      require
-         fifo.exists(server_fifo)
-         string /= Void
-      local
-         tfw: TEXT_FILE_WRITE
       do
-         create tfw.connect_to(server_fifo)
-         if tfw.is_connected then
-            tfw.put_line(string)
-            tfw.flush
-
-            -- give time to the OS and the server to get the message before closing the connection
-            fifo.sleep(100)
-
-            tfw.disconnect
-         end
+         channel.send(string)
       end
 
 feature {} -- xclip
@@ -385,6 +353,5 @@ feature {} -- create a brand new vault
 
 invariant
    server_fifo /= Void
-   client_fifo /= Void
 
 end

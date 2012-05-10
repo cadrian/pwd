@@ -31,9 +31,9 @@ feature {}
 
    send_menu is
       require
-         not fifo.exists(client_fifo)
+         channel.is_ready
       do
-         call_server(once "list #(1)" # client_fifo,
+         call_server(once "list", Void,
                      agent (stream: INPUT_STREAM) is
                         do
                            from
