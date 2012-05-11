@@ -117,5 +117,6 @@ feature {}
 
 invariant
    channel /= Void
+   fifo_filename /= Void
 
 end

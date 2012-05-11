@@ -299,7 +299,6 @@ feature {}
 
 invariant
    vault /= Void
-   fifo_filename /= Void
    channel /= Void
 
 end

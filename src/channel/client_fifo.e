@@ -27,9 +27,6 @@ create {CHANNEL_FACTORY}
 
 feature {CLIENT}
    send (string: ABSTRACT_STRING) is
-      require
-         fifo.exists(server_fifo)
-         string /= Void
       local
          tfw: TEXT_FILE_WRITE
       do
