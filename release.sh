@@ -8,12 +8,16 @@
 #                                                                        #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
+ON_KEY=false
+[ "$1" == "-onkey" ] && ON_KEY=true
+
 dir=$(dirname $(readlink -f $0))
 cd $dir
 
 make -j$((2 * $(cat /proc/cpuinfo | grep ^processor | wc -l)))
 
 release_dir=$dir/target/release
+$ON_KEY && release_dir=${release_dir}-onkey
 test -d $release_dir && rm -rf $release_dir
 
 BIN=$release_dir/bin
@@ -31,7 +35,11 @@ umask 222
 for src in bin/pwdmgr_*
 do
     tgt=$BIN/$(basename $src)
-    sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/share/pwdmgr|;s| \$prop$||g' < $src > $tgt
+    if $ON_KEY; then
+        sed 's|^dist=.*$|HOME=$(dirname $(dirname $(readlink -f $0)))\nexport HOME\nexe=$HOME/share/pwdmgr|;s| \$prop$||g' < $src > $tgt
+    else
+        sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/share/pwdmgr|;s| \$prop$||g' < $src > $tgt
+    fi
     chmod a+x $tgt
 done
 
