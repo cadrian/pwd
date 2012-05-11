@@ -135,3 +135,32 @@ then the local version wins.
 Note that, to help merge take decisions in the latter case, keys are
 never really deleted from the vault. They are simply marked as being
 removed.
+
+## Proxy support
+
+Proxies are supported when using the *curl* protocol: the console
+installs the `ALL_PROXY` variable using the following keys in the
+`[proxy]` section of the configuration file:
+
+ - `protocol` specifies the proxy protocol
+ - `host` is the only mandatory key; it contains the name of the proxy host
+ - `port` specifies a port, if different from the default (e.g. 8080)
+ - `user` gives a user name, if the proxy needs authentication
+ - `pass` gives a password key, to be retrieved from the vault
+
+## Important note
+
+pwdmgr is a local password manager. As such, it needs to provide
+passwords in cleartext to other processes (mainly the X clipboard).
+
+It is important to understand that, under such circumstances, there is
+no reason to make pwdmgr overly secure. It can be subject to many
+local exploits (reading its environment variables, its memory sections
+etc. may provide cleartext passwords).
+
+On the other hand, there should be no remote exploits, because the
+vault load/save protocol only sends and receives encrypted vault
+streams.
+
+Just take the needed steps to ensure that your machine is not remotely
+exploitable.

@@ -17,25 +17,19 @@ class CONSOLE
 
 inherit
    CLIENT
-      redefine
-         make
-      end
 
 create {}
    make
 
 feature {} -- the CLIENT interface
-   make is
-      do
-         create remote_map.make
-         Precursor
-      end
+   proxy: PROXY
 
    stop: BOOLEAN
 
    run is
       do
          fill_remote_map
+         proxy.install(Current)
 
          from
             stop := False
@@ -987,6 +981,8 @@ feature {} -- helpers
          remote_sections: FIXED_STRING
          start, next: INTEGER
       do
+         create remote_map.make
+
          remote_sections := conf(config_remote_sections)
          if remote_sections /= Void then
             from
