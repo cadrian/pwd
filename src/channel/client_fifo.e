@@ -30,13 +30,14 @@ feature {CLIENT}
       local
          tfw: TEXT_FILE_WRITE
       do
+         fifo.sleep(25)
          create tfw.connect_to(server_fifo)
          if tfw.is_connected then
             tfw.put_line(string)
             tfw.flush
 
             -- give time to the OS and the server to get the message before closing the connection
-            fifo.sleep(100)
+            fifo.sleep(25)
 
             tfw.disconnect
          end

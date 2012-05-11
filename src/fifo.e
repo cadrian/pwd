@@ -98,8 +98,8 @@ feature {ANY}
                      fd_set r,w,e;
                      struct timeval t;
 
-                     t.tv_sec  = 0L;
-                     t.tv_usec = a1;
+                     t.tv_sec  = a1 / 1000;
+                     t.tv_usec = (1000 * a1) % 1000000;
                      select(0, &r, &w, &e, &t);
 
                      ]")
@@ -108,11 +108,11 @@ feature {ANY}
    wait_for (name: FIXED_STRING) is
       do
          from
-            sleep(100)
+            sleep(25)
          until
             exists(name)
          loop
-            sleep(100)
+            sleep(25)
          end
       end
 

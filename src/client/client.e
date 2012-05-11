@@ -153,7 +153,7 @@ feature {}
                die_with_code(proc.status)
             end
             fifo.wait_for(server_fifo)
-            fifo.sleep(500)
+            fifo.sleep(25)
          end
       ensure
          fifo.exists(server_fifo)

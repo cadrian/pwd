@@ -111,7 +111,6 @@ feature {} -- command management
          when "stop" then
             log.info.put_line(once "stopping server.")
             send("stop")
-            fifo.sleep(100)
             stop := True
          else
             command.add_first(cmd) -- yes, add it again... it's a ring array so no harm done
