@@ -55,6 +55,13 @@ feature {} -- the CLIENT interface
                run_command
             end
          end
+      rescue
+         if exceptions.is_signal then
+            log.info.put_line(once "Killed by signal #(1), exitting gracefully." # exceptions.signal_number.out)
+            cleanup
+            io.put_new_line
+            die_with_code(0)
+         end
       end
 
 feature {} -- command management
@@ -217,8 +224,8 @@ feature {} -- help
                     [1;32mKnown commands[0m
 
                     [33madd <key> [how][0m    Add a new password. Needs at least a key.
-                                       If [33m[how][0m is either not specified or "generate" then
-                                       the password is randomly generated.
+                                       If [33m[how][0m is "generate" then the password is
+                                       randomly generated ([1mdefault[0m).
                                        If [33m[how][0m is "generate" with an extra argument then
                                        the extra argument represents a "recipe" used to generate
                                        the password (*).
@@ -226,21 +233,32 @@ feature {} -- help
                                        If the password already exists it is changed.
                                        In all cases the password is stored in the clipboard.
 
+                                       (*) A recipe is a series of "ingredients" separated by a '+'.
+                                       Each "ingredient" is an optional quantity (default 1)
+                                       followed by a series of 'a' (alphanumeric), 'n' (numeric),
+                                       or 's' (symbol).
+                                       The password is generated using the recipe to randomly select
+                                       characters, and mixing them.
+
                     [33mrem <key>[0m          Removes the password corresponding to the given key.
 
                     [33mlist[0m               List the known passwords (show only the keys).
 
-                    [33msave[0m               Save the password vault upto the server.
+                    [33msave [remote][0m      Save the password vault upto the server.
+                                       [33m[remote][0m: see note below
 
-                    [33mload[0m               [1mReplace[0m the local vault with the server's version.
+                    [33mload [remote][0m      [1mReplace[0m the local vault with the server's version.
                                        Note: in that case you will be asked for the new vault
                                        password (the previous vault is closed).
+                                       [33m[remote][0m: see note below
 
-                    [33mmerge[0m              Load the server version and compare to the local one.
+                    [33mmerge [remote][0m     Load the server version and compare to the local one.
                                        Keep the most recent keys and save the merged version
                                        back to the server.
+                                       [33m[remote][0m: see note below
 
-                                       The load, save, and merge commands require an extra argument
+                                       [33m[remote][0m note:
+                                       The [33mload[0m, [33msave[0m, and [33mmerge[0m commands require an extra argument
                                        if there is more than one available remotes; in that case,
                                        the argument is the remote to select.
 
@@ -249,19 +267,12 @@ feature {} -- help
                     [33mmaster[0m             Change the master password.
                                        [1m(not yet implemented)[0m
 
-                    [33mstop[0m               Stop the server and closes the administration console.
+                    [33mstop[0m               Stop the server and close the administration console.
 
                     [33mhelp[0m               Show this screen :-)
 
                     Any other input is understood as a password request using the given key.
                     If that key exists the password is stored in the clipboard.
-
-                    --------
-                    (*) A recipe is a series of "ingredients" separated by a '+'. Each "ingredient"
-                    is an optional quantity (default 1) followed by a series of 'a' (alphanumeric),
-                    'n' (numeric) and 's' (symbol).
-                    The password is generated using the recipe to randomly select characters,
-                    and mixing them.
 
                     --------
                     [32mpwdmgr Copyright (C) 2012 Cyril Adrian <cyril.adrian@gmail.com>[0m

@@ -85,6 +85,7 @@ feature {}
       end
 
 feature {}
+   exceptions: EXCEPTIONS
    fifo: FIFO
 
    server_fifo: FIXED_STRING is

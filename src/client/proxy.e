@@ -37,14 +37,20 @@ feature {CLIENT}
             log.trace.put_line(once "Installing proxy: host=#(1)" # host)
 
             protocol := conf(config_protocol)
-            log.trace.put_line(once "                  protocol=#(1)" # protocol)
+            if protocol /= Void then
+               log.trace.put_line(once "                  protocol=#(1)" # protocol)
+            end
             port := conf(config_port)
-            log.trace.put_line(once "                  port=#(1)" # port)
+            if port /= Void then
+               log.trace.put_line(once "                  port=#(1)" # port)
+            end
             user := conf(config_user)
-            log.trace.put_line(once "                  user=#(1)" # user)
+            if user /= Void then
+               log.trace.put_line(once "                  user=#(1)" # user)
+            end
             pass := conf(config_pass)
-            log.trace.put_line(once "                  pass=#(1)" # pass)
             if pass /= Void then
+               log.trace.put_line(once "                  pass=#(1)" # pass)
                pwd := client.get_password(pass)
             end
 
