@@ -22,17 +22,17 @@ insert
 feature {ANY}
    server_fifo: FIXED_STRING is
       once
-         Result := ("#(1)/#(2)" # xdg.runtime_dir # "/server_fifo").intern
+         Result := ("#(1)/server_fifo" # xdg.runtime_dir).intern
       end
 
    server_pidfile: FIXED_STRING is
       once
-         Result := ("#(1)/#(2)" # xdg.runtime_dir # "/server_pid").intern
+         Result := ("#(1)/server_pid" # xdg.runtime_dir).intern
       end
 
    vault_file: FIXED_STRING is
       once
-         Result := ("#(1)/#(2)" # xdg.data_home # "/vault").intern
+         Result := ("#(1)/vault" # xdg.data_home).intern
       end
 
    log_file (tag: ABSTRACT_STRING): FIXED_STRING is

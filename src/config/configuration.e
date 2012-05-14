@@ -98,7 +98,7 @@ feature {}
          end
       end
 
-   do_parse_conf (config: INPUT_STREAM) is
+   do_parse_conf (config: TEXT_FILE_READ) is
       require
          config.is_connected
          filename /= Void
