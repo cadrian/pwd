@@ -78,44 +78,55 @@ dir=\$(dirname \$(readlink -f \$0))
 
 if test \$(id -u) -eq 0; then
     echo Installing as root
-    PREFIX_BIN=\${PREFIX:-/usr/local}/bin            # for package install:
-    PREFIX_DATA=\${PREFIX:-/usr/local}/share/pwdmgr  #  - set \$PREFIX to /usr
-    CONFIG=\${CONFIG:-/usr/local/etc}/pwdmgr         #  - set \$CONFIG to /etc/xdg
+    PREFIX_BIN=\${PREFIX:-/usr/local}/bin     # for package install:
+    PREFIX_DATA=\${PREFIX:-/usr/local}/share  #  - set \$PREFIX to /usr
+    CONFIG=\${CONFIG:-/usr/local/etc}         #  - set \$CONFIG to /etc/xdg
     binmod=555
 else
     echo Installing as user \$USER
     PREFIX_BIN=\${PREFIX:-\$HOME/.local}/bin
-    PREFIX_DATA=\${PREFIX:-\$HOME/.local}/share/pwdmgr
-    CONFIG=\${CONFIG:-\$HOME/.config}/pwdmgr
+    PREFIX_DATA=\${PREFIX:-\$HOME/.local}/share
+    CONFIG=\${CONFIG:-\$HOME/.config}
     binmod=500
 fi
 
 mkdir -p \$PREFIX_BIN
-mkdir -p \$PREFIX_DATA
-mkdir -p \$CONFIG
+mkdir -p \$PREFIX_DATA/doc/pwdmgr
+mkdir -p \$PREFIX_DATA/pwdmgr
+mkdir -p \$CONFIG/pwdmgr
 
-for src in \$dir/data/bin/\*
+for src in \$dir/data/bin/*
 do
     tgt=\$PREFIX_BIN/\${src#\$dir/data/bin/}
+    test -e \$tgt && rm -f \$tgt
     sed 's|^exe=.*$|exe='"\$PREFIX_DATA"'|' < \$src > \$tgt
     chmod \$binmod \$tgt
 done
 
-for src in \$(find \$dir/data/share -type d -name pwdmgr)
+for dirsrc in \$dir/data/share/pwdmgr \$dir/data/share/doc/pwdmgr
 do
-    tgt=\$PREFIX_DATA/\${src#\$dir/data/share/}
-    test -d \$tgt && rm -rf \$tgt
-    cp -a \$src \$tgt
+    for src in \$dirsrc/*; do
+        tgt=\$PREFIX_DATA/\${src#\$dir/data/share/}
+        test -d \$tgt && rm -rf \$tgt
+        cp -rf \$src \$tgt
+    done
 done
 
-for src in \$dir/config/pwdmgr/\*
+for src in \$dir/config/pwdmgr/*
 do
-    tgt=\$CONFIG/\${src#\$dir/config/pwdmgr/}
-    cp -f \$src \$tgt
+    tgt=\$CONFIG/\${src#\$dir/config/}
+    if test -e \$tgt; then
+        cp \$src \$tgt
+    else
+        echo "There is already a config file named \$tgt -- not overriding."
+        echo "The new config file is installed as \$tgt.pkg (please check)"
+        echo
+        cp \$src \$tgt.pkg
+    fi
 done
 
-if [ \$(id -u) -ne 0 ]; then
-    chmod u+w \$CONFIG/config.rc
+if test \$(id -u) -ne 0; then
+    chmod u+w \$CONFIG/pwdmgr/config.rc
 fi
 EOF
 fi >$release_dir/install.sh
