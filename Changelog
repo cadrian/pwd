@@ -5,6 +5,8 @@
         * Now allowing more than one remotes (in that case, the requested remote must be selected in the load/save/merge commands)
         * Password generation customization
         * Renamed pwdsrv (ugly) as server
+        * #16 - XDG (freedesktop.org base directories) compliance
+        * Standalone install on USB key
 
 0.0.4 (released 2012-01-25)
 
