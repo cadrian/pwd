@@ -117,7 +117,7 @@ feature {}
       once
          create dirs.with_capacity(4)
          dirs.add_last(config_home_)
-         value := getenv("XDG_CONFIG_DIRS", "/etc/xdg")
+         value := getenv("XDG_CONFIG_DIRS", "/usr/local/etc:/etc/xdg") -- the first one is not standard but useful for local installs
          split_dirs(value, dirs)
          Result := dirs
       end
