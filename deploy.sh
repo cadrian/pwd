@@ -58,11 +58,12 @@ echo deploy
 version=$(head -n 1 $dir/Changelog | awk '{print $1}')
 target=$(gcc -v 2>&1 | awk '/^Target:/ {print $2}')
 pkg=pwdmgr_$version
-root=pwdmgr_$version\_$target
-boot=pwdmgr-boot_$version
+root=${pkg}_$target
+boot=${pkg}-bootstrap
+
 cd $dir/target
-$RELEASE && tar cfz $root.tgz --transform "s|^release|$pkg|" release/*
-$ONKEY && tar cfz $root-onkey.tgz --transform "s|^release-onkey|$pkg|" release-onkey/*
+$RELEASE   && tar cfz $root.tgz --transform "s|^release|$pkg|" release/*
+$ONKEY     && tar cfz $root-onkey.tgz --transform "s|^release-onkey|$pkg|" release-onkey/*
 $BOOTSTRAP && tar cfz $boot.tgz --transform "s|^bootstrap|$pkg|" bootstrap/*
 
 echo done
