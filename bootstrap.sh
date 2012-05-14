@@ -38,8 +38,9 @@ cat > $MAKEFILE_BOOT <<EOF
 .PHONY: all clean install
 .SILENT:
 
-PREFIX   ?= /usr/local
-LINKFLAGS = -lm
+PREFIX    ?= /usr/local
+CONFIG    ?= /usr/local/etc
+LINKFLAGS  = -lm
 
 all: $EXE
 EOF
@@ -79,15 +80,16 @@ done
     printf '\tinstall -d $(PREFIX)/share/pwdmgr\n'
     printf '\tinstall -d $(PREFIX)/share/doc\n'
     printf '\tinstall -d $(PREFIX)/share/doc/pwdmgr\n'
-    printf '\tinstall -d $(PREFIX)/etc\n'
+    printf '\tinstall -d $(CONFIG)\n'
+    printf '\tinstall -d $(CONFIG)/pwdmgr\n'
     for exe in $EXE
     do
         printf '\tinstall -m555 exe/%s $(PREFIX)/share/pwdmgr/\n' $exe
     done
-    printf '\tinstall -m444 conf/pwdmgr-remote.properties $(PREFIX)/etc/pwdmgr.rc\n'
-    printf '\tinstall -m444 conf/pwdmgr-local.properties $(PREFIX)/share/doc/pwdmgr/sample-local-pwdmgr.rc\n'
-    printf '\tinstall -m444 conf/pwdmgr-remote-curl.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-curl-pwdmgr.rc\n'
-    printf '\tinstall -m444 conf/pwdmgr-remote-scp.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-scp-pwdmgr.rc\n'
+    printf '\tinstall -m444 conf/pwdmgr-remote.properties $(CONFIG)/pwdmgr/config.rc\n'
+    printf '\tinstall -m444 conf/pwdmgr-local.properties $(PREFIX)/share/doc/pwdmgr/sample-local-config.rc\n'
+    printf '\tinstall -m444 conf/pwdmgr-remote-curl.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-curl-config.rc\n'
+    printf '\tinstall -m444 conf/pwdmgr-remote-scp.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-scp-config.rc\n'
     printf '\tinstall -m444 README.md $(PREFIX)/share/doc/pwdmgr/\n'
     printf '\tinstall -m444 COPYING $(PREFIX)/share/doc/pwdmgr/\n'
 } >> $MAKEFILE_BOOT

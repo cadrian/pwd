@@ -77,62 +77,43 @@ feature {ANY}
       end
 
 feature {}
+   xdg: XDG
+
    default_create is
       do
          parse_conf
       end
 
-   available_file_locations: FAST_ARRAY[FIXED_STRING] is
-      local
-         sys: SYSTEM; home: STRING
-      once
-         home := sys.get_environment_variable("HOME")
-         Result := {FAST_ARRAY[FIXED_STRING] <<
-                                               ("#(1)/.pwdmgr/config.rc" # home).intern,
-                                               ("#(1)/.local/etc/pwdmgr.rc" # home).intern,
-                                               "/usr/local/etc/pwdmgr.rc".intern,
-                                               "/etc/pwdmgr.rc".intern
-                                             >> }
-      end
-
    parse_conf is
       local
-         tfr: TEXT_FILE_READ; i: INTEGER
+         config: TEXT_FILE_READ; i: INTEGER
       once
-         from
-            create tfr.make
-            i := available_file_locations.lower
-         until
-            tfr.is_connected or else i > available_file_locations.upper
-         loop
-            filename_ref.set_item(available_file_locations.item(i))
-            tfr.connect_to(filename)
-            i := i + 1
-         end
-         if tfr.is_connected then
-            do_parse_conf(tfr)
-            tfr.disconnect
+         config := xdg.read_config("config.rc")
+         if config /= Void then
+            filename_ref.set_item(config.path.intern)
+            do_parse_conf(config)
+            config.disconnect
          else
             filename_ref.set_item(Void)
          end
       end
 
-   do_parse_conf (tfr: TEXT_FILE_READ) is
+   do_parse_conf (config: INPUT_STREAM) is
       require
-         tfr.is_connected
+         config.is_connected
          filename /= Void
       local
          section: FIXED_STRING
       do
          from
-            tfr.read_line
+            config.read_line
          until
-            tfr.end_of_input
+            config.end_of_input
          loop
-            section := add_conf(tfr.last_string, section)
-            tfr.read_line
+            section := add_conf(config.last_string, section)
+            config.read_line
          end
-         section := add_conf(tfr.last_string, section)
+         section := add_conf(config.last_string, section)
       end
 
    add_conf (line: STRING; section: FIXED_STRING): FIXED_STRING is
@@ -140,6 +121,8 @@ feature {}
       local
          key, value: FIXED_STRING
       do
+         line.left_adjust
+         line.right_adjust
          Result := section
          if line.is_empty then
             -- ignore

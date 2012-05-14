@@ -20,10 +20,10 @@ release_dir=$dir/target/release
 $ON_KEY && release_dir=${release_dir}-onkey
 test -d $release_dir && rm -rf $release_dir
 
-BIN=$release_dir/bin
-EXE=$release_dir/share/pwdmgr
-DOC=$release_dir/share/doc/pwdmgr
-CONF=$release_dir/etc
+BIN=$release_dir/data/bin
+EXE=$release_dir/data/share/pwdmgr/exe
+DOC=$release_dir/data/share/doc/pwdmgr
+CONF=$release_dir/config/pwdmgr
 
 for dir in $BIN $EXE $DOC $CONF
 do
@@ -36,59 +36,88 @@ for src in bin/pwdmgr_*
 do
     tgt=$BIN/$(basename $src)
     if $ON_KEY; then
-        sed 's|^dist=.*$|HOME=$(dirname $(dirname $(readlink -f $0)))\nexport HOME\nexe=$HOME/share/pwdmgr|;s| \$prop$||g' < $src > $tgt
+        sed 's|^dist=.*$|home=$(dirname $(dirname $(dirname $(readlink -f $0)))); echo home=$home\nXDG_DATA_HOME=$home/local/share; export XDG_DATA_HOME\nXDG_CONFIG_HOME=$home/config; export XDG_CONFIG_HOME\nXDG_CACHE_HOME=$home/cache; export XDG_CACHE_HOME\nexe=$XDG_DATA_HOME/pwdmgr/exe|;s| \$prop$| \$1|g' < $src > $tgt
     else
-        sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/share/pwdmgr|;s| \$prop$||g' < $src > $tgt
+        sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/share/pwdmgr/exe|;s| \$prop$| \$1|g' < $src > $tgt
     fi
     chmod a+x $tgt
 done
 
 cp exe/* $EXE/
 cp COPYING README.md Changelog $DOC/
-cp conf/pwdmgr-local.properties $DOC/sample-local-pwdmgr.rc
-cp conf/pwdmgr-remote-curl.properties $DOC/sample-remote-curl-pwdmgr.rc
-cp conf/pwdmgr-remote-scp.properties $DOC/sample-remote-scp-pwdmgr.rc
-cp conf/pwdmgr-remote.properties $CONF/pwdmgr.rc
+cp conf/pwdmgr-local.properties $DOC/sample-local-config.rc
+cp conf/pwdmgr-remote-curl.properties $DOC/sample-remote-curl-config.rc
+cp conf/pwdmgr-remote-scp.properties $DOC/sample-remote-scp-config.rc
+cp conf/pwdmgr-remote.properties $CONF/config.rc
 
-cat >$release_dir/install.sh <<EOF
+if $ON_KEY; then
+    cat <<EOF
 #!/bin/sh
 
-if [ \$(id -u) -eq 0 ]; then
+dir=\$(dirname \$(readlink -f \$0))
+
+if test -z "\$1"; then
+    echo "Please provide the install directory, which will act as portable HOME" >&2
+    exit 1
+fi
+
+mkdir -p "\$1"/local
+mkdir -p "\$1"/config
+mkdir -p "\$1"/cache
+
+cp -a \$dir/data/*   "\$1"/local/
+cp -a \$dir/config/* "\$1"/config/
+
+chmod +w "\$1"/config/pwdmgr/config.rc
+EOF
+else
+    cat <<EOF
+#!/bin/sh
+
+dir=\$(dirname \$(readlink -f \$0))
+
+if test \$(id -u) -eq 0; then
     echo Installing as root
-    PREFIX=\${1:-\${PREFIX:-/usr/local}}
+    PREFIX_BIN=\${PREFIX:-/usr/local}/bin            # for package install:
+    PREFIX_DATA=\${PREFIX:-/usr/local}/share/pwdmgr  #  - set \$PREFIX to /usr
+    CONFIG=\${CONFIG:-/usr/local/etc}/pwdmgr         #  - set \$CONFIG to /etc/xdg
     binmod=555
 else
-    echo Installing as \$USER
-    PREFIX=\${1:-\${PREFIX:-\$HOME/.local}}
-    for dir in bin etc share; do
-        mkdir -p \$PREFIX/\$dir
-    done
+    echo Installing as user \$USER
+    PREFIX_BIN=\${PREFIX:-\$HOME/.local}/bin
+    PREFIX_DATA=\${PREFIX:-\$HOME/.local}/share/pwdmgr
+    CONFIG=\${CONFIG:-\$HOME/.config}/pwdmgr
     binmod=500
 fi
 
-for src in bin/*
+mkdir -p \$PREFIX_BIN
+mkdir -p \$PREFIX_DATA
+mkdir -p \$CONFIG
+
+for src in \$dir/data/bin/\*
 do
-    tgt=\$PREFIX/bin/\$(basename \$src)
-    sed 's|^exe=.*$|exe='"\$PREFIX"'/share/pwdmgr|' < \$src > \$tgt
+    tgt=\$PREFIX_BIN/\${src#\$dir/data/bin/}
+    sed 's|^exe=.*$|exe='"\$PREFIX_DATA"'|' < \$src > \$tgt
     chmod \$binmod \$tgt
 done
 
-for tgt in \$(find share -type d -name pwdmgr) etc/*
+for src in \$(find \$dir/data/share -type d -name pwdmgr)
 do
-    if [ -d \$tgt ]; then
-        test -d \$PREFIX/\$tgt && rm -rf \$PREFIX/\$tgt
-        cp -a \$tgt \$PREFIX/\$tgt
-    else
-        cp -f \$tgt \$PREFIX/\$tgt
-    fi
+    tgt=\$PREFIX_DATA/\${src#\$dir/data/share/}
+    test -d \$tgt && rm -rf \$tgt
+    cp -a \$src \$tgt
+done
+
+for src in \$dir/config/pwdmgr/\*
+do
+    tgt=\$CONFIG/\${src#\$dir/config/pwdmgr/}
+    cp -f \$src \$tgt
 done
 
 if [ \$(id -u) -ne 0 ]; then
-    dir=\$HOME/.pwdmgr
-    test -d \$dir || mkdir \$dir
-    test -e \$dir/config.rc || cp \$PREFIX/etc/pwdmgr.rc \$dir/config.rc # should we ln -s instead?
-    chmod u+w \$dir/config.rc
+    chmod u+w \$CONFIG/config.rc
 fi
 EOF
+fi >$release_dir/install.sh
 
 chmod a+x $release_dir/install.sh

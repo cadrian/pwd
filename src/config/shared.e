@@ -22,29 +22,29 @@ insert
 feature {ANY}
    server_fifo: FIXED_STRING is
       once
-         Result := mandatory_key(config_server_fifo)
+         Result := ("#(1)/#(2)" # xdg.runtime_dir # "/server_fifo").intern
       end
 
    server_pidfile: FIXED_STRING is
       once
-         Result := mandatory_key(config_server_pidfile)
+         Result := ("#(1)/#(2)" # xdg.runtime_dir # "/server_pid").intern
       end
 
    vault_file: FIXED_STRING is
       once
-         Result := mandatory_key(config_vault_file)
+         Result := ("#(1)/#(2)" # xdg.data_home # "/vault").intern
       end
 
    log_file (tag: ABSTRACT_STRING): FIXED_STRING is
       require
          tag /= Void
       do
-         Result := (once "#(1)/#(2).log" # mandatory_key(config_log_dir) # tag).intern
+         Result := (once "#(1)/#(2).log" # xdg.cache_home # tag).intern
       end
 
-   tmp_dir: FIXED_STRING is
+   runtime_dir: FIXED_STRING is
       once
-         Result := mandatory_key(config_tmp_fifo_dir)
+         Result := xdg.runtime_dir
       end
 
    log_level: FIXED_STRING is
@@ -72,6 +72,8 @@ feature {ANY}
       end
 
 feature {}
+   xdg: XDG
+
    mandatory_key (key: FIXED_STRING): FIXED_STRING is
       require
          key /= Void
@@ -86,34 +88,9 @@ feature {}
          Result /= Void
       end
 
-   config_server_fifo: FIXED_STRING is
-      once
-         Result := "server.fifo".intern
-      end
-
-   config_server_pidfile: FIXED_STRING is
-      once
-         Result := "server.pidfile".intern
-      end
-
-   config_log_dir: FIXED_STRING is
-      once
-         Result := "log.dir".intern
-      end
-
    config_log_level: FIXED_STRING is
       once
          Result := "log.level".intern
-      end
-
-   config_vault_file: FIXED_STRING is
-      once
-         Result := "vault.file".intern
-      end
-
-   config_tmp_fifo_dir: FIXED_STRING is
-      once
-         Result := "tmp.fifo.dir".intern
       end
 
    config_default_recipe: FIXED_STRING is

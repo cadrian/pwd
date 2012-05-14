@@ -40,7 +40,7 @@ feature {}
          preload
          ensure_directory_of(shared.server_fifo)
          ensure_directory_of(shared.vault_file)
-         ensure_directory_of(("#(1)/XXXXXX" # shared.tmp_dir).intern)
+         ensure_directory_of(("#(1)/XXXXXX" # shared.runtime_dir).intern)
          ensure_directory_of(log_file)
 
          create config.from_string(("[
@@ -108,7 +108,7 @@ feature {}
                             Server fifo:         #(2)
                             Server pid file:     #(3)
                             Vault is:            #(4)
-                            Temporary directory: #(5)
+                            Runtime directory:   #(5)
                             Log file:            #(6)
 
                             ]"
@@ -116,7 +116,7 @@ feature {}
                            # shared.server_fifo
                            # shared.server_pidfile
                            # shared.vault_file
-                           # shared.tmp_dir
+                           # shared.runtime_dir
                            # log_file)
 
          main
