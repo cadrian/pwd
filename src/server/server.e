@@ -266,7 +266,7 @@ feature {}
             die_with_code(1)
          end
 
-         if configuration.filename = Void then
+         if configuration.main_config = Void then
             std_error.put_line(once "Could not find any valid configuration file")
             die_with_code(1)
          end

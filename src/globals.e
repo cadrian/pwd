@@ -104,15 +104,15 @@ feature {}
       do
          log.info.put_line("[
                             **************** STARTUP ****************
-                            Configuration file:  #(1)
-                            Server fifo:         #(2)
-                            Server pid file:     #(3)
-                            Vault is:            #(4)
-                            Runtime directory:   #(5)
-                            Log file:            #(6)
+                            Main configuration file: #(1)
+                            Server fifo:             #(2)
+                            Server pid file:         #(3)
+                            Vault is:                #(4)
+                            Runtime directory:       #(5)
+                            Log file:                #(6)
 
                             ]"
-                           # configuration.filename
+                           # configuration.main_config.filename
                            # shared.server_fifo
                            # shared.server_pidfile
                            # shared.vault_file

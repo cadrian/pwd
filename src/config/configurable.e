@@ -15,45 +15,29 @@
 --
 expanded class CONFIGURABLE
 
-feature {ANY}
+feature {}
    conf_no_eval (key: ABSTRACT_STRING): FIXED_STRING is
       require
          key /= Void
       do
-         if specific_section = Void then
-            specific_section := generating_type.as_lower.intern
-         end
-         Result := configuration.get(specific_section, key)
+         check_specific
+         Result := specific_config.get_no_eval(specific_section, key)
       end
 
    conf (key: ABSTRACT_STRING): FIXED_STRING is
       require
          key /= Void
       do
-         Result := eval(conf_no_eval(key))
+         check_specific
+         Result := specific_config.get(specific_section, key)
       end
 
    has_conf (key: ABSTRACT_STRING): BOOLEAN is
       require
          key /= Void
       do
-         Result := conf(key) /= Void
-      end
-
-   conf_filename: FIXED_STRING is
-      do
-         Result := configuration.filename
-      end
-
-feature {}
-   eval (string: ABSTRACT_STRING): FIXED_STRING is
-         -- takes care of environment variables etc.
-      local
-         processor: PROCESSOR
-      do
-         if string /= Void then
-            Result := processor.split_arguments(string).first.intern
-         end
+         check_specific
+         Result := specific_config.has(specific_section, key)
       end
 
 feature {}
@@ -63,5 +47,19 @@ feature {}
       end
 
    specific_section: FIXED_STRING
+   specific_config: CONFIG_FILE
+
+   check_specific is
+      do
+         if specific_section = Void then
+            specific_section := generating_type.as_lower.intern
+         end
+         if specific_config = Void then
+            specific_config := configuration.main_config
+         end
+      ensure
+         specific_section /= Void
+         specific_config /= Void
+      end
 
 end

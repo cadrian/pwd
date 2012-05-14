@@ -99,7 +99,7 @@ for src in \$dir/data/bin/*
 do
     tgt=\$PREFIX_BIN/\${src#\$dir/data/bin/}
     test -e \$tgt && rm -f \$tgt
-    sed 's|^exe=.*$|exe='"\$PREFIX_DATA"'|' < \$src > \$tgt
+    sed 's|^exe=.*\$|exe='"\$PREFIX_DATA/pwdmgr/exe"'|' < \$src > \$tgt
     chmod \$binmod \$tgt
 done
 
