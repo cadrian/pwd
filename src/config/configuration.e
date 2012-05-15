@@ -27,13 +27,15 @@ create {CONFIGURABLE}
 feature {ANY}
    main_config: CONFIG_FILE
 
-   config (name: ABSTRACT_STRING): CONFIG_FILE is
+   specific (name: ABSTRACT_STRING): CONFIG_FILE is
       do
          Result := config_map.fast_reference_at(name.intern)
          if Result = Void then
-            Result := load_config(once "#(1).rc" # name)
+            Result := load_config(once "#(1).rc" # name, True)
             config_map.add(Result, name.intern)
          end
+      ensure
+         Result /= Void
       end
 
 feature {ANY}
@@ -42,7 +44,7 @@ feature {ANY}
          a_conf_file /= Void
       do
          if main_config = Void then
-            main_config := load_config(a_conf_file)
+            main_config := load_config(a_conf_file, False)
          end
       end
 
@@ -51,20 +53,24 @@ feature {}
 
    default_create is
       do
-         main_config := load_config(once "config.rc")
+         main_config := load_config(once "config.rc", False)
       end
 
-   load_config (a_filename: ABSTRACT_STRING): CONFIG_FILE is
+   load_config (a_filename: ABSTRACT_STRING; allow_unknown: BOOLEAN): CONFIG_FILE is
       require
          a_filename /= Void
       local
          tfr: TEXT_FILE_READ
       do
          tfr := xdg.read_config(a_filename)
-         if tfr.is_connected then
+         if tfr /= Void then
             create Result.make(a_filename.intern, tfr)
             tfr.disconnect
+         elseif allow_unknown then
+            create Result.make(a_filename.intern, Void)
          end
+      ensure
+         allow_unknown implies Result /= Void
       end
 
    config_map: HASHED_DICTIONARY[CONFIG_FILE, FIXED_STRING] is
@@ -73,6 +79,6 @@ feature {}
       end
 
 invariant
-   config /= Void
+   main_config /= Void
 
 end

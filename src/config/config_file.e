@@ -51,7 +51,7 @@ feature {ANY}
          end
       end
 
-feature {}
+feature {ANY}
    set (section, key, value: ABSTRACT_STRING) is
       require
          not section.is_empty
@@ -67,41 +67,29 @@ feature {}
          end
          section_conf.fast_put(value.intern, key.intern)
       ensure
-         get(section, key) = value.intern
-      end
-
-   eval (string: ABSTRACT_STRING): FIXED_STRING is
-         -- takes care of environment variables etc.
-      local
-         processor: PROCESSOR
-      do
-         if string /= Void then
-            Result := processor.split_arguments(string).first.intern
-         end
-      end
-
-feature {}
-   make (a_filename: like filename; tfr: TEXT_FILE_READ) is
-      require
-         tfr.is_connected
-         a_filename /= Void
-      do
-         if conf = Void then
-            create conf.make
-         end
-         do_parse_conf(tfr)
-         filename := a_filename
-      ensure
-         filename = a_filename
+         get_no_eval(section, key) = value.intern
       end
 
 feature {}
    conf: HASHED_DICTIONARY[HASHED_DICTIONARY[FIXED_STRING, FIXED_STRING], FIXED_STRING]
 
+   make (a_filename: like filename; tfr: TEXT_FILE_READ) is
+      require
+         a_filename /= Void
+         tfr /= Void implies tfr.is_connected
+      do
+         create conf.make
+         filename := a_filename
+         if tfr /= Void then
+            do_parse_conf(tfr)
+         end
+      ensure
+         filename = a_filename
+      end
+
    do_parse_conf (tfr: TEXT_FILE_READ) is
       require
          tfr.is_connected
-         filename /= Void
       local
          section: FIXED_STRING
       do
@@ -186,6 +174,16 @@ feature {}
          builder: REGULAR_EXPRESSION_BUILDER
       once
          Result := builder.convert_python_pattern("^(?P<key>[a-zA-Z0-9_.]+)\s*[:=]\s*(?P<value>.*)$")
+      end
+
+   eval (string: ABSTRACT_STRING): FIXED_STRING is
+         -- takes care of environment variables etc.
+      local
+         processor: PROCESSOR
+      do
+         if string /= Void then
+            Result := processor.split_arguments(string).first.intern
+         end
       end
 
 invariant

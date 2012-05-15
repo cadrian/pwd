@@ -109,13 +109,16 @@ feature {}
       end
 
 feature {}
-   make (a_specific_section: ABSTRACT_STRING) is
+   make (a_name: ABSTRACT_STRING) is
       require
-         a_specific_section /= Void
+         a_name /= Void
       do
-         specific_section := a_specific_section.intern
+         name := a_name.intern
+         specific_config := configuration.specific(name)
+         specific_section := specific_section_
       ensure
-         specific_section = a_specific_section.intern
+         name = a_name.intern
+         specific_config = configuration.specific(name)
       end
 
 end

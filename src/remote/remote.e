@@ -19,6 +19,8 @@ insert
    CONFIGURABLE
 
 feature {ANY}
+   name: FIXED_STRING
+
    save (local_file: ABSTRACT_STRING) is
       require
          local_file /= Void
@@ -34,7 +36,13 @@ feature {ANY}
 feature {}
    processor: PROCESSOR
 
+   specific_section_: FIXED_STRING is
+      once
+         Result := "remote".intern
+      end
+
 invariant
-   specific_section /= Void
+   name /= Void
+   specific_section = specific_section_
 
 end

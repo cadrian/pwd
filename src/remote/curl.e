@@ -28,10 +28,12 @@ feature {ANY}
       do
          arg := arguments(once "-T", local_file, config_key_remote_request_put)
          if arg /= Void then
+            proxy.set
             proc := processor.execute(once "curl", arg)
             if proc.is_connected then
                proc.wait
             end
+            proxy.reset
          end
       end
 
@@ -41,11 +43,19 @@ feature {ANY}
       do
          arg := arguments(once "-o", local_file, config_key_remote_request_get)
          if arg /= Void then
+            proxy.set
             proc := processor.execute(once "curl", arg)
             if proc.is_connected then
                proc.wait
             end
+            proxy.reset
          end
+      end
+
+feature {PROXY}
+   get_password (key: ABSTRACT_STRING): STRING is
+      do
+         Result := client.get_password(key)
       end
 
 feature {}
@@ -63,7 +73,7 @@ feature {}
          else
             Result := once "-\# #(1) '#(2)' '#(3)'" # option # file # url
             if not is_anonymous then
-               pass := client.get_password(conf(config_key_remote_pass))
+               pass := get_password(conf(config_key_remote_pass))
                if pass /= Void then
                   Result := once "#(1) -u #(2):#(3)" # Result # conf(config_key_remote_user) # pass
                end
@@ -82,43 +92,48 @@ feature {}
 
    config_key_remote_user: FIXED_STRING is
       once
-         Result := "remote.user".intern
+         Result := "user".intern
       end
 
    config_key_remote_pass: FIXED_STRING is
       once
-         Result := "remote.pass".intern
+         Result := "pass".intern
       end
 
    config_key_remote_url: FIXED_STRING is
       once
-         Result := "remote.url".intern
+         Result := "url".intern
       end
 
    config_key_remote_request_get: FIXED_STRING is
       once
-         Result := "remote.request.get".intern
+         Result := "request.get".intern
       end
 
    config_key_remote_request_put: FIXED_STRING is
       once
-         Result := "remote.request.put".intern
+         Result := "request.put".intern
       end
 
 feature {}
-   make (a_specific_section: ABSTRACT_STRING; a_client: like client) is
+   make (a_name: ABSTRACT_STRING; a_client: like client) is
       require
-         a_specific_section /= Void
+         a_name /= Void
          a_client /= Void
       do
-         specific_section:= a_specific_section.intern
+         name := a_name.intern
+         specific_config := configuration.specific(name)
+         specific_section := specific_section_
          client := a_client
+         create proxy.make(Current)
       ensure
-         specific_section = a_specific_section.intern
+         name = a_name.intern
+         specific_config = configuration.specific(name)
          client = a_client
       end
 
    client: CLIENT
+   proxy: PROXY
 
 invariant
    client /= Void

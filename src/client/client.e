@@ -216,7 +216,7 @@ feature {} -- get a password from the server
                         end)
       end
 
-feature {REMOTE, PROXY}
+feature {REMOTE}
    get_password (key: ABSTRACT_STRING): STRING is
       local
          pass: REFERENCE[STRING]

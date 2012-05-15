@@ -13,21 +13,45 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class PROXY
+class PROXY
 
 insert
    LOGGING
    CONFIGURABLE
 
-feature {CLIENT}
-   install (client: CLIENT) is
-      require
-         client /= Void
+create {REMOTE}
+   make
+
+feature {REMOTE}
+   set is
       local
          sys: SYSTEM
+      do
+         if proxy_url /= Void then
+            sys.set_environment_variable(once "ALL_PROXY", proxy_url.out)
+            log.trace.put_line(once "Proxy set.")
+         end
+      end
+
+   reset is
+      local
+         sys: SYSTEM
+      do
+         if proxy_url /= Void then
+            sys.set_environment_variable(once "ALL_PROXY", once "")
+            log.trace.put_line(once "Proxy unset.")
+         end
+      end
+
+feature {}
+   proxy_url: ABSTRACT_STRING
+
+   parse is
+      require
+         remote /= Void
+      local
          protocol, host, port, user, pass: FIXED_STRING
          pwd: STRING
-         proxy_url: ABSTRACT_STRING
       do
          host := conf(config_host)
 
@@ -51,7 +75,7 @@ feature {CLIENT}
             pass := conf(config_pass)
             if pass /= Void then
                log.trace.put_line(once "                  pass=#(1)" # pass)
-               pwd := client.get_password(pass)
+               pwd := remote.get_password(pass)
             end
 
             if user = Void then
@@ -70,13 +94,9 @@ feature {CLIENT}
             if protocol /= Void then
                proxy_url := "#(1)://#(2)" # protocol # proxy_url
             end
-
-            sys.set_environment_variable(once "ALL_PROXY", proxy_url.out)
-            log.info.put_line(once "Proxy installed.")
          end
       end
 
-feature {}
    escape (pwd: STRING): STRING is
       local
          i: INTEGER; c: CHARACTER
@@ -130,5 +150,24 @@ feature {}
       once
          Result := "pass".intern
       end
+
+feature {}
+   make (a_remote: like remote) is
+      require
+         a_remote /= Void
+      do
+         remote := a_remote
+         specific_config := configuration.specific(a_remote.name)
+         parse
+      ensure
+         remote = a_remote
+         specific_config = configuration.specific(a_remote.name)
+      end
+
+   remote: CURL
+
+invariant
+   remote /= Void
+   specific_config /= Void
 
 end
