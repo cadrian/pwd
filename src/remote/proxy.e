@@ -23,13 +23,19 @@ create {REMOTE}
    make
 
 feature {REMOTE}
+   is_set: BOOLEAN
+
    set is
+      require
+         not is_set
       local
-         sys: SYSTEM
+         sys: SYSTEM; url: like proxy_url
       do
-         if proxy_url /= Void then
-            sys.set_environment_variable(once "ALL_PROXY", proxy_url.out)
+         url := proxy_url
+         if url /= Void then
+            sys.set_environment_variable(once "ALL_PROXY", url.out)
             log.trace.put_line(once "Proxy set.")
+            is_set := True
          end
       end
 
@@ -37,79 +43,123 @@ feature {REMOTE}
       local
          sys: SYSTEM
       do
-         if proxy_url /= Void then
+         if is_set then
             sys.set_environment_variable(once "ALL_PROXY", once "")
             log.trace.put_line(once "Proxy unset.")
+            is_set := False
+         end
+      ensure
+         not is_set
+      end
+
+   set_property (key, value: ABSTRACT_STRING): BOOLEAN is
+      do
+         inspect
+            key.out
+         when "protocol" then
+            protocol := value.intern
+            Result := True
+         when "host" then
+            host := value.intern
+            Result := True
+         when "port" then
+            port := value.intern
+            Result := True
+         when "user" then
+            user := value.intern
+            Result := True
+         when "pass" then
+            passkey := value.intern
+            Result := True
+         else
+            check not Result end
+         end
+      end
+
+   unset_property (key: ABSTRACT_STRING): BOOLEAN is
+      do
+         inspect
+            key.out
+         when "protocol" then
+            protocol := Void
+            Result := True
+         when "host" then
+            host := Void
+            Result := True
+         when "port" then
+            port := Void
+            Result := True
+         when "user" then
+            user := Void
+            Result := True
+         when "pass" then
+            passkey := Void
+            Result := True
+         else
+            check not Result end
          end
       end
 
 feature {}
-   proxy_url: ABSTRACT_STRING
+   protocol, host, port, user, passkey: FIXED_STRING
 
-   parse is
+   proxy_url: ABSTRACT_STRING is
       require
          remote /= Void
       local
-         protocol, host, port, user, pass: FIXED_STRING
-         pwd: STRING
+         pass: STRING
       do
-         host := conf(config_host)
-
          if host = Void then
             log.info.put_line(once "No defined proxy.")
          else
             log.trace.put_line(once "Installing proxy: host=#(1)" # host)
 
-            protocol := conf(config_protocol)
             if protocol /= Void then
                log.trace.put_line(once "                  protocol=#(1)" # protocol)
             end
-            port := conf(config_port)
             if port /= Void then
                log.trace.put_line(once "                  port=#(1)" # port)
             end
-            user := conf(config_user)
             if user /= Void then
                log.trace.put_line(once "                  user=#(1)" # user)
             end
-            pass := conf(config_pass)
             if pass /= Void then
                log.trace.put_line(once "                  pass=#(1)" # pass)
-               pwd := remote.get_password(pass)
+               pass := remote.get_password(pass)
             end
 
             if user = Void then
-               proxy_url := host
+               Result := host
             else
-               if pwd = Void then
-                  proxy_url := "#(1)@#(2)" # user # host
+               if pass = Void then
+                  Result := "#(1)@#(2)" # user # host
                else
-                  proxy_url := "#(1):#(2)@#(3)" # user # escape(pwd) # host
+                  Result := "#(1):#(2)@#(3)" # user # escape(pass) # host
                end
             end
 
             if port /= Void then
-               proxy_url := "#(1):#(2)" # proxy_url # port
+               Result := "#(1):#(2)" # Result # port
             end
             if protocol /= Void then
-               proxy_url := "#(1)://#(2)" # protocol # proxy_url
+               Result := "#(1)://#(2)" # protocol # Result
             end
          end
       end
 
-   escape (pwd: STRING): STRING is
+   escape (pass: STRING): STRING is
       local
          i: INTEGER; c: CHARACTER
       do
-         create Result.with_capacity(pwd.count)
+         create Result.with_capacity(pass.count)
          from
-            i := pwd.lower
+            i := pass.lower
          variant
-            pwd.upper - i
+            pass.upper - i
          until
-            i > pwd.upper
+            i > pass.upper
          loop
-            c := pwd.item(i)
+            c := pass.item(i)
             inspect
                c
             when '%%' then
@@ -124,6 +174,26 @@ feature {}
             i := i + 1
          end
       end
+
+feature {}
+   make (a_remote: like remote) is
+      require
+         a_remote /= Void
+      do
+         remote := a_remote
+         specific_config := configuration.specific(a_remote.name)
+
+         protocol := conf(config_protocol)
+         host := conf(config_host)
+         port := conf(config_port)
+         user := conf(config_user)
+         passkey := conf(config_pass)
+      ensure
+         remote = a_remote
+         specific_config = configuration.specific(a_remote.name)
+      end
+
+   remote: CURL
 
 feature {}
    config_protocol: FIXED_STRING is
@@ -150,21 +220,6 @@ feature {}
       once
          Result := "pass".intern
       end
-
-feature {}
-   make (a_remote: like remote) is
-      require
-         a_remote /= Void
-      do
-         remote := a_remote
-         specific_config := configuration.specific(a_remote.name)
-         parse
-      ensure
-         remote = a_remote
-         specific_config = configuration.specific(a_remote.name)
-      end
-
-   remote: CURL
 
 invariant
    remote /= Void

@@ -3,11 +3,15 @@
 #
 
 ######################################################################
-# curl-specific information
-[remote]
-
-# Direct backup of the file somewhere on the machine.
-url = file://$HOME/backup/pwdmgr.vault
+# remote type
+[remote_factory]
 
 # Method of transfer. Currently available methods are "curl" and "scp"
 method = curl
+
+######################################################################
+# curl-specific information
+[curl]
+
+# Direct backup of the file somewhere on the machine.
+url = file://$HOME/backup/pwdmgr.vault

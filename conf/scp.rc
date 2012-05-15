@@ -3,11 +3,15 @@
 #
 
 ######################################################################
-# scp-specific information
-[remote]
+# remote type
+[remote_factory]
 
 # Method of transfer. Currently available methods are "curl" and "scp"
 method    = scp
+
+######################################################################
+# scp-specific information
+[scp]
 
 # Name of the user.
 user      = your_remote_login

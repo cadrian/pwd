@@ -33,16 +33,44 @@ feature {ANY}
       deferred
       end
 
+feature {CLIENT}
+   set_property (key, value: ABSTRACT_STRING): BOOLEAN is
+         -- True if the property was set; False if unknown or could
+         -- not be set
+      require
+         not key.is_empty
+         not value.is_empty
+      deferred
+      end
+
+   unset_property (key: ABSTRACT_STRING): BOOLEAN is
+         -- True if the property was unset; False if unknown or could
+         -- not be unset
+      require
+         not key.is_empty
+      deferred
+      end
+
+   has_proxy: BOOLEAN is
+      -- True if the remote can have a proxy (not necessarily if it
+      -- actually has one)
+      deferred
+      end
+
+   set_proxy_property (key, value: ABSTRACT_STRING): BOOLEAN is
+         -- True if the property was set; False if unknown or could
+         -- not be set
+      require
+         has_proxy
+         not key.is_empty
+         not value.is_empty
+      deferred
+      end
+
 feature {}
    processor: PROCESSOR
 
-   specific_section_: FIXED_STRING is
-      once
-         Result := "remote".intern
-      end
-
 invariant
    name /= Void
-   specific_section = specific_section_
 
 end

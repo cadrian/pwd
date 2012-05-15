@@ -102,12 +102,14 @@ feature {} -- command management
             run_load
          when "merge" then
             run_merge
+         when "show" then
+            run_show
          when "master" then
             io.put_line(once "not yet implemented.")
          when "help" then
             run_help
-         when "show" then
-            run_show
+         when "remote" then
+            run_remote
          when "stop" then
             log.info.put_line(once "stopping server.")
             send("stop")
@@ -256,12 +258,56 @@ feature {} -- help
                                        back to the server.
                                        [33m[remote][0m: see note below
 
-                                       [33m[remote][0m note:
-                                       The [33mload[0m, [33msave[0m, and [33mmerge[0m commands require an extra argument
-                                       if there is more than one available remotes; in that case,
-                                       the argument is the remote to select.
+                    [33mremote create [remote] method {curl|scp}[0m
+                                       Create a new remote. Give it a name and choose a method.
 
-                                       #(1)
+                    [33mremote delete [remote][0m
+                                       Delete a remote.
+                                       [33m[remote][0m: see note below
+
+                    [33mremote set [remote] [property] [value][0m
+                                       Set a property of a remote.
+                                       The properties are:
+                                         - [33muser[0m        the user name
+                                       * curl specific:
+                                         - [33mpass[0m        the key of the password in the vault
+                                         - [33murl[0m         the url of the remote vault file
+                                                       (not directory)
+                                         - [33mget_request[0m the http get verb (e.g. GET or PROPFIND)
+                                         - [33mset_request[0m the http put verb (e.g. PUT)
+                                       * scp specific:
+                                         - [33mhost[0m        the hostname
+                                         - [33mfile[0m        the path of the remote vault file
+                                                       (not directory)
+                                         - [33moptions[0m     the scp options
+                                       [33m[remote][0m: see note below
+
+                    [33mremote unset [remote] [property][0m
+                                       Unset a property of a remote.
+                                       [33m[remote][0m: see note below
+
+                    [33mremote proxy [remote] [property] [value][0m
+                                       Set a property of the proxy attached to a remote.
+                                       The properties are:
+                                         - [33mprotocol[0m    the proxy protocol (default http)
+                                         - [33mhost[0m        the proxy host (must be set for the proxy
+                                                       to be used)
+                                         - [33mport[0m        the proxy port
+                                         - [33muser[0m        the proxy user
+                                         - [33mpass[0m        the key of the proxy password in the vault
+                                       [33m[remote][0m: see note below
+
+                    [33mremote proxy [remote] unset [property][0m
+                                       Unset a property of the proxy attached to a remote.
+                                       [33m[remote][0m: see note below
+
+                                     [1;33m|[0m [33m[remote][0m note:
+                                     [1;33m|[0m The [33mload[0m, [33msave[0m, [33mmerge[0m, and [33mremote[0m commands require
+                                     [1;33m|[0m an extra argument if there is more than one available
+                                     [1;33m|[0m remotes.
+                                     [1;33m|[0m In that case, the argument is the remote to select.
+                                     [1;33m|[0m
+                                     [1;33m|[0m #(1)
 
                     [33mmaster[0m             Change the master password.
                                        [1m(not yet implemented)[0m
@@ -954,6 +1000,106 @@ feature {} -- remote vault management
          end
       end
 
+   run_remote is
+      local
+         subcmd, name: STRING; count: INTEGER
+         remote: REMOTE
+         action: PROCEDURE[TUPLE[REMOTE, FIXED_STRING]]
+      do
+         if command.count < 2 then
+            std_output.put_line(once "[1mNot enough arguments![0m")
+         else
+            subcmd := command.first
+            command.remove_first
+            name := command.first
+            command.remove_first
+
+            remote := remote_map.fast_reference_at(name.intern)
+            inspect
+               subcmd
+            when "create" then
+               count := 2
+               action := agent remote_create
+            when "delete" then
+               count := 0
+               action := agent remote_delete
+            when "unset" then
+               count := 1
+               action := agent remote_unset
+            when "set" then
+               count := 2
+               action := agent remote_set
+            when "proxy" then
+               count := 2
+               action := agent remote_proxy
+            end
+
+            if command.count < count then
+               std_output.put_line(once "[1mNot enough arguments![0m")
+            else
+               if command.count > count then
+                  std_output.put_line(once "[1mIgnoring extra arguments[0m")
+               end
+               action.call([remote, name.intern])
+            end
+         end
+      end
+
+   remote_create (remote: REMOTE; name: FIXED_STRING) is
+      local
+         remote_factory: REMOTE_FACTORY
+         new_remote: REMOTE
+      do
+         if remote /= Void then
+            std_output.put_line(once "[1mDuplicate remote: #(1)[0m" # name)
+         elseif not command.first.same_as(once "method") then
+            std_output.put_line(once "[1mUnknown command: #(1)[0m" # command.first)
+         else
+            new_remote := remote_factory.new_remote(name, command.last, Current)
+            if new_remote /= Void then
+               remote_map.add(new_remote, name)
+            end
+         end
+      end
+
+   remote_delete (remote: REMOTE; name: FIXED_STRING) is
+      do
+         if remote = Void then
+            std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
+         else
+            remote_map.fast_remove(remote.name)
+         end
+      end
+
+   remote_unset (remote: REMOTE; name: FIXED_STRING) is
+      do
+         if remote = Void then
+            std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
+         elseif not remote.unset_property(command.first) then
+            std_output.put_line(once "[1mFailed (unknown property?)[0m")
+         end
+      end
+
+   remote_set (remote: REMOTE; name: FIXED_STRING) is
+      do
+         if remote = Void then
+            std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
+         elseif not remote.set_property(command.first, command.last) then
+            std_output.put_line(once "[1mFailed (unknown property?)[0m")
+         end
+      end
+
+   remote_proxy (remote: REMOTE; name: FIXED_STRING) is
+      do
+         if remote = Void then
+            std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
+         elseif not remote.has_proxy then
+            std_output.put_line(once "[1mCannot set proxy on that remote[0m")
+         elseif not remote.set_proxy_property(command.first, command.last) then
+            std_output.put_line(once "[1mFailed (unknown property?)[0m")
+         end
+      end
+
 feature {} -- helpers
    merge_vault: FIXED_STRING is
       once
@@ -975,14 +1121,18 @@ feature {} -- helpers
 
    remote_map: LINKED_HASHED_DICTIONARY[REMOTE, FIXED_STRING]
 
-   add_remote (section: FIXED_STRING) is
+   add_remote (name: FIXED_STRING) is
+      require
+         name /= Void
       local
          remote: REMOTE
          remote_factory: REMOTE_FACTORY
       do
-         remote := remote_factory.new_remote(section, Current)
-         if remote /= Void then
-            remote_map.add(remote, section)
+         if not name.is_empty then
+            remote := remote_factory.load_remote(name, Current)
+            if remote /= Void then
+               remote_map.add(remote, name)
+            end
          end
       end
 
@@ -1044,7 +1194,7 @@ feature {} -- helpers
                   if command.count > 1 then
                      std_output.put_line(once "[1mAll arguments but the first one are ignored[0m")
                   end
-                  Result := remote_map.reference_at(command.first.intern)
+                  Result := remote_map.fast_reference_at(command.first.intern)
                   if Result = Void then
                      std_output.put_line(once "[1mUnknown remote: #(1)[0m" # command.first)
                   end
@@ -1060,7 +1210,7 @@ feature {} -- helpers
          elseif remote_map.count = 1 then
             Result := once "There is only one remote defined: [1m#(1)[0m" # remote_map.key(remote_map.lower)
          else
-            Result := once "The defined remotes are:%N                   [1m#(1)[0m" # list_remotes
+            Result := once "The defined remotes are:%N                 [1;33m|[0m [1m#(1)[0m" # list_remotes
          end
       end
 

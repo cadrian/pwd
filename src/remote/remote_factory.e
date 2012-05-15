@@ -17,38 +17,43 @@ expanded class REMOTE_FACTORY
 
 insert
    CONFIGURABLE
+   LOGGING
 
 feature {ANY}
-   new_remote (a_specific_section: ABSTRACT_STRING; a_client: CLIENT): REMOTE is
+   load_remote (a_name: ABSTRACT_STRING; a_client: CLIENT): REMOTE is
       require
          a_client /= Void
+         not a_name.is_empty
       local
-         section: FIXED_STRING
+         method: FIXED_STRING
       do
-         if a_specific_section = Void or else a_specific_section.is_empty then
-            -- no remote
+         specific_config := configuration.specific(a_name.intern)
+         method := conf(config_key_remote_method)
+         if method /= Void and then not method.is_empty then
+            Result := new_remote(a_name, method, a_client)
+         end
+      end
+
+   new_remote (a_name, a_method: ABSTRACT_STRING; a_client: CLIENT): REMOTE is
+      require
+         a_client /= Void
+         not a_name.is_empty
+         not a_method.is_empty
+      do
+         inspect
+            a_method.out
+         when "curl" then
+            create {CURL} Result.make(a_name.intern, a_client)
+         when "scp" then
+            create {SCP} Result.make(a_name.intern)
          else
-            specific_section := a_specific_section.intern
-            section := conf(config_key_remote_method)
-            if section = Void or else section.is_empty then
-               -- no remote
-            else
-               inspect
-                  section.out
-               when "curl" then
-                  create {CURL} Result.make(a_specific_section, a_client)
-               when "scp" then
-                  create {SCP} Result.make(a_specific_section)
-               else
-                  -- no remote
-               end
-            end
+            log.warning.put_line(once "Unknown remote method: #(1)" # a_method)
          end
       end
 
    config_key_remote_method: FIXED_STRING is
       once
-         Result := "remote.method".intern
+         Result := "method".intern
       end
 
 end

@@ -52,18 +52,80 @@ feature {ANY}
          end
       end
 
-feature {}
-   arguments: ABSTRACT_STRING is
-      local
-         file, host, user: FIXED_STRING
+feature {CLIENT}
+   set_property (key, value: ABSTRACT_STRING): BOOLEAN is
       do
+         inspect
+            key.out
+         when "user" then
+            user := value.intern
+            Result := True
+         when "host" then
+            host := value.intern
+            Result := True
+         when "file" then
+            file := value.intern
+            Result := True
+         when "options" then
+            options := value.intern
+            Result := True
+         else
+            check not Result end
+         end
+      end
+
+   unset_property (key: ABSTRACT_STRING): BOOLEAN is
+      do
+         inspect
+            key.out
+         when "user" then
+            user := Void
+            Result := True
+         when "host" then
+            host := Void
+            Result := True
+         when "file" then
+            file := Void
+            Result := True
+         when "options" then
+            options := Void
+            Result := True
+         else
+            check not Result end
+         end
+      end
+
+   has_proxy: BOOLEAN is False
+
+   set_proxy_property (key, value: ABSTRACT_STRING): BOOLEAN is
+      do
+         check False end
+      end
+
+feature {}
+   file, host, user, options: FIXED_STRING
+
+   make (a_name: ABSTRACT_STRING) is
+      require
+         a_name /= Void
+      do
+         name := a_name.intern
+         specific_config := configuration.specific(name)
+
          file := conf(config_key_remote_file)
+         host := conf(config_key_remote_host)
+         user := conf(config_key_remote_user)
+         options := conf(config_key_remote_options)
+      ensure
+         name = a_name.intern
+         specific_config = configuration.specific(name)
+      end
+
+   arguments: ABSTRACT_STRING is
+      do
          if file = Void then
             std_output.put_line(once "[1mMissing remote vault path![0m")
          else
-            host := conf(config_key_remote_host)
-            user := conf(config_key_remote_user)
-
             Result := file
             if host /= Void then
                Result := once "#(1):#(2)" # host # Result
@@ -80,7 +142,7 @@ feature {}
 
    remote_options: ABSTRACT_STRING is
       do
-         Result := conf(config_key_remote_options)
+         Result := options
          if Result = Void then
             Result := once ""
          end
@@ -88,37 +150,25 @@ feature {}
          Result /= Void
       end
 
+feature {}
    config_key_remote_user: FIXED_STRING is
       once
-         Result := "remote.user".intern
+         Result := "user".intern
       end
 
    config_key_remote_host: FIXED_STRING is
       once
-         Result := "remote.host".intern
+         Result := "host".intern
       end
 
    config_key_remote_file: FIXED_STRING is
       once
-         Result := "remote.file".intern
+         Result := "file".intern
       end
 
    config_key_remote_options: FIXED_STRING is
       once
-         Result := "remote.options".intern
-      end
-
-feature {}
-   make (a_name: ABSTRACT_STRING) is
-      require
-         a_name /= Void
-      do
-         name := a_name.intern
-         specific_config := configuration.specific(name)
-         specific_section := specific_section_
-      ensure
-         name = a_name.intern
-         specific_config = configuration.specific(name)
+         Result := "options".intern
       end
 
 end

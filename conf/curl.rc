@@ -3,11 +3,15 @@
 #
 
 ######################################################################
-# curl-specific information
-[remote]
+# remote type
+[remote_factory]
 
 # Method of transfer. Currently available methods are "curl" and "scp"
 method    = curl
+
+######################################################################
+# curl-specific information
+[curl]
 
 # Name of the user.
 # Leave blank for anonymous.
