@@ -103,7 +103,14 @@ feature {CLIENT}
       end
 
 feature {}
-   file, host, user, options: FIXED_STRING
+   write_to (tfw: TEXT_FILE_WRITE) is
+      do
+         tfw.put_string(once "[remote_factory]%Nmethod = scp%N%N[scp]%N")
+         put_property(tfw, config_key_remote_file,    file)
+         put_property(tfw, config_key_remote_host,    host)
+         put_property(tfw, config_key_remote_user,    user)
+         put_property(tfw, config_key_remote_options, options)
+      end
 
    make (a_name: ABSTRACT_STRING) is
       require
@@ -151,6 +158,8 @@ feature {}
       end
 
 feature {}
+   file, host, user, options: FIXED_STRING
+
    config_key_remote_user: FIXED_STRING is
       once
          Result := "user".intern

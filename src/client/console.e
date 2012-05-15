@@ -1032,11 +1032,13 @@ feature {} -- remote vault management
             when "proxy" then
                count := 2
                action := agent remote_proxy
+            else
+               std_output.put_line(once "[1mUnknown sub-command: #(1)[0m" # subcmd)
             end
 
             if command.count < count then
                std_output.put_line(once "[1mNot enough arguments![0m")
-            else
+            elseif action /= Void then
                if command.count > count then
                   std_output.put_line(once "[1mIgnoring extra arguments[0m")
                end
@@ -1057,6 +1059,7 @@ feature {} -- remote vault management
          else
             new_remote := remote_factory.new_remote(name, command.last, Current)
             if new_remote /= Void then
+               new_remote.save_file
                remote_map.add(new_remote, name)
             end
          end
@@ -1067,6 +1070,7 @@ feature {} -- remote vault management
          if remote = Void then
             std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
          else
+            remote.delete_file
             remote_map.fast_remove(remote.name)
          end
       end
@@ -1075,7 +1079,9 @@ feature {} -- remote vault management
       do
          if remote = Void then
             std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
-         elseif not remote.unset_property(command.first) then
+         elseif remote.unset_property(command.first) then
+            remote.save_file
+         else
             std_output.put_line(once "[1mFailed (unknown property?)[0m")
          end
       end
@@ -1084,7 +1090,9 @@ feature {} -- remote vault management
       do
          if remote = Void then
             std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
-         elseif not remote.set_property(command.first, command.last) then
+         elseif remote.set_property(command.first, command.last) then
+            remote.save_file
+         else
             std_output.put_line(once "[1mFailed (unknown property?)[0m")
          end
       end
@@ -1095,7 +1103,9 @@ feature {} -- remote vault management
             std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
          elseif not remote.has_proxy then
             std_output.put_line(once "[1mCannot set proxy on that remote[0m")
-         elseif not remote.set_proxy_property(command.first, command.last) then
+         elseif remote.set_proxy_property(command.first, command.last) then
+            remote.save_file
+         else
             std_output.put_line(once "[1mFailed (unknown property?)[0m")
          end
       end

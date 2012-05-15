@@ -101,8 +101,6 @@ feature {REMOTE}
       end
 
 feature {}
-   protocol, host, port, user, passkey: FIXED_STRING
-
    proxy_url: ABSTRACT_STRING is
       require
          remote /= Void
@@ -195,7 +193,9 @@ feature {}
 
    remote: CURL
 
-feature {}
+feature {REMOTE}
+   protocol, host, port, user, passkey: FIXED_STRING
+
    config_protocol: FIXED_STRING is
       once
          Result := "protocol".intern

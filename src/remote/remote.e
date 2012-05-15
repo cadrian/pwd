@@ -67,8 +67,50 @@ feature {CLIENT}
       deferred
       end
 
+   save_file is
+      local
+         tfw: TEXT_FILE_WRITE
+      do
+         create tfw.connect_to(filename)
+         if tfw.is_connected then
+            write_to(tfw)
+            tfw.disconnect
+         end
+      end
+
+   delete_file is
+      local
+         ft: FILE_TOOLS; path: FIXED_STRING
+      do
+         path := filename
+         if ft.file_exists(path) then
+            ft.delete(path)
+         end
+      end
+
 feature {}
    processor: PROCESSOR
+   xdg: XDG
+
+   filename: FIXED_STRING is
+      do
+         Result := (once "#(1)/#(2).rc" # xdg.config_home # name).intern
+      end
+
+   write_to (tfw: TEXT_FILE_WRITE) is
+      require
+         tfw.is_connected
+      deferred
+      end
+
+   put_property (tfw: TEXT_FILE_WRITE; property, value: ABSTRACT_STRING) is
+      require
+         tfw.is_connected
+      do
+         if value /= Void and then not value.is_empty then
+            tfw.put_line(once "#(1) = #(2)" # property # value)
+         end
+      end
 
 invariant
    name /= Void

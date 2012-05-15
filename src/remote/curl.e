@@ -119,7 +119,21 @@ feature {PROXY}
       end
 
 feature {}
-   url, get_request, put_request, user, passkey: FIXED_STRING
+   write_to (tfw: TEXT_FILE_WRITE) is
+      do
+         tfw.put_string(once "[remote_factory]%Nmethod = curl%N%N[curl]%N")
+         put_property(tfw, config_key_remote_user,        user)
+         put_property(tfw, config_key_remote_pass,        passkey)
+         put_property(tfw, config_key_remote_url,         url)
+         put_property(tfw, config_key_remote_request_get, get_request)
+         put_property(tfw, config_key_remote_request_put, put_request)
+         tfw.put_string(once "%N[proxy]%N")
+         put_property(tfw, proxy.config_protocol, proxy.protocol)
+         put_property(tfw, proxy.config_host,     proxy.host)
+         put_property(tfw, proxy.config_port,     proxy.port)
+         put_property(tfw, proxy.config_user,     proxy.user)
+         put_property(tfw, proxy.config_pass,     proxy.passkey)
+      end
 
    arguments (option, file, request: ABSTRACT_STRING): ABSTRACT_STRING is
       require
@@ -148,6 +162,9 @@ feature {}
       do
          Result := not has_conf(config_key_remote_user) or else not has_conf(config_key_remote_pass)
       end
+
+feature {}
+   url, get_request, put_request, user, passkey: FIXED_STRING
 
    config_key_remote_user: FIXED_STRING is
       once
