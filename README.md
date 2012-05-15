@@ -29,8 +29,10 @@ An *administration console* is also provided.
 
 ## Typical use
 
- - bind `<super>k` to *pwdmgr_menu*
- - bind `<super><shift>k` to *pwdmgr_console*
+For a per-user install:
+
+ - bind `<super>k` to *$HOME/.local/bin/pwdmgr_menu*
+ - bind `<super><shift>k` to *$HOME/.local/bin/pwdmgr_console*
 
 # Configuration
 
