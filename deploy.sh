@@ -17,6 +17,7 @@ rm -rf target
 BOOTSTRAP=false
 RELEASE=false
 ONKEY=false
+INSTALL=false
 
 if [ x$1 == x ]; then
     BOOTSTRAP=true
@@ -32,6 +33,10 @@ else
             ;;
         onkey)
             ONKEY=true
+            ;;
+        install)
+            RELEASE=true
+            INSTALL=true
             ;;
         *)
             echo unrecognized option >&2
@@ -65,5 +70,10 @@ cd $dir/target
 $RELEASE   && tar cfz $root.tgz --transform "s|^release|$pkg|" release/*
 $ONKEY     && tar cfz $root-onkey.tgz --transform "s|^release-onkey|$pkg|" release-onkey/*
 $BOOTSTRAP && tar cfz $boot.tgz --transform "s|^bootstrap|$pkg|" bootstrap/*
+
+if $INSTALL; then
+    echo install
+    $dir/target/release/install.sh
+fi
 
 echo done
