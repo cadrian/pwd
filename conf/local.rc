@@ -1,0 +1,13 @@
+#
+# This example configuration file sets a "local" remote vault
+#
+
+######################################################################
+# curl-specific information
+[remote]
+
+# Direct backup of the file somewhere on the machine.
+url = file://$HOME/backup/pwdmgr.vault
+
+# Method of transfer. Currently available methods are "curl" and "scp"
+method = curl

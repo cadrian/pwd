@@ -1,0 +1,47 @@
+#
+# This example configuration file sets a web-saved remote vault
+#
+
+######################################################################
+# curl-specific information
+[remote]
+
+# Method of transfer. Currently available methods are "curl" and "scp"
+method    = curl
+
+# Name of the user.
+# Leave blank for anonymous.
+user      = your_remote_login
+
+# Key (in the vault) of the password to use.
+# Leave blank for anonymous.
+pass      = key_in_vault
+
+# Url of the remote vault
+url       = https://my_server.com/pwdmgr/vault.txt
+
+# HTTP request for data retrieval (default: GET) -- set to PROPFIND for WebDAV servers
+#request.get = PROPFIND
+
+# HTTP request for data storage (default: PUT)
+#request.put = PUT
+
+######################################################################
+# If you need a proxy
+[proxy]
+
+# The only mandatory key (otherwise the proxy will not be set)
+# The host name of the proxy
+host =
+
+# Proxy protocol
+protocol = http
+
+# Proxy port
+port = 8080
+
+# Proxy user, if authentication is needed
+user = $USER
+
+# Key (in the vault) of the password to use
+pass = proxy

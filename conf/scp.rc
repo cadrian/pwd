@@ -1,0 +1,22 @@
+#
+# This example configuration file sets a remote vault accessible through scp
+#
+
+######################################################################
+# scp-specific information
+[remote]
+
+# Method of transfer. Currently available methods are "curl" and "scp"
+method    = scp
+
+# Name of the user.
+user      = your_remote_login
+
+# Key (in the vault) of the password to use.
+host      = your_remote_host
+
+# Path to the vault *file* (not its containing directory!) on the remote machine
+file      = /your/path/to/vault
+
+# Extra options for scp
+options   = -o PasswordAuthentication=no -o StrictHostKeyChecking=yes

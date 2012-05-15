@@ -92,6 +92,7 @@ done
         printf '\tinstall -m555 %s $(PREFIX)/bin/\n' $bin
     done
     printf '\tinstall -m444 conf/pwdmgr-remote.properties $(CONFIG)/pwdmgr/config.rc\n'
+    printf '\tinstall -m444 conf/*.rc $(CONFIG)/pwdmgr/\n'
     printf '\tinstall -m444 conf/pwdmgr-local.properties $(PREFIX)/share/doc/pwdmgr/sample-local-config.rc\n'
     printf '\tinstall -m444 conf/pwdmgr-remote-curl.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-curl-config.rc\n'
     printf '\tinstall -m444 conf/pwdmgr-remote-scp.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-scp-config.rc\n'

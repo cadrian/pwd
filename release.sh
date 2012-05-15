@@ -49,6 +49,7 @@ cp conf/pwdmgr-local.properties $DOC/sample-local-config.rc
 cp conf/pwdmgr-remote-curl.properties $DOC/sample-remote-curl-config.rc
 cp conf/pwdmgr-remote-scp.properties $DOC/sample-remote-scp-config.rc
 cp conf/pwdmgr-remote.properties $CONF/config.rc
+cp conf/*.rc $CONF/
 
 if $ON_KEY; then
     cat <<EOF
@@ -66,7 +67,18 @@ mkdir -p "\$1"/config
 mkdir -p "\$1"/cache
 
 cp -a \$dir/data/*   "\$1"/local/
-cp -a \$dir/config/* "\$1"/config/
+
+for src in \$dir/config/*; do
+    tgt="\$1"/\${src#\$dir/config/}
+    if test -e \$tgt; then
+        echo "There is already a config file named \$tgt -- not overriding."
+        echo "The new config file is installed as \$tgt.pkg (please check)"
+        echo
+        cp \$src \$tgt.pkg
+    else
+        cp \$src \$tgt
+    fi
+done
 
 chmod +w "\$1"/config/pwdmgr/config.rc
 EOF
