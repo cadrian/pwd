@@ -116,12 +116,12 @@ for src in \$dir/config/pwdmgr/*
 do
     tgt=\$CONFIG/\${src#\$dir/config/}
     if test -e \$tgt; then
-        cp \$src \$tgt
-    else
         echo "There is already a config file named \$tgt -- not overriding."
         echo "The new config file is installed as \$tgt.pkg (please check)"
         echo
         cp \$src \$tgt.pkg
+    else
+        cp \$src \$tgt
     fi
 done
 
