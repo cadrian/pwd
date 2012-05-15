@@ -8,6 +8,15 @@ CLASS=$(echo $name | tr '[a-z]' '[A-Z]')
 clean=${2:+no}
 clean=${clean:-yes}
 
+case $name in
+    console)
+        trace=no
+        ;;
+    *)
+        trace=no
+        ;;
+esac
+
 cat > $target <<EOF
 system "$exe"
 
@@ -18,11 +27,15 @@ default
     assertion(boost)
     collect(yes)
     debug(no)
-    trace(no)
+    trace($trace)
     verbose(no)
 
 cluster
     pwdmgr: "src/loadpath.se"
+--        default
+--            assertion(invariant)
+--        end
+
     liberty: "\${path_liberty}src/loadpath.se"
 
 generate
