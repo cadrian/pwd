@@ -79,7 +79,7 @@ for src in \$dir/config/*; do
     fi
 done
 
-chmod +w "\$1"/config/pwdmgr/config.rc
+chmod +w "\$1"/config/pwdmgr/*.rc
 EOF
 else
     cat <<EOF
@@ -136,7 +136,7 @@ do
 done
 
 if test \$(id -u) -ne 0; then
-    chmod u+w \$CONFIG/pwdmgr/config.rc
+    chmod u+w \$CONFIG/pwdmgr/*.rc
 fi
 EOF
 fi >$release_dir/install.sh
