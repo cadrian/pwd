@@ -7,6 +7,8 @@
         * Renamed pwdsrv (ugly) as server
         * #16 - XDG (freedesktop.org base directories) compliance
         * Standalone install on USB key
+        * Standalong config files for each remote
+        * Remote configuration on the console command line
 
 0.0.4 (released 2012-01-25)
 
