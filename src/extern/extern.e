@@ -141,9 +141,7 @@ feature {ANY}
          proc: STRING
          p: POINTER; sts: INTEGER
       do
-         proc := once "                "
-         proc.copy(once "/proc/")
-         pid.append_in(proc)
+         proc := (once "/proc/#(1)" # pid.out).out
          p := proc.to_external
          c_inline_c("[
                      struct stat s;
