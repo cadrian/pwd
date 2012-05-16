@@ -9,6 +9,7 @@
         * Standalone install on USB key
         * Standalong config files for each remote
         * Remote configuration on the console command line
+        * #23 - jugulate fifo manipulation and ugly sleeps in the fifo channels implementation
 
 0.0.4 (released 2012-01-25)
 
