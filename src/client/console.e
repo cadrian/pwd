@@ -18,7 +18,7 @@ class CONSOLE
 inherit
    CLIENT
       redefine
-         make
+         make, cleanup
       end
 
 create {}
@@ -30,6 +30,7 @@ feature {} -- the CLIENT interface
    run is
       do
          fill_remote_map
+         load_history
 
          from
             stop := False
@@ -64,19 +65,60 @@ feature {} -- the CLIENT interface
          end
       end
 
+   cleanup is
+      do
+         Precursor
+         save_history
+      end
+
+feature {} -- readline history management
+   history_size: INTEGER
+
+   load_history is
+      local
+         histsize: FIXED_STRING
+      do
+         histsize := conf(config_history_size)
+         if histsize = Void or else not histsize.is_integer then
+            history_size := 0
+         else
+            history_size := histsize.to_integer
+         end
+         rio.history.from_file(history_filename)
+      end
+
+   save_history is
+      do
+         rio.history.write(history_filename)
+         if history_size > 0 then
+            rio.history.truncate_file(history_filename, history_size)
+         end
+      end
+
+   history_filename: FIXED_STRING is
+      local
+         xdg: XDG
+      once
+         Result := (once "#(1)/.console_history" # xdg.data_home).intern
+      end
+
 feature {} -- command management
    command: RING_ARRAY[STRING] is
       once
          create Result.with_capacity(16, 0)
       end
 
+   rio: READLINE_INPUT_STREAM is
+      once
+         create Result.make
+         Result.set_prompt(once "%N[33mReady.[0m%N[1;32m>[0m ")
+      end
+
    read_command is
       do
          command.clear_count
-         io.put_string(once "%N[33mReady.[0m%N[1;32m>[0m ")
-         io.flush
-         io.read_line
-         io.last_string.split_in(command)
+         rio.read_line
+         rio.last_string.split_in(command)
       end
 
    run_command is
@@ -1228,6 +1270,11 @@ feature {} -- helpers
    config_remote_sections: FIXED_STRING is
       once
          Result := "remote.sections".intern
+      end
+
+   config_history_size: FIXED_STRING is
+      once
+         Result := "history.size".intern
       end
 
    make is
