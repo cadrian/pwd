@@ -20,11 +20,6 @@ insert
    LOGGING
 
 feature {ANY}
-   server_fifo: FIXED_STRING is
-      once
-         Result := ("#(1)/server_fifo" # xdg.runtime_dir).intern
-      end
-
    server_pidfile: FIXED_STRING is
       once
          Result := ("#(1)/server_pid" # xdg.runtime_dir).intern

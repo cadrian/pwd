@@ -48,8 +48,9 @@ feature {}
    main is
       local
          channel_factory: CHANNEL_FACTORY
+         extern: EXTERN
       do
-         tmpdir := fifo.tmp
+         tmpdir := extern.tmp
          if tmpdir = Void then
             log.error.put_line("#(1): could not create tmp directory!" # command_name)
             die_with_code(1)
@@ -86,12 +87,6 @@ feature {}
 
 feature {}
    exceptions: EXCEPTIONS
-   fifo: FIFO
-
-   server_fifo: FIXED_STRING is
-      do
-         Result := shared.server_fifo
-      end
 
    server_pidfile: FIXED_STRING is
       do
@@ -102,13 +97,11 @@ feature {}
       do
          if not file_exists(shared.vault_file) then
             check
-               not fifo.exists(server_fifo)
+               not channel.server_running
                not file_exists(server_pidfile)
             end
             server_bootstrap
-         elseif not fifo.exists(server_fifo) then
-            server_restart
-         elseif not fifo.server_running then
+         elseif not channel.server_running then
             server_restart
          end
       end
@@ -118,45 +111,16 @@ feature {}
          log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
          read_new_master(once "This is a new vault")
          create_vault
-         start_server
+         channel.server_start
          send_master
       end
 
    server_restart is
       do
          log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
-         start_server
+         channel.server_start
          master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
          send_master
-      end
-
-   start_server is
-      require
-         not fifo.exists(server_fifo)
-      local
-         proc: PROCESS; arg: ABSTRACT_STRING
-      do
-         log.info.put_line(once "starting server...")
-         if configuration.argument_count = 1 then
-            arg := once "server '#(1)'" # configuration.argument(1)
-         else
-            arg := once "server"
-         end
-         proc := processor.execute_to_dev_null(once "nohup", arg)
-         if proc.is_connected then
-            proc.wait
-            if proc.status = 0 then
-               log.info.put_line(once "server started.")
-            else
-               log.error.put_line(once "server not started! (exit=#(1))" # proc.status.out)
-               sedb_breakpoint
-               die_with_code(proc.status)
-            end
-            fifo.wait_for(server_fifo)
-            fifo.sleep(25)
-         end
-      ensure
-         fifo.exists(server_fifo)
       end
 
    call_server (verb, arguments: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
@@ -266,7 +230,7 @@ feature {} -- master phrase
 
    send_master is
       require
-         fifo.exists(server_fifo)
+         channel.server_running
       do
          log.info.put_line(once "Pinging server to settle queues")
          do_ping
@@ -353,8 +317,5 @@ feature {} -- create a brand new vault
          new_vault.save(shared.vault_file.out)
          new_vault.close
       end
-
-invariant
-   server_fifo /= Void
 
 end

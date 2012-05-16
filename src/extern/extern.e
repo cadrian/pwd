@@ -13,7 +13,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class FIFO
+expanded class EXTERN
 --
 -- originally POSIX fifo helpers, now misc helpers too
 --
@@ -61,6 +61,7 @@ feature {ANY}
          -- create a temporary directory
       local
          t, p: POINTER; template: STRING
+         shared: SHARED
       do
          template := (once "#(1)/XXXXXX" # shared.runtime_dir).out
          t := template.to_external
@@ -133,38 +134,6 @@ feature {ANY}
          output.flush
       end
 
-   server_running: BOOLEAN is
-         -- True if the server is running and healthy; False if the server does not run or was killed
-      local
-         tfr: TEXT_FILE_READ; pid_string: STRING; pid: INTEGER
-         ft: FILE_TOOLS
-      do
-         check
-            exists(shared.server_fifo)
-         end
-         if ft.file_exists(shared.server_pidfile) then
-            create tfr.connect_to(shared.server_pidfile)
-            if tfr.is_connected then
-               tfr.read_line
-               if tfr.last_string.is_integer then
-                  pid := tfr.last_string.to_integer
-                  if process_running(pid) then
-                     Result := True
-                  end
-               end
-               tfr.disconnect
-            end
-
-            if not Result then
-               ft.delete(shared.server_pidfile)
-            end
-         end
-
-         if not Result then
-            ft.delete(shared.server_fifo)
-         end
-      end
-
    process_running (pid: INTEGER): BOOLEAN is
       require
          pid > 0
@@ -188,8 +157,5 @@ feature {ANY}
                      ]")
          Result := sts /= 0
       end
-
-feature {}
-   shared: SHARED
 
 end

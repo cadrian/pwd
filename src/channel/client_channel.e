@@ -16,6 +16,17 @@
 deferred class CLIENT_CHANNEL
 
 feature {CLIENT}
+   server_running: BOOLEAN is
+         -- True if the server is running, False otherwise
+      deferred
+      end
+
+   server_start is
+      require
+         not server_running
+      deferred
+      end
+
    send (string: ABSTRACT_STRING) is
       require
          server_is_ready

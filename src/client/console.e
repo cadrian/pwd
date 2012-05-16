@@ -211,9 +211,10 @@ feature {} -- local vault commands
                      agent (stream: INPUT_STREAM) is
                         local
                            str: STRING_OUTPUT_STREAM
+                           extern: EXTERN
                         do
                            create str.make
-                           fifo.splice(stream, str)
+                           extern.splice(stream, str)
                            less(str.to_string)
                         end)
       end

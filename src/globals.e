@@ -38,10 +38,6 @@ feature {}
          config: STRING_INPUT_STREAM
       do
          preload
-         ensure_directory_of(shared.server_fifo)
-         ensure_directory_of(shared.vault_file)
-         ensure_directory_of(("#(1)/XXXXXX" # shared.runtime_dir).intern)
-         ensure_directory_of(log_file)
 
          create config.from_string(("[
                                      log configuration
@@ -73,29 +69,6 @@ feature {}
          logconf.load(config, Void, Void, agent start_main)
       end
 
-   ensure_directory_of (file: FIXED_STRING) is
-      local
-         dir: FIXED_STRING; i: INTEGER
-         ft: FILE_TOOLS; bd: BASIC_DIRECTORY
-      do
-         i := file.last_index_of('/')
-         if file.valid_index(i) and then i > file.lower then
-            dir := file.substring(file.lower, i - 1)
-            if ft.is_directory(dir) then
-               -- OK
-            elseif ft.file_exists(dir) then
-               std_error.put_line("File exists and is not a directory: #(1)" # dir)
-               die_with_code(1)
-            else
-               ensure_directory_of(dir)
-               if not bd.create_new_directory(dir) then
-                  std_error.put_line("Could not create directory: #(1)" # dir)
-                  die_with_code(1)
-               end
-            end
-         end
-      end
-
    preload is
       deferred
       end
@@ -105,15 +78,13 @@ feature {}
          log.info.put_line("[
                             **************** STARTUP ****************
                             Main configuration file: #(1)
-                            Server fifo:             #(2)
-                            Server pid file:         #(3)
-                            Vault is:                #(4)
-                            Runtime directory:       #(5)
-                            Log file:                #(6)
+                            Server pid file:         #(2)
+                            Vault is:                #(3)
+                            Runtime directory:       #(4)
+                            Log file:                #(5)
 
                             ]"
                            # configuration.main_config.filename
-                           # shared.server_fifo
                            # shared.server_pidfile
                            # shared.vault_file
                            # shared.runtime_dir

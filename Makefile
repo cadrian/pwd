@@ -1,6 +1,6 @@
 #!/usr/exe/env make -f
 
-COMMON_FILES = src/*.e src/config/*.e
+COMMON_FILES = src/*.e src/config/*.e src/extern/*.e
 
 all: exe/server exe/menu exe/console
 

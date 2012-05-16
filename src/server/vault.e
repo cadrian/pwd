@@ -49,7 +49,7 @@ feature {ANY}
             set_environment_variable(once "VAULT_MASTER", pass)
             proc := processor.execute_redirect(once "openssl", once "#(1) -d -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
             if proc.is_connected then
-               fifo.splice(vault_file, proc.input)
+               extern.splice(vault_file, proc.input)
                proc.input.disconnect
                read_data(proc.output)
                proc.wait
@@ -173,13 +173,13 @@ feature {}
                print_all_keys(proc.input)
                proc.input.flush
                proc.input.disconnect
-               fifo.splice(proc.output, stream)
+               extern.splice(proc.output, stream)
                proc.wait
             end
          end
       end
 
-   do_get (stream:  OUTPUT_STREAM; name: STRING) is
+   do_get (stream: OUTPUT_STREAM; name: STRING) is
       require
          is_open
          stream.is_connected
@@ -467,7 +467,7 @@ feature {}
       end
 
    dirty: BOOLEAN
-   fifo: FIFO
+   extern: EXTERN
 
    processor: PROCESSOR
 

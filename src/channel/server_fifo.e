@@ -19,6 +19,7 @@ inherit
    SERVER_CHANNEL
 
 insert
+   SHARED_FIFO
    LOGGING
    FILE_TOOLS
 
@@ -70,15 +71,15 @@ feature {SERVER}
 
    restart is
       do
-         if not fifo.exists(fifo_filename) then
-            fifo.make(fifo_filename)
-            if not fifo.exists(fifo_filename) then
-               log.error.put_line(once "Error while opening fifo #(1)" # fifo_filename)
+         if not extern.exists(server_fifo) then
+            extern.make(server_fifo)
+            if not extern.exists(server_fifo) then
+               log.error.put_line(once "Error while opening fifo #(1)" # server_fifo)
                die_with_code(1)
             end
          end
 
-         channel.connect_to(fifo_filename)
+         channel.connect_to(server_fifo)
       end
 
    disconnect is
@@ -88,13 +89,13 @@ feature {SERVER}
 
    cleanup is
       do
-         delete(fifo_filename)
+         delete(server_fifo)
       end
 
 feature {}
    make is
       do
-         if fifo.exists(fifo_filename) then
+         if extern.exists(server_fifo) then
             log.error.put_line(once "Fifo already exists, not starting server")
             die_with_code(1)
          end
@@ -104,19 +105,11 @@ feature {}
       end
 
    channel: TEXT_FILE_READ_WRITE
-         -- There must be at least one writer for the fifo_filename to be blocking in select(2)
+         -- There must be at least one writer for the server_fifo to be blocking in select(2)
          -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo
-
-   fifo: FIFO
-   shared: SHARED
-
-   fifo_filename: FIXED_STRING is
-      do
-         Result := shared.server_fifo
-      end
 
 invariant
    channel /= Void
-   fifo_filename /= Void
+   server_fifo /= Void
 
 end

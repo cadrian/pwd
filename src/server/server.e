@@ -295,7 +295,6 @@ feature {}
       end
 
    detach: BOOLEAN
-   fifo: FIFO
 
 invariant
    vault /= Void
