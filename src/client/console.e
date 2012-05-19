@@ -1099,6 +1099,8 @@ feature {} -- remote vault management
             std_output.put_line(once "[1mDuplicate remote: #(1)[0m" # name)
          elseif not command.first.same_as(once "method") then
             std_output.put_line(once "[1mUnknown command: #(1)[0m" # command.first)
+         elseif name.same_as(once "config") then
+            std_output.put_line(once "[1mThis name (#(1)) is reserved, please choose another one[0m" # name)
          else
             new_remote := remote_factory.new_remote(name, command.last, Current)
             if new_remote /= Void then
