@@ -111,12 +111,13 @@ feature {} -- command management
    rio: READLINE_INPUT_STREAM is
       once
          create Result.make
-         Result.set_prompt(once "%N[33mReady.[0m%N[1;32m>[0m ")
+         Result.set_prompt("> ")
       end
 
    read_command is
       do
          command.clear_count
+         io.put_line(once "%N[33mReady.[0m")
          rio.read_line
          rio.last_string.split_in(command)
       end
