@@ -99,7 +99,7 @@ feature {} -- readline history management
       local
          xdg: XDG
       once
-         Result := (once "#(1)/.console_history" # xdg.data_home).intern
+         Result := ("#(1)/.console_history" # xdg.data_home).intern
       end
 
 feature {} -- command management
@@ -1174,6 +1174,30 @@ feature {} -- helpers
 
    remote_map: LINKED_HASHED_DICTIONARY[REMOTE, FIXED_STRING]
 
+   fill_remote_map is
+      local
+         config_dir: DIRECTORY
+         xdg: XDG
+      do
+         remote_map.clear_count
+
+         create config_dir.scan(xdg.config_home)
+         config_dir.new_iterator.do_all(agent load_remote)
+      end
+
+   load_remote (name: FIXED_STRING) is
+      require
+         dir /= Void
+         name /= Void
+      local
+         remote_name: FIXED_STRING
+      do
+         if name.has_suffix(once ".rc") and then not name.same_as(once "config.rc") then
+            remote_name := name.substring(name.lower, name.upper - 3)
+            add_remote(remote_name)
+         end
+      end
+
    add_remote (name: FIXED_STRING) is
       require
          name /= Void
@@ -1186,28 +1210,6 @@ feature {} -- helpers
             if remote /= Void then
                remote_map.add(remote, name)
             end
-         end
-      end
-
-   fill_remote_map is
-      local
-         remote_sections: FIXED_STRING
-         start, next: INTEGER
-      do
-         remote_map.clear_count
-         remote_sections := conf(config_remote_sections)
-         if remote_sections /= Void then
-            from
-               start := remote_sections.lower
-               next := remote_sections.first_index_of(',')
-            until
-               not remote_sections.valid_index(next)
-            loop
-               add_remote(remote_sections.substring(start, next - 1))
-               start := next + 1
-               next := remote_sections.index_of(',', start)
-            end
-            add_remote(remote_sections.substring(start, remote_sections.upper))
          end
       end
 
@@ -1265,11 +1267,6 @@ feature {} -- helpers
          else
             Result := once "The defined remotes are:%N                 [1;33m|[0m [1m#(1)[0m" # list_remotes
          end
-      end
-
-   config_remote_sections: FIXED_STRING is
-      once
-         Result := "remote.sections".intern
       end
 
    config_history_size: FIXED_STRING is
