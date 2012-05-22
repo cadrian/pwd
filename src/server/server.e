@@ -189,6 +189,7 @@ feature {}
    exceptions: EXCEPTIONS
    channel: SERVER_CHANNEL
    vault: VAULT
+   is_running: BOOLEAN
 
    run_in_child is
          -- the main loop
@@ -214,7 +215,10 @@ feature {}
             loop_stack.add_job(Current)
             restart
             log.info.put_line(once "Starting main loop.")
+
+            is_running := True
             loop_stack.run
+            is_running := False
          end
 
          if vault.is_open then
@@ -297,7 +301,7 @@ feature {}
    detach: BOOLEAN
 
 invariant
-   vault /= Void
-   channel /= Void
+   is_running implies vault /= Void
+   is_running implies channel /= Void
 
 end
