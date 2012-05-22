@@ -122,43 +122,21 @@ feature {} -- command management
          rio.last_string.split_in(command)
       end
 
+   commands: MAP[PROCEDURE[TUPLE], FIXED_STRING]
+
    run_command is
       require
          not command.is_empty
          channel.is_ready
       local
-         cmd: STRING
+         cmd: STRING; runner: PROCEDURE[TUPLE]
       do
          cmd := command.first
-         command.remove_first
-         inspect
-            cmd
-         when "add" then
-            run_add
-         when "rem" then
-            run_rem
-         when "list" then
-            run_list
-         when "save" then
-            run_save
-         when "load" then
-            run_load
-         when "merge" then
-            run_merge
-         when "show" then
-            run_show
-         when "master" then
-            io.put_line(once "not yet implemented.")
-         when "help" then
-            run_help
-         when "remote" then
-            run_remote
-         when "stop" then
-            log.info.put_line(once "stopping server.")
-            send("stop")
-            stop := True
+         runner := commands.fast_reference_at(cmd.intern)
+         if runner /= Void then
+            command.remove_first
+            runner.call([])
          else
-            command.add_first(cmd) -- yes, add it again... it's a ring array so no harm done
             run_get
          end
       ensure
@@ -174,6 +152,18 @@ feature {} -- local vault commands
    run_get is
       do
          do_get(command.first, agent xclip, agent unknown_key)
+      end
+
+   run_master is
+      do
+         io.put_line(once "not yet implemented.")
+      end
+
+   run_stop is
+      do
+         log.info.put_line(once "stopping server.")
+         send("stop")
+         stop := True
       end
 
    run_add is
@@ -1190,7 +1180,6 @@ feature {} -- helpers
 
    load_remote (name: FIXED_STRING) is
       require
-         dir /= Void
          name /= Void
       local
          remote_name: FIXED_STRING
@@ -1280,10 +1269,51 @@ feature {} -- helpers
    make is
       do
          create remote_map.make
+
+         commands := {LINKED_HASHED_DICTIONARY[PROCEDURE[TUPLE], FIXED_STRING] <<
+            agent run_add    , "add".intern    ;
+            agent run_help   , "help".intern   ;
+            agent run_list   , "list".intern   ;
+            agent run_load   , "load".intern   ;
+            agent run_master , "master".intern ;
+            agent run_merge  , "merge".intern  ;
+            agent run_rem    , "rem".intern    ;
+            agent run_remote , "remote".intern ;
+            agent run_save   , "save".intern   ;
+            agent run_show   , "show".intern   ;
+            agent run_stop   , "stop".intern   ;
+         >> }
+
+         rio.completion.set_completion_agent(agent complete)
          Precursor
+      end
+
+   complete (word: FIXED_STRING; start_index, end_index: INTEGER): FAST_ARRAY[FIXED_STRING] is
+      require
+         word /= Void
+      do
+         if start_index = 0 then
+            create Result.with_capacity(commands.count)
+            commands.new_iterator_on_keys.do_all(agent if_complete(word, ?, Result))
+            log.trace.put_line(once "**** complete #(1)-#(2): #(3)" # start_index.out # end_index.out # Result.out)
+         else
+            log.trace.put_line(once "**** complete #(1)-#(2)" # start_index.out # end_index.out)
+         end
+      end
+
+   if_complete (word, entry: FIXED_STRING; completions: FAST_ARRAY[FIXED_STRING]) is
+      require
+         word /= Void
+         entry /= Void
+         completions /= Void
+      do
+         if entry.has_prefix(word) then
+            completions.add_last(entry)
+         end
       end
 
 invariant
    remote_map /= Void
+   commands /= Void
 
 end
