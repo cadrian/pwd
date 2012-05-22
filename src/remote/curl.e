@@ -218,6 +218,6 @@ feature {}
 
 invariant
    client /= Void
-   proxy /= Void
+   --proxy /= Void
 
 end
