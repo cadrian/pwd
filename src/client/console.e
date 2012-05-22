@@ -116,26 +116,25 @@ feature {} -- command management
 
    read_command is
       do
-         command.clear_count
-         io.put_line(once "%N[33mReady.[0m")
          rio.read_line
+         command.clear_count
          rio.last_string.split_in(command)
       end
 
-   commands: MAP[PROCEDURE[TUPLE], FIXED_STRING]
+   commands: MAP[TUPLE[PROCEDURE[TUPLE], FUNCTION[TUPLE[FIXED_STRING], AVL_SET[FIXED_STRING]]], FIXED_STRING]
 
    run_command is
       require
          not command.is_empty
          channel.is_ready
       local
-         cmd: STRING; runner: PROCEDURE[TUPLE]
+         cmd: STRING; command_agents: TUPLE[PROCEDURE[TUPLE], FUNCTION[TUPLE[FIXED_STRING], AVL_SET[FIXED_STRING]]]
       do
          cmd := command.first
-         runner := commands.fast_reference_at(cmd.intern)
-         if runner /= Void then
+         command_agents := commands.fast_reference_at(cmd.intern)
+         if command_agents /= Void then
             command.remove_first
-            runner.call([])
+            command_agents.first.call([])
          else
             run_get
          end
@@ -1266,49 +1265,66 @@ feature {} -- helpers
          Result := "history.size".intern
       end
 
+   dont_complete (word: FIXED_STRING): AVL_SET[FIXED_STRING] is
+      require
+         not command.is_empty
+      do
+         log.trace.put_line(once "dont_complete #(1)" # command.first)
+         create Result.make
+      end
+
    make is
       do
          create remote_map.make
 
-         commands := {LINKED_HASHED_DICTIONARY[PROCEDURE[TUPLE], FIXED_STRING] <<
-            agent run_add    , "add".intern    ;
-            agent run_help   , "help".intern   ;
-            agent run_list   , "list".intern   ;
-            agent run_load   , "load".intern   ;
-            agent run_master , "master".intern ;
-            agent run_merge  , "merge".intern  ;
-            agent run_rem    , "rem".intern    ;
-            agent run_remote , "remote".intern ;
-            agent run_save   , "save".intern   ;
-            agent run_show   , "show".intern   ;
-            agent run_stop   , "stop".intern   ;
+         commands := {LINKED_HASHED_DICTIONARY[TUPLE[PROCEDURE[TUPLE], FUNCTION[TUPLE[FIXED_STRING], AVL_SET[FIXED_STRING]]], FIXED_STRING] <<
+            [agent run_add    , agent dont_complete], "add".intern    ;
+            [agent run_help   , agent dont_complete], "help".intern   ;
+            [agent run_list   , agent dont_complete], "list".intern   ;
+            [agent run_load   , agent dont_complete], "load".intern   ;
+            [agent run_master , agent dont_complete], "master".intern ;
+            [agent run_merge  , agent dont_complete], "merge".intern  ;
+            [agent run_rem    , agent dont_complete], "rem".intern    ;
+            [agent run_remote , agent dont_complete], "remote".intern ;
+            [agent run_save   , agent dont_complete], "save".intern   ;
+            [agent run_show   , agent dont_complete], "show".intern   ;
+            [agent run_stop   , agent dont_complete], "stop".intern   ;
          >> }
 
          rio.completion.set_completion_agent(agent complete)
          Precursor
       end
 
-   complete (word: FIXED_STRING; start_index, end_index: INTEGER): FAST_ARRAY[FIXED_STRING] is
+   complete (word: FIXED_STRING; start_index, end_index: INTEGER): AVL_SET[FIXED_STRING] is
       require
          word /= Void
+      local
+         command_agents: TUPLE[PROCEDURE[TUPLE], FUNCTION[TUPLE[FIXED_STRING], AVL_SET[FIXED_STRING]]]
+         buffer: FIXED_STRING
       do
          if start_index = 0 then
-            create Result.with_capacity(commands.count)
-            commands.new_iterator_on_keys.do_all(agent if_complete(word, ?, Result))
-            log.trace.put_line(once "**** complete #(1)-#(2): #(3)" # start_index.out # end_index.out # Result.out)
+            create Result.make
+            commands.new_iterator_on_keys.do_all(agent complete_first_word(word, ?, Result))
+            -- TODO: add known keys (ask the server)
          else
-            log.trace.put_line(once "**** complete #(1)-#(2)" # start_index.out # end_index.out)
+            buffer := rio.buffer
+            command.clear_count
+            buffer.substring(buffer.lower, start_index + buffer.lower).split_in(command)
+            command_agents := commands.fast_reference_at(command.first.intern)
+            if command_agents /= Void and then command_agents.second /= Void then
+               Result := command_agents.second.item([word])
+            end
          end
       end
 
-   if_complete (word, entry: FIXED_STRING; completions: FAST_ARRAY[FIXED_STRING]) is
+   complete_first_word (word, entry: FIXED_STRING; completions: AVL_SET[FIXED_STRING]) is
       require
          word /= Void
          entry /= Void
          completions /= Void
       do
          if entry.has_prefix(word) then
-            completions.add_last(entry)
+            completions.fast_add(entry)
          end
       end
 
