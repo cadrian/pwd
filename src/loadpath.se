@@ -1,6 +1,6 @@
 ./
 channel/loadpath.se
-client/
+client/loadpath.se
 config/
 generator/
 remote/
