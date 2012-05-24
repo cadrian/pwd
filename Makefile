@@ -15,7 +15,7 @@ exe/menu: exe menu.ace src/client/menu.e src/client/client.e $(COMMON_FILES)
 	se c menu.ace
 	mv menu.exe $@
 
-exe/console: exe console.ace src/client/console.e src/client/client.e src/remote/*.e $(COMMON_FILES)
+exe/console: exe console.ace src/client/console.e src/client/client.e src/client/remote/*.e src/client/command/*.e src/client/command/remote/*.e $(COMMON_FILES)
 	se c console.ace
 	mv console.exe $@
 

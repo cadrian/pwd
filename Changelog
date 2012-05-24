@@ -1,5 +1,7 @@
 0.0.6 (not yet released)
         * fix #27 - remote discovery
+        * fix #24 - readline does not like invisible characters (e.g. ANSI color sequences)
+        * fix #25 - CLI arguments
 
 0.0.5 (released 2012-05-18)
         * #18 - Client/server handshake
