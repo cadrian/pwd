@@ -16,30 +16,18 @@
 class COMMAND_LOAD
 
 inherit
-   COMMAND
+   COMMAND_WITH_REMOTE
 
-create {CLIENT}
+create {CONSOLE}
    make
 
-feature {CLIENT}
+feature {COMMANDER}
    name: FIXED_STRING is
       once
          Result := "load".intern
       end
 
-   run (command: COLLECTION[STRING]) is
-      do
-      end
-
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
-      do
-         create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
-      end
-
-feature {ANY}
    help (command: COLLECTION[STRING]): STRING is
-         -- If `command' is Void, provide extended help
-         -- Otherwise provide help depending on the user input
       do
          Result := once "[
                     [33mload [remote][0m      [1mReplace[0m the local vault with the server's version.
@@ -48,6 +36,14 @@ feature {ANY}
                                        [33m[remote][0m: see note below
 
                          ]"
+      end
+
+feature {}
+   run_remote (remote: REMOTE) is
+      local
+         shared: SHARED
+      do
+         remote.load(shared.vault_file)
       end
 
 end

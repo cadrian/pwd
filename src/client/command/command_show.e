@@ -18,10 +18,10 @@ class COMMAND_SHOW
 inherit
    COMMAND
 
-create {CLIENT}
+create {CONSOLE}
    make
 
-feature {CLIENT}
+feature {COMMANDER}
    name: FIXED_STRING is
       once
          Result := "show".intern
@@ -30,7 +30,7 @@ feature {CLIENT}
    run (command: COLLECTION[STRING]) is
       do
          if command.is_empty or else command.first.first = 'w' then
-            less(once "{
+            client.less(once "{
 
   15. Disclaimer of Warranty.
 
@@ -64,8 +64,8 @@ an absolute waiver of all civil liability in connection with the
 Program, unless a warranty or assumption of liability accompanies a
 copy of the Program in return for a fee.
                        }")
-         elseif command.first.first = 'c' then
-            less(once "{
+         elseif command.count = 1 and then command.first.first = 'c' then
+            client.less(once "{
                        TERMS AND CONDITIONS
 
   0. Definitions.
@@ -619,20 +619,32 @@ copy of the Program in return for a fee.
                      END OF TERMS AND CONDITIONS
                        }")
          else
-            io.put_line(once "[1mUnknown show command[0m")
+            error_and_help(message_invalid_arguments, command)
          end
       end
 
    complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
       do
-         create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
+         if command.count = 1 then
+            Result := filter_completions(completions, word)
+         else
+            Result := no_completion
+         end
       end
 
-feature {ANY}
    help (command: COLLECTION[STRING]): STRING is
-         -- If `command' is Void, provide extended help
-         -- Otherwise provide help depending on the user input
       do
+         -- nothing, there is a specific section at the end of the
+         -- global help
+      end
+
+feature {}
+   completions: ITERATOR[FIXED_STRING] is
+      once
+         Result := {FAST_ARRAY[FIXED_STRING] <<
+            "copyright".intern,
+            "warranty".intern,
+         >> }.new_iterator
       end
 
 end

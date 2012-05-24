@@ -18,10 +18,10 @@ class COMMAND_REM
 inherit
    COMMAND
 
-create {CLIENT}
+create {CONSOLE}
    make
 
-feature {CLIENT}
+feature {COMMANDER}
    name: FIXED_STRING is
       once
          Result := "rem".intern
@@ -29,16 +29,20 @@ feature {CLIENT}
 
    run (command: COLLECTION[STRING]) is
       do
-         call_server(once "unset", command.first,
-                     agent (stream: INPUT_STREAM) is
-                        do
-                           stream.read_line
-                           if not stream.end_of_input then
-                              xclip(once "")
-                              io.put_line(once "[1mDone[0m")
-                           end
-                        end)
-         send_save
+         if command.count /= 1 then
+            error_and_help(message_invalid_arguments, command)
+         else
+            client.call_server(once "unset", command.first,
+                               agent (stream: INPUT_STREAM) is
+                               do
+                                  stream.read_line
+                                  if not stream.end_of_input then
+                                     client.xclip(once "")
+                                     io.put_line(once "[1mDone[0m")
+                                  end
+                               end)
+            client.send_save
+         end
       end
 
    complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
@@ -46,10 +50,7 @@ feature {CLIENT}
          create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
       end
 
-feature {ANY}
    help (command: COLLECTION[STRING]): STRING is
-         -- If `command' is Void, provide extended help
-         -- Otherwise provide help depending on the user input
       do
          Result := once "[33mrem <key>[0m          Removes the password corresponding to the given key."
       end

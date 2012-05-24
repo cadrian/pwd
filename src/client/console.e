@@ -17,9 +17,15 @@ class CONSOLE
 
 inherit
    CLIENT
+      export {COMMAND} -- commands need access to a lot of client stuff
+         xclip, read_password, call_server, send_save, tmpdir, master_pass
       redefine
          make, cleanup
       end
+
+insert
+   COMMANDER
+   COMPLETION_TOOLS
 
 create {}
    make
@@ -50,7 +56,7 @@ feature {} -- the CLIENT interface
             stop
          loop
             read_command
-            if command.is_empty then
+            if command_line.is_empty then
                stop := True
             else
                run_command
@@ -103,7 +109,7 @@ feature {} -- readline history management
       end
 
 feature {} -- command management
-   command: RING_ARRAY[STRING] is
+   command_line: RING_ARRAY[STRING] is
       once
          create Result.with_capacity(16, 0)
       end
@@ -117,24 +123,22 @@ feature {} -- command management
    read_command is
       do
          rio.read_line
-         command.clear_count
-         rio.last_string.split_in(command)
+         command_line.clear_count
+         rio.last_string.split_in(command_line)
       end
-
-   commands: MAP[COMMAND, FIXED_STRING]
 
    run_command is
       require
-         not command.is_empty
+         not command_line.is_empty
          channel.is_ready
       local
-         cmd: STRING; command_agents: TUPLE[PROCEDURE[TUPLE], FUNCTION[TUPLE[FIXED_STRING], AVL_SET[FIXED_STRING]]]
+         cmd: STRING; command: COMMAND
       do
-         cmd := command.first
-         command_agents := commands.fast_reference_at(cmd.intern)
-         if command_agents /= Void then
-            command.remove_first
-            command_agents.first.call([])
+         cmd := command_line.first
+         command := commands.fast_reference_at(cmd.intern)
+         if command /= Void then
+            command_line.remove_first
+            command.run(command_line)
          else
             run_get
          end
@@ -150,35 +154,28 @@ feature {} -- local vault commands
 
    run_get is
       do
-         do_get(command.first, agent xclip, agent unknown_key)
+         do_get(command_line.first, agent xclip, agent unknown_key)
       end
 
 feature {COMMAND}
    do_stop is
       do
+         send("stop")
          stop := True
       end
 
-feature {} -- help
-
-   run_show is
-
-feature {} -- remote vault management
-   run_save is
-         -- save to remote
-
+feature {COMMAND} -- command helpers
    on_cancel: PROCEDURE[TUPLE] is
+         -- an agent called on cancel
       once
-         Result := agent is do std_output.put_line(once "[1mCancelled.[0m") end
-      end
-
-feature {} -- helpers
-   merge_vault: FIXED_STRING is
-      once
-         Result := ("#(1)/merge_vault" # tmpdir).intern
+         Result := agent is
+                   do
+                      std_output.put_line(once "[1mCancelled.[0m")
+                   end
       end
 
    less (string: ABSTRACT_STRING) is
+         -- invoke less with the `string' to be displayed
       local
          proc: PROCESS
       do
@@ -191,6 +188,27 @@ feature {} -- helpers
          end
       end
 
+   list_remotes: STRING is
+         -- a formatted list of all the known remotes
+      local
+         i: INTEGER
+      do
+         Result := once ""
+         Result.clear_count
+         from
+            i := remote_map.lower
+         until
+            i > remote_map.upper
+         loop
+            if i > remote_map.lower then
+               Result.append(once ", ")
+            end
+            Result.append(remote_map.key(i))
+            i := i + 1
+         end
+      end
+
+feature {} -- helpers
    remote_map: LINKED_HASHED_DICTIONARY[REMOTE, FIXED_STRING]
 
    fill_remote_map is
@@ -231,62 +249,6 @@ feature {} -- helpers
          end
       end
 
-   list_remotes: STRING is
-      local
-         i: INTEGER
-      do
-         Result := once ""
-         Result.clear_count
-         from
-            i := remote_map.lower
-         until
-            i > remote_map.upper
-         loop
-            if i > remote_map.lower then
-               Result.append(once ", ")
-            end
-            Result.append(remote_map.key(i))
-            i := i + 1
-         end
-      end
-
-   selected_remote: REMOTE is
-      do
-         if remote_map.is_empty then
-            std_output.put_line(once "[1mNo remote defined![0m")
-         else
-            if remote_map.count = 1 then
-               if not command.is_empty then
-                  std_output.put_line(once "[1mRemote argument ignored (only one remote)[0m")
-               end
-               Result := remote_map.first
-            else
-               if command.is_empty then
-                  std_output.put_line(once "[1mPlease specify the remote to use (#(1))[0m" # list_remotes)
-               else
-                  if command.count > 1 then
-                     std_output.put_line(once "[1mAll arguments but the first one are ignored[0m")
-                  end
-                  Result := remote_map.fast_reference_at(command.first.intern)
-                  if Result = Void then
-                     std_output.put_line(once "[1mUnknown remote: #(1)[0m" # command.first)
-                  end
-               end
-            end
-         end
-      end
-
-   help_list_remotes: ABSTRACT_STRING is
-      do
-         if remote_map.is_empty then
-            Result := once "There are no remotes defined."
-         elseif remote_map.count = 1 then
-            Result := once "There is only one remote defined: [1m#(1)[0m" # remote_map.key(remote_map.lower)
-         else
-            Result := once "The defined remotes are:%N                 [1;33m|[0m [1m#(1)[0m" # list_remotes
-         end
-      end
-
    config_history_size: FIXED_STRING is
       once
          Result := "history.size".intern
@@ -294,30 +256,31 @@ feature {} -- helpers
 
    dont_complete (word: FIXED_STRING): AVL_SET[FIXED_STRING] is
       require
-         not command.is_empty
+         not command_lilne.is_empty
       do
-         log.trace.put_line(once "dont_complete #(1)" # command.first)
+         log.trace.put_line(once "dont_complete #(1)" # command_line.first)
          create Result.make
       end
 
    make is
       local
          commands_map: LINKED_HASHED_DICTIONARY[COMMAND, FIXED_STRING]
+         command: COMMAND
       do
          create remote_map.make
 
-         create commands_map.make(0)
-         create {COMMAND_ADD   }.make(Current, commands_map)
-         create {COMMAND_HELP  }.make(Current, commands_map)
-         create {COMMAND_LIST  }.make(Current, commands_map)
-         create {COMMAND_LOAD  }.make(Current, commands_map)
-         create {COMMAND_MASTER}.make(Current, commands_map)
-         create {COMMAND_MERGE }.make(Current, commands_map)
-         create {COMMAND_REM   }.make(Current, commands_map)
-         create {COMMAND_REMOTE}.make(Current, commands_map)
-         create {COMMAND_SAVE  }.make(Current, commands_map)
-         create {COMMAND_SHOW  }.make(Current, commands_map)
-         create {COMMAND_STOP  }.make(Current, commands_map)
+         create commands_map.make
+         create {COMMAND_ADD   } command.make(Current, commands_map)
+         create {COMMAND_HELP  } command.make(Current, commands_map)
+         create {COMMAND_LIST  } command.make(Current, commands_map)
+         create {COMMAND_LOAD  } command.make(Current, commands_map, remote_map)
+         create {COMMAND_MASTER} command.make(Current, commands_map)
+         create {COMMAND_MERGE } command.make(Current, commands_map, remote_map)
+         create {COMMAND_REM   } command.make(Current, commands_map)
+         create {COMMAND_REMOTE} command.make(Current, commands_map, remote_map)
+         create {COMMAND_SAVE  } command.make(Current, commands_map, remote_map)
+         create {COMMAND_SHOW  } command.make(Current, commands_map)
+         create {COMMAND_STOP  } command.make(Current, commands_map)
 
          commands := commands_map
 
@@ -329,36 +292,30 @@ feature {} -- helpers
       require
          word /= Void
       local
-         command_agents: TUPLE[PROCEDURE[TUPLE], FUNCTION[TUPLE[FIXED_STRING], AVL_SET[FIXED_STRING]]]
+         command: COMMAND
          buffer: FIXED_STRING
       do
          if start_index = 0 then
-            Result := complete_first_word(word)
+            Result := filter_completions(commands.new_iterator_on_keys, word)
          else
             buffer := rio.buffer
-            command.clear_count
-            buffer.substring(buffer.lower, start_index + buffer.lower).split_in(command)
-            command_agents := commands.fast_reference_at(command.first.intern)
-            if command_agents /= Void and then command_agents.second /= Void then
-               Result := command_agents.second.item([word])
+            if end_index /= buffer.count then
+               Result := no_completion
+            else
+               command_line.clear_count
+               buffer.substring(buffer.lower, buffer.lower + start_index - 1).split_in(command_line)
+               command := commands.fast_reference_at(command_line.first.intern)
+               if command /= Void then
+                  log.trace.put_line(once "Completion of command: #(1) for word #(2)" # command_line.out # word)
+                  Result := command.complete(command_line, word)
+               else
+                  Result := no_completion
+               end
             end
          end
       end
 
-   complete_first_word (word: FIXED_STRING): AVL_SET[FIXED_STRING] is
-      do
-         create Result.make
-         commands.new_iterator_on_keys.do_all(agent (word, entry: FIXED_STRING; completions: AVL_SET[FIXED_STRING]) is
-                                              do
-                                                 if entry.has_prefix(word) then
-                                                    completions.fast_add(entry)
-                                                 end
-                                              end
-         -- TODO: add known keys (ask the server)
-      end
-
 invariant
    remote_map /= Void
-   commands /= Void
 
 end

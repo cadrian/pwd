@@ -13,35 +13,28 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
-class COMMAND_SAVE
-
-inherit
-   COMMAND_WITH_REMOTE
-
-create {CONSOLE}
-   make
-
-feature {COMMANDER}
-   name: FIXED_STRING is
-      once
-         Result := "save".intern
-      end
-
-   help (command: COLLECTION[STRING]): STRING is
-      do
-         Result := once "[
-                          [33msave [remote][0m      Save the password vault upto the server.
-                                             [33m[remote][0m: see note below
-
-                         ]"
-      end
+expanded class COMMANDER
 
 feature {}
-   run_remote (remote: REMOTE) is
-      local
-         shared: SHARED
+   commands: MAP[COMMAND, FIXED_STRING]
+
+   add_help (a_msg: STRING) is
+      require
+         a_msg /= Void
       do
-         remote.save(shared.vault_file)
+         commands.do_all_items(agent (msg: STRING; cmd: COMMAND) is
+                               local
+                                  h: ABSTRACT_STRING
+                               do
+                                  h := cmd.help(Void)
+                                  if h /= Void then
+                                     msg.extend('%N')
+                                     msg.append(h)
+                                  end
+                               end (a_msg, ?))
       end
+
+invariant
+   commands /= Void
 
 end

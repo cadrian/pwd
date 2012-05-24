@@ -33,7 +33,7 @@ feature {ANY}
       deferred
       end
 
-feature {CLIENT}
+feature {COMMAND}
    set_property (key, value: ABSTRACT_STRING): BOOLEAN is
          -- True if the property was set; False if unknown or could
          -- not be set

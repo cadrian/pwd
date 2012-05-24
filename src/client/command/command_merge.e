@@ -16,71 +16,68 @@
 class COMMAND_MERGE
 
 inherit
-   COMMAND
+   COMMAND_WITH_REMOTE
 
-create {CLIENT}
+insert
+   FILE_TOOLS
+
+create {CONSOLE}
    make
 
-feature {CLIENT}
+feature {COMMANDER}
    name: FIXED_STRING is
       once
          Result := "merge".intern
       end
 
-   run (command: COLLECTION[STRING]) is
-      local
-         merge_pass0, merge_pass: STRING
-         remote: REMOTE
-      do
-         remote := selected_remote
-         if remote /= Void then
-            std_output.put_line(once "[32mPlease wait...[0m")
-            remote.load(merge_vault)
-
-            merge_pass0 := read_password(once "Please enter the encryption phrase%Nto the remote vault%N(just leave empty if the same as the current vault's)", on_cancel)
-            if merge_pass0 = Void then
-               -- cancelled
-            else
-               if merge_pass0.is_empty then
-                  merge_pass := master_pass
-               else
-                  merge_pass := once ""
-                  merge_pass.copy(merge_pass0)
-               end
-               call_server(once "merge", once "#(1) #(2)" # merge_vault # merge_pass,
-                           agent (stream: INPUT_STREAM) is
-                              do
-                                 stream.read_line
-                                 if not stream.end_of_input then
-                                    xclip(once "")
-                                    io.put_line(once "[1mDone[0m")
-                                 end
-                              end)
-               send_save
-               remote.save(shared.vault_file)
-            end
-
-            delete(merge_vault)
-         end
-      end
-
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
-      do
-         create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
-      end
-
-feature {ANY}
    help (command: COLLECTION[STRING]): STRING is
-         -- If `command' is Void, provide extended help
-         -- Otherwise provide help depending on the user input
       do
          Result := once "[
-                    [33mmerge [remote][0m     Load the server version and compare to the local one.
-                                       Keep the most recent keys and save the merged version
-                                       back to the server.
-                                       [33m[remote][0m: see note below
+                          [33mmerge [remote][0m     Load the server version and compare to the local one.
+                                             Keep the most recent keys and save the merged version
+                                             back to the server.
+                                             [33m[remote][0m: see note below
 
                          ]"
+      end
+
+feature {}
+   run_remote (remote: REMOTE) is
+      local
+         merge_pass0, merge_pass: STRING
+         shared: SHARED
+      do
+         remote.load(merge_vault)
+
+         merge_pass0 := client.read_password(once "Please enter the encryption phrase%Nto the remote vault%N(just leave empty if the same as the current vault's)", client.on_cancel)
+         if merge_pass0 = Void then
+            -- cancelled
+         else
+            if merge_pass0.is_empty then
+               merge_pass := client.master_pass
+            else
+               merge_pass := once ""
+               merge_pass.copy(merge_pass0)
+            end
+            client.call_server(once "merge", once "#(1) #(2)" # merge_vault # merge_pass,
+                               agent (stream: INPUT_STREAM) is
+                                  do
+                                     stream.read_line
+                                     if not stream.end_of_input then
+                                        client.xclip(once "")
+                                        io.put_line(once "[1mDone[0m")
+                                     end
+                                  end)
+            client.send_save
+            remote.save(shared.vault_file)
+         end
+
+         delete(merge_vault)
+      end
+
+   merge_vault: FIXED_STRING is
+      once
+         Result := ("#(1)/merge_vault" # client.tmpdir).intern
       end
 
 end

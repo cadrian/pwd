@@ -13,35 +13,49 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
-class COMMAND_SAVE
+class COMMAND_REMOTE_DELETE
 
 inherit
-   COMMAND_WITH_REMOTE
+   COMMAND_REMOTE_ACTION
 
-create {CONSOLE}
+create {COMMAND_REMOTE}
    make
 
 feature {COMMANDER}
    name: FIXED_STRING is
       once
-         Result := "save".intern
+         Result := "delete".intern
       end
 
-   help (command: COLLECTION[STRING]): STRING is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
       do
-         Result := once "[
-                          [33msave [remote][0m      Save the password vault upto the server.
-                                             [33m[remote][0m: see note below
-
-                         ]"
+         if command.count = 2 then
+            Result := filter_completions(remote_map.new_iterator_on_keys, word)
+         else
+            Result := no_completion
+         end
       end
 
 feature {}
-   run_remote (remote: REMOTE) is
-      local
-         shared: SHARED
+   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE) is
       do
-         remote.save(shared.vault_file)
+         if remote = Void then
+            error_and_help(message_unknown_remote # remote_name, command)
+         else
+            remote.delete_file
+            remote_map.fast_remove(remote.name)
+         end
+      end
+
+feature {ANY}
+   help (command: COLLECTION[STRING]): STRING is
+      do
+         Result := once "[
+                          [33mremote delete [remote][0m
+                                             Delete a remote.
+                                             [33m[remote][0m: see note below
+
+                         ]"
       end
 
 end

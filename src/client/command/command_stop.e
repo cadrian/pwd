@@ -18,10 +18,13 @@ class COMMAND_STOP
 inherit
    COMMAND
 
-create {CLIENT}
+insert
+   LOGGING
+
+create {CONSOLE}
    make
 
-feature {CLIENT}
+feature {COMMANDER}
    name: FIXED_STRING is
       once
          Result := "stop".intern
@@ -29,9 +32,12 @@ feature {CLIENT}
 
    run (command: COLLECTION[STRING]) is
       do
-         log.info.put_line(once "stopping server.")
-         send("stop")
-         client.do_stop
+         if not command.is_empty then
+            error_and_help(message_invalid_arguments, command)
+         else
+            log.info.put_line(once "stopping server.")
+            client.do_stop
+         end
       end
 
    complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
@@ -39,10 +45,7 @@ feature {CLIENT}
          create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
       end
 
-feature {ANY}
    help (command: COLLECTION[STRING]): STRING is
-         -- If `command' is Void, provide extended help
-         -- Otherwise provide help depending on the user input
       do
          Result := once "[33mstop[0m               Stop the server and close the administration console."
       end

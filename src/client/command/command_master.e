@@ -18,10 +18,10 @@ class COMMAND_MASTER
 inherit
    COMMAND
 
-create {CLIENT}
+create {CONSOLE}
    make
 
-feature {CLIENT}
+feature {COMMANDER}
    name: FIXED_STRING is
       once
          Result := "master".intern
@@ -29,7 +29,7 @@ feature {CLIENT}
 
    run (command: COLLECTION[STRING]) is
       do
-         io.put_line(once "not yet implemented.")
+         error_and_help(once "Not yet implemented", command)
       end
 
    complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
@@ -37,10 +37,7 @@ feature {CLIENT}
          create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
       end
 
-feature {ANY}
    help (command: COLLECTION[STRING]): STRING is
-         -- If `command' is Void, provide extended help
-         -- Otherwise provide help depending on the user input
       do
          Result := once "[
                     [33mmaster[0m             Change the master password.

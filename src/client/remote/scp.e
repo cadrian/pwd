@@ -52,7 +52,7 @@ feature {ANY}
          end
       end
 
-feature {CLIENT}
+feature {COMMAND}
    set_property (key, value: ABSTRACT_STRING): BOOLEAN is
       do
          inspect

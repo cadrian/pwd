@@ -83,7 +83,7 @@ feature {CLIENT}
                die_with_code(proc.status)
             end
             extern.wait_for(server_fifo)
-            extern.sleep(25)
+            extern.sleep(100)
          end
       ensure
          extern.exists(server_fifo)

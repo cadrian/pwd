@@ -18,10 +18,10 @@ class COMMAND_ADD
 inherit
    COMMAND
 
-create {CLIENT}
+create {CONSOLE}
    make
 
-feature {CLIENT}
+feature {COMMANDER}
    name: FIXED_STRING is
       once
          Result := "add".intern
@@ -30,6 +30,7 @@ feature {CLIENT}
    run (command: COLLECTION[STRING]) is
       local
          cmd: ABSTRACT_STRING; pass, recipe: STRING
+         shared: SHARED
       do
          inspect
             command.count
@@ -41,12 +42,12 @@ feature {CLIENT}
             when "generate" then
                cmd := once "#(1) random #(2)" # command.first # shared.default_recipe
             when "prompt" then
-               pass := read_password(once "Please enter the new password for #(1)" # command.first, on_cancel)
+               pass := client.read_password(once "Please enter the new password for #(1)" # command.first, client.on_cancel)
                if pass /= Void then
                   cmd := once "#(1) given #(2)" # command.first # pass
                end
             else
-               io.put_line(once "[1mError:[0m unrecognized argument '#(1)'" # command.last)
+               error_and_help(once "Unrecognized argument '#(1)'" # command.last, command)
             end
          when 3 then
             recipe := command.last
@@ -56,41 +57,42 @@ feature {CLIENT}
             when "generate" then
                cmd := once "#(1) random #(2)" # command.first # recipe
             else
-               io.put_line(once "[1mError:[0m unrecognized argument '#(1)'" # command.last)
+               error_and_help(once "Unrecognized argument '#(1)'" # command.last, command)
             end
          else
-            io.put_line(once "[1mError:[0m bad number of arguments")
+            error_and_help(message_invalid_arguments, command)
          end
          if cmd /= Void then
-            call_server(once "set", cmd,
-                        agent (stream: INPUT_STREAM) is
-                           do
-                              stream.read_line
-                              if not stream.end_of_input then
-                                 data.clear_count
-                                 stream.last_string.split_in(data)
-                                 if data.count = 2 then
-                                    xclip(data.last)
-                                 else
-                                    check data.count = 1 end
-                                    xclip(once "")
-                                    io.put_line(once "[1mError[0m") -- ???
-                                 end
-                              end
-                           end)
-            send_save
+            client.call_server(once "set", cmd,
+                               agent (stream: INPUT_STREAM) is
+                               do
+                                  stream.read_line
+                                  if not stream.end_of_input then
+                                     data.clear_count
+                                     stream.last_string.split_in(data)
+                                     if data.count = 2 then
+                                        client.xclip(data.last)
+                                     else
+                                        check data.count = 1 end
+                                        client.xclip(once "")
+                                        error_and_help(once "Server protocol error", Void)
+                                     end
+                                  end
+                               end)
+            client.send_save
          end
       end
 
    complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
       do
-         create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
+         if command.count = 2 then
+            Result := filter_completions(complete_how, word)
+         else
+            Result := no_completion
+         end
       end
 
-feature {ANY}
    help (command: COLLECTION[STRING]): STRING is
-         -- If `command' is Void, provide extended help
-         -- Otherwise provide help depending on the user input
       do
          Result := once "[
                     [33madd <key> [how][0m    Add a new password. Needs at least a key.
@@ -111,6 +113,15 @@ feature {ANY}
                                        characters, and mixing them.
 
                          ]"
+      end
+
+feature {}
+   complete_how: ITERATOR[FIXED_STRING] is
+      once
+         Result := {FAST_ARRAY[FIXED_STRING] <<
+            "generate".intern,
+            "prompt".intern,
+         >> }.new_iterator
       end
 
 end

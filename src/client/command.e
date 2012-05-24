@@ -15,7 +15,10 @@
 --
 deferred class COMMAND
 
-feature {CLIENT}
+insert
+   COMPLETION_TOOLS
+
+feature {COMMANDER}
    name: FIXED_STRING is
       deferred
       end
@@ -35,7 +38,6 @@ feature {CLIENT}
       deferred
       end
 
-feature {ANY}
    help (command: COLLECTION[STRING]): ABSTRACT_STRING is
          -- If `command' is Void, provide extended help
          -- Otherwise provide help depending on the user input
@@ -45,6 +47,21 @@ feature {ANY}
       end
 
 feature {}
+   error_and_help (message: ABSTRACT_STRING; command_line: COLLECTION[STRING]) is
+      require
+         message /= Void
+      do
+         std_output.put_string(once "[1m**** #(1)[0m%N#(2)%N" # message # help(command_line))
+      end
+
+   message_invalid_arguments: STRING is "Invalid arguments"
+
+feature {}
+   data: RING_ARRAY[STRING] is
+      once
+         create Result.with_capacity(16, 0)
+      end
+
    make (a_client: like client; map: DICTIONARY[COMMAND, FIXED_STRING]) is
       require
          a_client /= Void
@@ -58,7 +75,7 @@ feature {}
          map.fast_at(name) = Current
       end
 
-   client: CLIENT
+   client: CONSOLE
 
 invariant
    client /= Void

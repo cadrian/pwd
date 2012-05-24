@@ -17,192 +17,122 @@ class COMMAND_REMOTE
 
 inherit
    COMMAND
+      rename
+         make as make_command
+      end
 
-create {CLIENT}
+insert
+   COMMANDER
+   LOGGING
+
+create {CONSOLE}
    make
 
-feature {CLIENT}
+feature {COMMANDER}
    name: FIXED_STRING is
       once
          Result := "remote".intern
       end
 
-   run (command: COLLECTION[STRING]) is
+   run (command_line: COLLECTION[STRING]) is
       local
-         subcmd, name: STRING; count: INTEGER
-         remote: REMOTE
-         action: PROCEDURE[TUPLE[REMOTE, FIXED_STRING]]
+         subcmd: FIXED_STRING
+         command: COMMAND
       do
-         if command.count < 2 then
-            std_output.put_line(once "[1mNot enough arguments![0m")
+         if command_line.count < 2 then
+            error_and_help(message_invalid_arguments, command_line)
          else
-            subcmd := command.first
-            command.remove_first
-            name := command.first
-            command.remove_first
-
-            remote := remote_map.fast_reference_at(name.intern)
-            inspect
-               subcmd
-            when "create" then
-               count := 2
-               action := agent remote_create
-            when "delete" then
-               count := 0
-               action := agent remote_delete
-            when "unset" then
-               count := 1
-               action := agent remote_unset
-            when "set" then
-               count := 2
-               action := agent remote_set
-            when "proxy" then
-               count := 2
-               action := agent remote_proxy
+            subcmd := command_line.first.intern
+            command := commands.fast_reference_at(subcmd)
+            if command = Void then
+               error_and_help(once "Unknown remote command: #(1)" # subcmd, command_line)
             else
-               std_output.put_line(once "[1mUnknown sub-command: #(1)[0m" # subcmd)
-            end
-
-            if command.count < count then
-               std_output.put_line(once "[1mNot enough arguments![0m")
-            elseif action /= Void then
-               if command.count > count then
-                  std_output.put_line(once "[1mIgnoring extra arguments[0m")
-               end
-               action.call([remote, name.intern])
+               command_line.remove_first
+               command.run(command_line)
             end
          end
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command_line: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+      local
+         subcmd: FIXED_STRING
+         command: COMMAND
       do
-         create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
+         if command_line.count = 1 then
+            Result := filter_completions(commands.new_iterator_on_keys, word)
+         else
+            subcmd := command_line.item(command_line.lower + 1).intern
+            command := commands.fast_reference_at(subcmd)
+            if command = Void then
+               log.trace.put_line(once "Unknown remote command: #(1)" # subcmd)
+               Result := no_completion
+            else
+               log.trace.put_line(once "Completing remote command: #(1)" # subcmd)
+               Result := command.complete(command_line, word)
+            end
+         end
+      end
+
+   help (command_line: COLLECTION[STRING]): ABSTRACT_STRING is
+      local
+         command: COMMAND; msg: STRING
+      do
+         if command_line /= Void and then not command_line.is_empty then
+            command := commands.fast_reference_at(command_line.first.intern)
+         end
+         if command /= Void then
+            Result := command.help(command_line)
+         else
+            msg := once ""
+            msg.clear_count
+            add_help(msg)
+            msg.append(once "[
+
+                             [1;33m|[0m [33m[remote][0m note:
+                             [1;33m|[0m The [33mload[0m, [33msave[0m, [33mmerge[0m, and [33mremote[0m commands require
+                             [1;33m|[0m an extra argument if there is more than one available
+                             [1;33m|[0m remotes.
+                             [1;33m|[0m In that case, the argument is the remote to select.
+                             [1;33m|[0m
+                             [1;33m|[0m #(1)
+
+                             ]" # help_list_remotes)
+
+            Result := msg
+         end
       end
 
 feature {}
-   remote_create (remote: REMOTE; name: FIXED_STRING) is
+   help_list_remotes: ABSTRACT_STRING is
+      do
+         if remote_map.is_empty then
+            Result := once "There are no remotes defined."
+         elseif remote_map.count = 1 then
+            Result := once "There is only one remote defined: [1m#(1)[0m" # remote_map.key(remote_map.lower)
+         else
+            Result := once "The defined remotes are:%N                 [1;33m|[0m [1m#(1)[0m" # client.list_remotes
+         end
+      end
+
+   make (a_client: like client; map: DICTIONARY[COMMAND, FIXED_STRING]; a_remote_map: DICTIONARY[REMOTE, FIXED_STRING]) is
       local
-         remote_factory: REMOTE_FACTORY
-         new_remote: REMOTE
+         commands_map: LINKED_HASHED_DICTIONARY[COMMAND, FIXED_STRING]
+         command: COMMAND
       do
-         if remote /= Void then
-            std_output.put_line(once "[1mDuplicate remote: #(1)[0m" # name)
-         elseif not command.first.same_as(once "method") then
-            std_output.put_line(once "[1mUnknown command: #(1)[0m" # command.first)
-         elseif name.same_as(once "config") then
-            std_output.put_line(once "[1mThis name (#(1)) is reserved, please choose another one[0m" # name)
-         else
-            new_remote := remote_factory.new_remote(name, command.last, Current)
-            if new_remote /= Void then
-               new_remote.save_file
-               remote_map.add(new_remote, name)
-            end
-         end
+         create commands_map.make
+         create {COMMAND_REMOTE_CREATE} command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_DELETE} command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_SET   } command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_UNSET } command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_PROXY } command.make(a_client, commands_map, a_remote_map)
+
+         commands := commands_map
+
+         remote_map := a_remote_map
+
+         make_command(a_client, map)
       end
 
-   remote_delete (remote: REMOTE; name: FIXED_STRING) is
-      do
-         if remote = Void then
-            std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
-         else
-            remote.delete_file
-            remote_map.fast_remove(remote.name)
-         end
-      end
-
-   remote_unset (remote: REMOTE; name: FIXED_STRING) is
-      do
-         if remote = Void then
-            std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
-         elseif remote.unset_property(command.first) then
-            remote.save_file
-         else
-            std_output.put_line(once "[1mFailed (unknown property?)[0m")
-         end
-      end
-
-   remote_set (remote: REMOTE; name: FIXED_STRING) is
-      do
-         if remote = Void then
-            std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
-         elseif remote.set_property(command.first, command.last) then
-            remote.save_file
-         else
-            std_output.put_line(once "[1mFailed (unknown property?)[0m")
-         end
-      end
-
-   remote_proxy (remote: REMOTE; name: FIXED_STRING) is
-      do
-         if remote = Void then
-            std_output.put_line(once "[1mUnknown remote: #(1)[0m" # name)
-         elseif not remote.has_proxy then
-            std_output.put_line(once "[1mCannot set proxy on that remote[0m")
-         elseif remote.set_proxy_property(command.first, command.last) then
-            remote.save_file
-         else
-            std_output.put_line(once "[1mFailed (unknown property?)[0m")
-         end
-      end
-
-feature {ANY}
-   help (command: COLLECTION[STRING]): ABSTRACT_STRING is
-         -- If `command' is Void, provide extended help
-         -- Otherwise provide help depending on the user input
-      do
-         Result := once "[
-                    [33mremote create [remote] method {curl|scp}[0m
-                                       Create a new remote. Give it a name and choose a method.
-
-                    [33mremote delete [remote][0m
-                                       Delete a remote.
-                                       [33m[remote][0m: see note below
-
-                    [33mremote set [remote] [property] [value][0m
-                                       Set a property of a remote.
-                                       The properties are:
-                                         - [33muser[0m        the user name
-                                       * curl specific:
-                                         - [33mpass[0m        the key of the password in the vault
-                                         - [33murl[0m         the url of the remote vault file
-                                                       (not directory)
-                                         - [33mget_request[0m the http get verb (e.g. GET or PROPFIND)
-                                         - [33mset_request[0m the http put verb (e.g. PUT)
-                                       * scp specific:
-                                         - [33mhost[0m        the hostname
-                                         - [33mfile[0m        the path of the remote vault file
-                                                       (not directory)
-                                         - [33moptions[0m     the scp options
-                                       [33m[remote][0m: see note below
-
-                    [33mremote unset [remote] [property][0m
-                                       Unset a property of a remote.
-                                       [33m[remote][0m: see note below
-
-                    [33mremote proxy [remote] [property] [value][0m
-                                       Set a property of the proxy attached to a remote.
-                                       The properties are:
-                                         - [33mprotocol[0m    the proxy protocol (default http)
-                                         - [33mhost[0m        the proxy host (must be set for the proxy
-                                                       to be used)
-                                         - [33mport[0m        the proxy port
-                                         - [33muser[0m        the proxy user
-                                         - [33mpass[0m        the key of the proxy password in the vault
-                                       [33m[remote][0m: see note below
-
-                    [33mremote proxy [remote] unset [property][0m
-                                       Unset a property of the proxy attached to a remote.
-                                       [33m[remote][0m: see note below
-
-                                     [1;33m|[0m [33m[remote][0m note:
-                                     [1;33m|[0m The [33mload[0m, [33msave[0m, [33mmerge[0m, and [33mremote[0m commands require
-                                     [1;33m|[0m an extra argument if there is more than one available
-                                     [1;33m|[0m remotes.
-                                     [1;33m|[0m In that case, the argument is the remote to select.
-                                     [1;33m|[0m
-                                     [1;33m|[0m #(1)
-
-                         ]" # help_list_remotes
-      end
+   remote_map: MAP[REMOTE, FIXED_STRING]
 
 end

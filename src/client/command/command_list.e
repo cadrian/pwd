@@ -18,10 +18,10 @@ class COMMAND_LIST
 inherit
    COMMAND
 
-create {CLIENT}
+create {CONSOLE}
    make
 
-feature {CLIENT}
+feature {COMMANDER}
    name: FIXED_STRING is
       once
          Result := "list".intern
@@ -29,27 +29,28 @@ feature {CLIENT}
 
    run (command: COLLECTION[STRING]) is
       do
-         call_server(once "list", Void,
-                     agent (stream: INPUT_STREAM) is
-                        local
-                           str: STRING_OUTPUT_STREAM
-                           extern: EXTERN
-                        do
-                           create str.make
-                           extern.splice(stream, str)
-                           less(str.to_string)
-                        end)
+         if not command.is_empty then
+            error_and_help(message_invalid_arguments, command)
+         else
+            client.call_server(once "list", Void,
+                               agent (stream: INPUT_STREAM) is
+                               local
+                                  str: STRING_OUTPUT_STREAM
+                                  extern: EXTERN
+                               do
+                                  create str.make
+                                  extern.splice(stream, str)
+                                  client.less(str.to_string)
+                               end)
+         end
       end
 
    complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
       do
-         create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
+         Result := no_completion
       end
 
-feature {ANY}
    help (command: COLLECTION[STRING]): STRING is
-         -- If `command' is Void, provide extended help
-         -- Otherwise provide help depending on the user input
       do
          Result := once "[33mlist[0m               List the known passwords (show only the keys)."
       end
