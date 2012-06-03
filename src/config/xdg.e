@@ -39,13 +39,26 @@ feature {ANY}
 
    cache_home: FIXED_STRING is
       once
-         Result := getenv("XDG_CACHE_HOME", "#(1)/.cache/pwdmgr" # home)
+         Result := getenv("XDG_CACHE_HOME", Void, agent: ABSTRACT_STRING is do Result := "#(1)/.cache/pwdmgr" # home end)
          check_dir(Result)
       end
 
    runtime_dir: FIXED_STRING is
       once
-         Result := getenv("XDG_RUNTIME_DIR", "/tmp/pwdmgr-#(1)" # user)
+         Result := getenv("XDG_RUNTIME_DIR",
+                          Void,
+                          agent: ABSTRACT_STRING is
+                          do
+                             Result := getenv("TMPDIR",
+                                              agent (tmp: ABSTRACT_STRING): ABSTRACT_STRING is
+                                              do
+                                                 Result := "#(1)/pwdmgr" # tmp
+                                              end,
+                                              agent: ABSTRACT_STRING is
+                                              do
+                                                 Result := "/tmp/pwdmgr-#(1)" # user
+                                              end)
+                          end)
          check_dir(Result)
       end
 
@@ -81,22 +94,22 @@ feature {}
 
    data_home_: FIXED_STRING is
       once
-         Result := getenv("XDG_DATA_HOME", "#(1)/.local/share" # home)
+         Result := getenv("XDG_DATA_HOME", Void, agent: ABSTRACT_STRING is do Result := "#(1)/.local/share" # home end)
       end
 
    config_home_: FIXED_STRING is
       once
-         Result := getenv("XDG_CONFIG_HOME", "#(1)/.config" # home)
+         Result := getenv("XDG_CONFIG_HOME", Void, agent: ABSTRACT_STRING is do Result := "#(1)/.config" # home end)
       end
 
    home: FIXED_STRING is
       once
-         Result := getenv("HOME", Void)
+         Result := getenv("HOME", Void, Void)
       end
 
    user: FIXED_STRING is
       once
-         Result := getenv("USER", Void)
+         Result := getenv("USER", Void, Void)
       end
 
 feature {}
@@ -106,7 +119,7 @@ feature {}
       once
          create dirs.with_capacity(4)
          dirs.add_last(data_home_)
-         value := getenv("XDG_DATA_DIRS", "/usr/local/share/:/usr/share/")
+         value := getenv("XDG_DATA_DIRS", Void, agent: ABSTRACT_STRING is do Result := "/usr/local/share/:/usr/share/" end)
          split_dirs(value, dirs)
          Result := dirs
       end
@@ -117,7 +130,7 @@ feature {}
       once
          create dirs.with_capacity(4)
          dirs.add_last(config_home_)
-         value := getenv("XDG_CONFIG_DIRS", "/usr/local/etc:/etc/xdg") -- the first one is not standard but useful for local installs
+         value := getenv("XDG_CONFIG_DIRS", Void, agent: ABSTRACT_STRING is do Result := "/usr/local/etc:/etc/xdg" end) -- the first one is not standard but useful for local installs
          split_dirs(value, dirs)
          Result := dirs
       end
@@ -160,7 +173,7 @@ feature {}
          end
       end
 
-   getenv (var, def: ABSTRACT_STRING): FIXED_STRING is
+   getenv (var: ABSTRACT_STRING; ext: FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]; def: FUNCTION[TUPLE, ABSTRACT_STRING]): FIXED_STRING is
       require
          var /= Void
          def /= Void implies not def.is_empty
@@ -174,9 +187,13 @@ feature {}
                std_error.put_line("**** Fatal error: no $#(1) defined!" # var)
                die_with_code(1)
             end
-            Result := def.intern
+            Result := def.item([]).intern
          else
-            Result := value.intern
+            if ext = Void then
+               Result := value.intern
+            else
+               Result := ext.item([value]).intern
+            end
          end
       ensure
          Result /= Void
