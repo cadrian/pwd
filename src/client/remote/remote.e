@@ -21,6 +21,12 @@ insert
 feature {ANY}
    name: FIXED_STRING
 
+   write_to (stream: OUTPUT_STREAM) is
+      require
+         stream.is_connected
+      deferred
+      end
+
    save (local_file: ABSTRACT_STRING) is
       require
          local_file /= Void
@@ -97,18 +103,12 @@ feature {}
          Result := (once "#(1)/#(2).rc" # xdg.config_home # name).intern
       end
 
-   write_to (tfw: TEXT_FILE_WRITE) is
+   put_property (stream: OUTPUT_STREAM; property, value: ABSTRACT_STRING) is
       require
-         tfw.is_connected
-      deferred
-      end
-
-   put_property (tfw: TEXT_FILE_WRITE; property, value: ABSTRACT_STRING) is
-      require
-         tfw.is_connected
+         stream.is_connected
       do
          if value /= Void and then not value.is_empty then
-            tfw.put_line(once "#(1) = #(2)" # property # value)
+            stream.put_line(once "#(1) = #(2)" # property # value)
          end
       end
 

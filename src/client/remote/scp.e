@@ -22,6 +22,15 @@ create {ANY}
    make
 
 feature {ANY}
+   write_to (stream: OUTPUT_STREAM) is
+      do
+         stream.put_string(once "[remote_factory]%Nmethod = scp%N%N[scp]%N")
+         put_property(stream, config_key_remote_file,    file)
+         put_property(stream, config_key_remote_host,    host)
+         put_property(stream, config_key_remote_user,    user)
+         put_property(stream, config_key_remote_options, options)
+      end
+
    save (local_file: ABSTRACT_STRING) is
       local
          proc: PROCESS; arg: like arguments
@@ -103,15 +112,6 @@ feature {COMMAND}
       end
 
 feature {}
-   write_to (tfw: TEXT_FILE_WRITE) is
-      do
-         tfw.put_string(once "[remote_factory]%Nmethod = scp%N%N[scp]%N")
-         put_property(tfw, config_key_remote_file,    file)
-         put_property(tfw, config_key_remote_host,    host)
-         put_property(tfw, config_key_remote_user,    user)
-         put_property(tfw, config_key_remote_options, options)
-      end
-
    make (a_name: ABSTRACT_STRING) is
       require
          a_name /= Void

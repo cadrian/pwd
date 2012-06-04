@@ -22,6 +22,22 @@ create {ANY}
    make
 
 feature {ANY}
+   write_to (stream: OUTPUT_STREAM) is
+      do
+         stream.put_string(once "[remote_factory]%Nmethod = curl%N%N[curl]%N")
+         put_property(stream, config_key_remote_user,        user)
+         put_property(stream, config_key_remote_pass,        passkey)
+         put_property(stream, config_key_remote_url,         url)
+         put_property(stream, config_key_remote_request_get, get_request)
+         put_property(stream, config_key_remote_request_put, put_request)
+         stream.put_string(once "%N[proxy]%N")
+         put_property(stream, proxy.config_protocol, proxy.protocol)
+         put_property(stream, proxy.config_host,     proxy.host)
+         put_property(stream, proxy.config_port,     proxy.port)
+         put_property(stream, proxy.config_user,     proxy.user)
+         put_property(stream, proxy.config_pass,     proxy.passkey)
+      end
+
    save (local_file: ABSTRACT_STRING) is
       local
          proc: PROCESS; arg: like arguments
@@ -119,22 +135,6 @@ feature {PROXY}
       end
 
 feature {}
-   write_to (tfw: TEXT_FILE_WRITE) is
-      do
-         tfw.put_string(once "[remote_factory]%Nmethod = curl%N%N[curl]%N")
-         put_property(tfw, config_key_remote_user,        user)
-         put_property(tfw, config_key_remote_pass,        passkey)
-         put_property(tfw, config_key_remote_url,         url)
-         put_property(tfw, config_key_remote_request_get, get_request)
-         put_property(tfw, config_key_remote_request_put, put_request)
-         tfw.put_string(once "%N[proxy]%N")
-         put_property(tfw, proxy.config_protocol, proxy.protocol)
-         put_property(tfw, proxy.config_host,     proxy.host)
-         put_property(tfw, proxy.config_port,     proxy.port)
-         put_property(tfw, proxy.config_user,     proxy.user)
-         put_property(tfw, proxy.config_pass,     proxy.passkey)
-      end
-
    arguments (option, file, request: ABSTRACT_STRING): ABSTRACT_STRING is
       require
          option.is_equal(once "-T") or else option.is_equal(once "-o")

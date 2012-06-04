@@ -28,10 +28,14 @@ feature {COMMANDER}
          remote_name: FIXED_STRING
          remote: REMOTE
       do
-         remote_name := command_line.first.intern
-         command_line.remove_first
-         remote := remote_map.fast_reference_at(remote_name)
-         run_remote(command_line, remote_name, remote)
+         if command_line.count < 1 then
+            error_and_help(message_invalid_arguments, command_line)
+         else
+            remote_name := command_line.first.intern
+            command_line.remove_first
+            remote := remote_map.fast_reference_at(remote_name)
+            run_remote(command_line, remote_name, remote)
+         end
       end
 
 feature {}

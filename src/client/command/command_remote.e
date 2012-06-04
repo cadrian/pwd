@@ -39,7 +39,7 @@ feature {COMMANDER}
          subcmd: FIXED_STRING
          command: COMMAND
       do
-         if command_line.count < 2 then
+         if command_line.count < 1 then
             error_and_help(message_invalid_arguments, command_line)
          else
             subcmd := command_line.first.intern
@@ -122,9 +122,11 @@ feature {}
          create commands_map.make
          create {COMMAND_REMOTE_CREATE} command.make(a_client, commands_map, a_remote_map)
          create {COMMAND_REMOTE_DELETE} command.make(a_client, commands_map, a_remote_map)
-         create {COMMAND_REMOTE_SET   } command.make(a_client, commands_map, a_remote_map)
-         create {COMMAND_REMOTE_UNSET } command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_LIST  } command.make(a_client, commands_map              )
          create {COMMAND_REMOTE_PROXY } command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_SET   } command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_SHOW  } command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_UNSET } command.make(a_client, commands_map, a_remote_map)
 
          commands := commands_map
 
