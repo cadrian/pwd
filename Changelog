@@ -1,8 +1,8 @@
-0.0.6 (not yet released)
-        * fix #27 - remote discovery
-        * fix #24 - readline does not like invisible characters (e.g. ANSI color sequences)
-        * fix #25 - CLI arguments
-        * fix #26 - new remote commands (list and show)
+0.0.6 (released 2012-06-05)
+        * #27 - Remote discovery
+        * #24 - GNU readline does not like invisible characters (e.g. ANSI color sequences)
+        * #25 - CLI arguments
+        * #26 - New remote commands (list and show)
 
 0.0.5 (released 2012-05-18)
         * #18 - Client/server handshake
