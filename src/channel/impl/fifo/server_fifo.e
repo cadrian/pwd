@@ -27,8 +27,6 @@ create {CHANNEL_FACTORY}
    make
 
 feature {SERVER}
-   command: RING_ARRAY[STRING]
-
    prepare (events: EVENTS_SET) is
       local
          t: TIME_EVENTS
@@ -61,6 +59,7 @@ feature {SERVER}
             log.info.put_line(once "Received empty command")
          else
             log.info.put_line(once "Received command: #(1)" # command.first)
+            fire_receive(command)
          end
       end
 
@@ -108,8 +107,11 @@ feature {}
          -- There must be at least one writer for the server_fifo to be blocking in select(2)
          -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo
 
+   command: RING_ARRAY[STRING]
+
 invariant
    channel /= Void
    server_fifo /= Void
+   command /= Void
 
 end

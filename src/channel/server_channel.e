@@ -22,10 +22,24 @@ insert
       end
 
 feature {SERVER}
-   command: RING_ARRAY[STRING] is
-      deferred
-      ensure
-         Result /= Void
+   on_receive (command: PROCEDURE[TUPLE[RING_ARRAY[STRING]]]) is
+      require
+         command /= Void
+      do
+         if commands = Void then
+            create commands.make(0)
+         end
+         commands.add_last(command)
+      end
+
+   on_new_job (job: PROCEDURE[TUPLE[JOB]]) is
+      require
+         job /= Void
+      do
+         if jobs = Void then
+            create jobs.make(0)
+         end
+         jobs.add_last(job)
       end
 
    disconnect is
@@ -34,6 +48,24 @@ feature {SERVER}
 
    cleanup is
       deferred
+      end
+
+feature {}
+   commands: FAST_ARRAY[PROCEDURE[TUPLE[RING_ARRAY[STRING]]]]
+   jobs: FAST_ARRAY[PROCEDURE[TUPLE[JOB]]]
+
+   fire_receive (command: RING_ARRAY[STRING]) is
+      do
+         if commands /= Void then
+            commands.do_all(agent (cmd: PROCEDURE[TUPLE[RING_ARRAY[STRING]]]; c: RING_ARRAY[STRING]) is do cmd.call([c]) end (?, command))
+         end
+      end
+
+   fire_new_job (job: JOB) is
+      do
+         if jobs /= Void then
+            jobs.do_all(agent (jb: PROCEDURE[TUPLE[JOB]]; j: JOB) is do jb.call([j]) end (?, job))
+         end
       end
 
 end

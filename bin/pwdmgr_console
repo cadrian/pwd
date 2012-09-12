@@ -1,6 +1,6 @@
 #!/bin/sh
 
-tty >/dev/null || exec xterm -bg red4 -fg ivory -fn fixed +sb -sl 25 -g 80x25 -e /bin/sh "$0" "$@"
+tty >/dev/null || exec xterm -bg red4 -fg ivory -fn fixed +ls +sb -sl 25 -g 80x25 -e /bin/bash "$0" "$@"
 
 dist=$(dirname $(dirname $(readlink -f $0))); exe=$dist/exe; prop=$dist/conf/pwdmgr.properties
 PATH=$exe:$PATH; export PATH

@@ -1,3 +1,6 @@
+0.0.7 (not yet released)
+        * #28 - Implement sockets
+
 0.0.6 (released 2012-06-05)
         * #27 - Remote discovery
         * #24 - GNU readline does not like invisible characters (e.g. ANSI color sequences)
@@ -18,7 +21,6 @@
         * #23 - jugulate fifo manipulation and ugly sleeps in the fifo channels implementation
 
 0.0.4 (released 2012-01-25)
-
         * #10, #12, #13 - Packaging: standard layout
         * #2 - Creation of missing empty directories
         * #4 - Ensure that passwords are never visible; provide a suitable way to enter a known password at "add" time
@@ -30,15 +32,12 @@
         * #5 - Documentation
 
 0.0.3 (released 2012-01-22)
-
         * Changelog
         * fixed release & bootstrap package contents
         * configuration
 
 0.0.2 (released 2012-01-19)
-
         * fixed #1: empty vault creation
 
 0.0.1 (released 2012-01-18)
-
         * initial version

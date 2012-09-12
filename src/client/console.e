@@ -62,13 +62,13 @@ feature {} -- the CLIENT interface
                run_command
             end
          end
-      rescue
-         if exceptions.is_signal then
-            log.info.put_line(once "Killed by signal #(1), exitting gracefully." # exceptions.signal_number.out)
-            cleanup
-            io.put_new_line
-            die_with_code(0)
-         end
+--      rescue
+--         if exceptions.is_signal then
+--            log.info.put_line(once "Killed by signal #(1), exitting gracefully." # exceptions.signal_number.out)
+--            cleanup
+--            io.put_new_line
+--            die_with_code(0)
+--         end
       end
 
    cleanup is
@@ -256,7 +256,7 @@ feature {} -- helpers
 
    dont_complete (word: FIXED_STRING): AVL_SET[FIXED_STRING] is
       require
-         not command_lilne.is_empty
+         not command_line.is_empty
       do
          log.trace.put_line(once "dont_complete #(1)" # command_line.first)
          create Result.make

@@ -75,7 +75,7 @@ feature {}
       do
          Precursor(a_client, a_map)
          commands := a_map
-      ensure
+      ensure then
          commands = a_map
       end
 

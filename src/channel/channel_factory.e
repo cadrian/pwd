@@ -27,6 +27,8 @@ feature {CLIENT}
             shared.channel_method.out
          when "fifo" then
             create {CLIENT_FIFO} Result.make(tmpdir)
+         when "socket" then
+            create {CLIENT_SOCKET} Result.make(tmpdir)
          else
             log.error.put_line(once "Unknown channel method: #(1)" # shared.channel_method)
             die_with_code(1)
@@ -40,6 +42,8 @@ feature {SERVER}
             shared.channel_method.out
          when "fifo" then
             create {SERVER_FIFO} Result.make
+         when "socket" then
+            create {SERVER_SOCKET} Result.make
          else
             log.error.put_line(once "Unknown channel method: #(1)" # shared.channel_method)
             die_with_code(1)

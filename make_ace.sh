@@ -32,9 +32,9 @@ default
 
 cluster
     pwdmgr: "src/loadpath.se"
---        default
---            assertion(invariant)
---        end
+        default
+            assertion(invariant)
+        end
 
     liberty: "\${path_liberty}src/loadpath.se"
 

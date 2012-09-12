@@ -23,11 +23,13 @@ feature {ANY}
    server_pidfile: FIXED_STRING is
       once
          Result := ("#(1)/server_pid" # xdg.runtime_dir).intern
+         log.info.put_line(once "Server pid file: #(1)" # Result)
       end
 
    vault_file: FIXED_STRING is
       once
          Result := ("#(1)/vault" # xdg.data_home).intern
+         log.info.put_line(once "Vault file: #(1)" # Result)
       end
 
    log_file (tag: ABSTRACT_STRING): FIXED_STRING is
@@ -35,11 +37,13 @@ feature {ANY}
          tag /= Void
       do
          Result := (once "#(1)/#(2).log" # xdg.cache_home # tag).intern
+         log.info.put_line(once "Logging file: #(1)" # Result)
       end
 
    runtime_dir: FIXED_STRING is
       once
          Result := xdg.runtime_dir
+         log.info.put_line(once "XDG runtime directory: #(1)" # Result)
       end
 
    log_level: FIXED_STRING is
@@ -48,6 +52,7 @@ feature {ANY}
          if Result = Void then
             Result := "info".intern
          end
+         log.info.put_line(once "Logging level: #(1)" # Result)
       end
 
    default_recipe: FIXED_STRING is
@@ -56,6 +61,7 @@ feature {ANY}
          if Result = Void then
             Result := "an+s+14ansanansaan".intern -- default is 16 chars long, with at least one alphanumeric and one symbol
          end
+         log.info.put_line(once "Default recipe: #(1)" # Result)
       end
 
    channel_method: FIXED_STRING is
@@ -64,6 +70,7 @@ feature {ANY}
          if Result = Void then
             Result := "fifo".intern -- default is named fifo
          end
+         log.info.put_line(once "Channel method: #(1)" # Result)
       end
 
 feature {}

@@ -176,7 +176,6 @@ feature {}
    getenv (var: ABSTRACT_STRING; ext: FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]; def: FUNCTION[TUPLE, ABSTRACT_STRING]): FIXED_STRING is
       require
          var /= Void
-         def /= Void implies not def.is_empty
       local
          value: STRING
       do
