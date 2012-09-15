@@ -32,16 +32,7 @@ feature {COMMANDER}
          if not command.is_empty then
             error_and_help(message_invalid_arguments, command)
          else
-            client.call_server(once "list", Void,
-                               agent (stream: INPUT_STREAM) is
-                               local
-                                  str: STRING_OUTPUT_STREAM
-                                  extern: EXTERN
-                               do
-                                  create str.make
-                                  extern.splice(stream, str)
-                                  client.less(str.to_string)
-                               end)
+            client.call_server(create {QUERY_LIST}.make, agent when_reply)
          end
       end
 
@@ -53,6 +44,25 @@ feature {COMMANDER}
    help (command: COLLECTION[STRING]): STRING is
       do
          Result := once "[33mlist[0m               List the known passwords (show only the keys)."
+      end
+
+feature {}
+   when_reply (a_reply: MESSAGE) is
+      local
+         reply: REPLY_LIST; string: STRING
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.error.is_empty then
+               string := ""
+               reply.do_all_names(agent (s, n: STRING) is do s.append(n); s.extend('%N') end (string, ?))
+               client.less(string)
+            else
+               error_and_help(reply.error, Void)
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+         end
       end
 
 end

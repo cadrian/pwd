@@ -59,15 +59,7 @@ feature {}
                merge_pass := once ""
                merge_pass.copy(merge_pass0)
             end
-            client.call_server(once "merge", once "#(1) #(2)" # merge_vault # merge_pass,
-                               agent (stream: INPUT_STREAM) is
-                                  do
-                                     stream.read_line
-                                     if not stream.end_of_input then
-                                        client.xclip(once "")
-                                        io.put_line(once "[1mDone[0m")
-                                     end
-                                  end)
+            client.call_server(create {QUERY_MERGE}.make(merge_vault, merge_pass), agent when_reply)
             client.send_save
             remote.save(shared.vault_file)
          end
@@ -78,6 +70,23 @@ feature {}
    merge_vault: FIXED_STRING is
       once
          Result := ("#(1)/merge_vault" # client.tmpdir).intern
+      end
+
+   when_reply (a_reply: MESSAGE) is
+      local
+         reply: REPLY_MERGE
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.error.is_empty then
+               client.xclip(once "")
+               io.put_line(once "[1mDone[0m")
+            else
+               error_and_help(reply.error, Void)
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+         end
       end
 
 end

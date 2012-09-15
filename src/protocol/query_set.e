@@ -47,7 +47,7 @@ feature {ANY}
       end
 
 feature {}
-   make_random (a_key, a_recipe: STRING) is
+   make_random (a_key, a_recipe: ABSTRACT_STRING) is
       require
          a_key /= Void
          a_recipe /= Void

@@ -92,7 +92,6 @@ feature {CLIENT}
    call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]]) is
       local
          tfw: TEXT_FILE_WRITE; tfr: TEXT_FILE_READ
-         reply: MESSAGE
       do
          extern.make(client_fifo)
          extern.sleep(25)

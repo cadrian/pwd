@@ -29,22 +29,23 @@ feature {COMMANDER}
 
    run (command: COLLECTION[STRING]) is
       local
-         cmd: ABSTRACT_STRING; pass, recipe: STRING
+         query: QUERY_SET
+         pass, recipe: STRING
          shared: SHARED
       do
          inspect
             command.count
          when 1 then
-            cmd := once "#(1) random #(2)" # command.first # shared.default_recipe
+            create query.make_random(command.first, shared.default_recipe)
          when 2 then
             inspect
                command.last
             when "generate" then
-               cmd := once "#(1) random #(2)" # command.first # shared.default_recipe
+               create query.make_random(command.first, shared.default_recipe)
             when "prompt" then
                pass := client.read_password(once "Please enter the new password for #(1)" # command.first, client.on_cancel)
                if pass /= Void then
-                  cmd := once "#(1) given #(2)" # command.first # pass
+                  create query.make_given(command.first, pass)
                end
             else
                error_and_help(once "Unrecognized argument '#(1)'" # command.last, command)
@@ -55,30 +56,15 @@ feature {COMMANDER}
             inspect
                command.last
             when "generate" then
-               cmd := once "#(1) random #(2)" # command.first # recipe
+               create query.make_random(command.first, recipe)
             else
                error_and_help(once "Unrecognized argument '#(1)'" # command.last, command)
             end
          else
             error_and_help(message_invalid_arguments, command)
          end
-         if cmd /= Void then
-            client.call_server(once "set", cmd,
-                               agent (stream: INPUT_STREAM) is
-                               do
-                                  stream.read_line
-                                  if not stream.end_of_input then
-                                     data.clear_count
-                                     stream.last_string.split_in(data)
-                                     if data.count = 2 then
-                                        client.xclip(data.last)
-                                     else
-                                        check data.count = 1 end
-                                        client.xclip(once "")
-                                        error_and_help(once "Server protocol error", Void)
-                                     end
-                                  end
-                               end)
+         if query /= Void then
+            client.call_server(query, agent when_reply)
             client.send_save
          end
       end
@@ -122,6 +108,23 @@ feature {}
             "generate".intern,
             "prompt".intern,
          >> }.new_iterator
+      end
+
+   when_reply (a_reply: MESSAGE) is
+      local
+         reply: REPLY_SET
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.error.is_empty then
+               client.xclip(reply.pass)
+               io.put_line(once "[1mDone[0m")
+            else
+               error_and_help(reply.error, Void)
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+         end
       end
 
 end

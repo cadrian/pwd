@@ -143,11 +143,11 @@ feature {} -- get a password from the server
       do
          if reply ?:= a_reply then
             reply ::= a_reply
-            if reply.error /= Void then
+            if reply.error.is_empty then
+               callback.call([reply.pass])
+            else
                log.error.put_line(reply.error)
                when_unknown.call([key])
-            else
-               callback.call([reply.pass])
             end
          else
             log.error.put_line(once "Unexpected reply")
@@ -160,7 +160,7 @@ feature {} -- get a password from the server
          callback /= Void
          when_unknown /= Void
       do
-         call_server(create {QUERY_GET}.make(key.out)
+         call_server(create {QUERY_GET}.make(key.out),
                      agent get_back(?, key, callback, when_unknown))
       end
 
@@ -180,7 +180,7 @@ feature {} -- get a password from the server
       do
          if reply ?:= a_reply then
             reply ::= a_reply
-            if reply.error /= Void then
+            if not reply.error.is_empty then
                log.error.put_line(reply.error)
             end
          else
@@ -254,7 +254,7 @@ feature {} -- master phrase
       do
          if reply ?:= a_reply then
             reply ::= a_reply
-            if reply.error /= Void then
+            if not reply.error.is_empty then
                log.error.put_line(reply.error)
             end
          else
@@ -273,7 +273,7 @@ feature {} -- master phrase
       do
          if reply ?:= a_reply then
             reply ::= a_reply
-            if reply.error /= Void then
+            if not reply.error.is_empty then
                log.error.put_line(reply.error)
             end
          else

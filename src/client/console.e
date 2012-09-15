@@ -160,8 +160,23 @@ feature {} -- local vault commands
 feature {COMMAND}
    do_stop is
       do
-         send("stop")
+         call_server(create {QUERY_STOP}.make, agent when_stop)
          stop := True
+      end
+
+feature {}
+   when_stop (a_reply: MESSAGE) is
+      local
+         reply: REPLY_STOP
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if not reply.error.is_empty then
+               log.error.put_line(reply.error)
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+         end
       end
 
 feature {COMMAND} -- command helpers

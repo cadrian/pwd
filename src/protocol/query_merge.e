@@ -42,7 +42,7 @@ feature {ANY}
       end
 
 feature {}
-   make (a_vault, a_master: STRING) is
+   make (a_vault, a_master: ABSTRACT_STRING) is
       do
          create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
                            json_string(once "merge"), json_string(once "type");

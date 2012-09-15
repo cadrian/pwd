@@ -32,15 +32,7 @@ feature {COMMANDER}
          if command.count /= 1 then
             error_and_help(message_invalid_arguments, command)
          else
-            client.call_server(once "unset", command.first,
-                               agent (stream: INPUT_STREAM) is
-                               do
-                                  stream.read_line
-                                  if not stream.end_of_input then
-                                     client.xclip(once "")
-                                     io.put_line(once "[1mDone[0m")
-                                  end
-                               end)
+            client.call_server(create {QUERY_UNSET}.make(command.first), agent when_reply)
             client.send_save
          end
       end
@@ -53,6 +45,24 @@ feature {COMMANDER}
    help (command: COLLECTION[STRING]): STRING is
       do
          Result := once "[33mrem <key>[0m          Removes the password corresponding to the given key."
+      end
+
+feature {}
+   when_reply (a_reply: MESSAGE) is
+      local
+         reply: REPLY_UNSET
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.error.is_empty then
+               client.xclip(once "")
+               io.put_line(once "[1mDone[0m")
+            else
+               error_and_help(reply.error, Void)
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+         end
       end
 
 end

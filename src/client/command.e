@@ -17,6 +17,7 @@ deferred class COMMAND
 
 insert
    COMPLETION_TOOLS
+   LOGGING
 
 feature {COMMANDER}
    name: FIXED_STRING is

@@ -46,10 +46,10 @@ feature {}
       do
          if reply ?:= a_reply then
             reply ::= a_reply
-            if reply.error /= Void then
-               log.error.put_line(reply.error)
-            else
+            if reply.error.is_empty then
                reply.do_all_names(agent list.add_last)
+            else
+               log.error.put_line(reply.error)
             end
          else
             log.error.put_line(once "Unexpected reply")
