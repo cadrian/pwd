@@ -36,6 +36,24 @@ feature {ANY}
          Result := string(once "error")
       end
 
+   do_all_names (action: PROCEDURE[TUPLE[STRING]]) is
+      require
+         action /= Void
+      local
+         array: JSON_ARRAY; str: JSON_STRING; i: INTEGER
+      do
+         array ::= json.members.reference_at(json_string(once "names"))
+         from
+            i := array.lower
+         until
+            i > array.upper
+         loop
+            str ::= array.item(i)
+            action.call([str.string.to_utf8])
+            i := i + 1
+         end
+      end
+
 feature {}
    make (a_error: ABSTRACT_STRING; a_names: COLLECTION[FIXED_STRING]) is
       require

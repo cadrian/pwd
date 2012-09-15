@@ -33,24 +33,26 @@ feature {}
       require
          channel.is_ready
       do
-         call_server(once "list", Void,
-                     agent (stream: INPUT_STREAM) is
-                        do
-                           from
-                              create list.make(0)
-                              stream.read_line
-                           until
-                              stream.end_of_input
-                           loop
-                              list.add_last(stream.last_string.twin)
-                              stream.read_line
-                           end
-                           if not stream.last_string.is_empty then
-                              list.add_last(stream.last_string.twin)
-                           end
-                        end)
+         call_server(create {QUERY_LIST}.make
+                     agent when_list)
          if list /= Void and then not list.is_empty then
             display_menu
+         end
+      end
+
+   when_list (a_reply: MESSAGE) is
+      local
+         reply: REPLY_LIST
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.error /= Void then
+               log.error.put_line(reply.error)
+            else
+               reply.do_all_names(agent list.add_last)
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
          end
       end
 

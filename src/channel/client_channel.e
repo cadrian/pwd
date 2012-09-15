@@ -27,19 +27,12 @@ feature {CLIENT}
       deferred
       end
 
-   send (string: ABSTRACT_STRING) is
-      require
-         server_is_ready
-         string /= Void
-      deferred
-      end
-
-   call (verb, arguments: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
+   call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]]) is
       require
          server_is_ready
          is_ready
-         verb /= Void
-         action /= Void
+         query /= Void
+         when_reply /= Void
       deferred
       ensure
          is_ready

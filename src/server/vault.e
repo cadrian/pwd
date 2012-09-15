@@ -108,24 +108,30 @@ feature {SERVER}
          Result := once ""
       end
 
-   save: ABSTRACT_STRING is
+   save (file: STRING): ABSTRACT_STRING is
       require
          is_open
       local
-         proc: PROCESS
+         proc: PROCESS; tfw: TEXT_FILE_WRITE
       do
          if dirty then
-            proc := processor.execute_to_dev_null(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
-            if proc.is_connected then
-               print_all_keys(proc.input)
-               proc.input.flush
-               proc.input.disconnect
-               proc.wait
-               if proc.status = 0 then
-                  Result := once ""
-               else
-                  Result := once "openssl returned status #(1)" # proc.status.out
+            create tfw.connect_to(file)
+            if tfw.is_connected then
+               proc := processor.execute_redirect(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
+               if proc.is_connected then
+                  print_all_keys(proc.input)
+                  proc.input.flush
+                  proc.input.disconnect
+                  proc.wait
+                  if proc.status = 0 then
+                     extern.splice(proc.output, tfw)
+                     tfw.flush
+                     Result := once ""
+                  else
+                     Result := once "openssl returned status #(1)" # proc.status.out
+                  end
                end
+               tfw.disconnect
             end
          else
             Result := once ""

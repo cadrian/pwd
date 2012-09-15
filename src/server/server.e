@@ -280,7 +280,7 @@ feature {QUERY_SAVE}
          error: ABSTRACT_STRING
       do
          if vault.is_open then
-            error := vault.save
+            error := vault.save(query.file)
             create {REPLY_SAVE} reply.make(error)
          else
             create {REPLY_SAVE} reply.make(once "Vault not open")

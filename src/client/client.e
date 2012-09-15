@@ -110,7 +110,6 @@ feature {}
       do
          log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
          read_new_master(once "This is a new vault")
-         create_vault
          channel.server_start
          send_master
       end
@@ -123,10 +122,10 @@ feature {}
          send_master
       end
 
-   call_server (verb, arguments: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
+   call_server (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]]) is
          -- communication with the server
       do
-         channel.call(verb, arguments, action)
+         channel.call(query, when_reply)
       end
 
 feature {} -- get a password from the server
@@ -135,21 +134,23 @@ feature {} -- get a password from the server
          create Result.with_capacity(16, 0)
       end
 
-   get_back (stream: INPUT_STREAM; key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]; when_unknown: PROCEDURE[TUPLE[ABSTRACT_STRING]]) is
+   get_back (a_reply: MESSAGE; key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]; when_unknown: PROCEDURE[TUPLE[ABSTRACT_STRING]]) is
       require
          callback /= Void
          when_unknown /= Void
+      local
+         reply: REPLY_GET
       do
-         stream.read_line
-         if not stream.end_of_input then
-            data.clear_count
-            stream.last_string.split_in(data)
-            if data.count = 2 then
-               callback.call([data.last])
-            else
-               check data.count = 1 end
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.error /= Void then
+               log.error.put_line(reply.error)
                when_unknown.call([key])
+            else
+               callback.call([reply.pass])
             end
+         else
+            log.error.put_line(once "Unexpected reply")
          end
       end
 
@@ -159,7 +160,7 @@ feature {} -- get a password from the server
          callback /= Void
          when_unknown /= Void
       do
-         call_server(once "get", key,
+         call_server(create {QUERY_GET}.make(key.out)
                      agent get_back(?, key, callback, when_unknown))
       end
 
@@ -169,15 +170,22 @@ feature {} -- get a password from the server
 
    do_ping is
       do
-         call_server(once "ping", Void,
-                     agent (in: INPUT_STREAM) is
-                        do
-                           in.read_line
-                           check
-                              in.last_string.is_equal(once "pong")
-                           end
-                           log.trace.put_line(once "ping: #(1)" # in.last_string)
-                        end)
+         call_server(create {QUERY_PING}.make(once ""),
+                     agent when_ping)
+      end
+
+   when_ping (a_reply: MESSAGE) is
+      local
+         reply: REPLY_PING
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.error /= Void then
+               log.error.put_line(reply.error)
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+         end
       end
 
 feature {REMOTE}
@@ -232,22 +240,45 @@ feature {} -- master phrase
       require
          channel.server_running
       do
-         log.info.put_line(once "Pinging server to settle queues")
+         log.info.put_line(once "Pinging server to settle queues") -- TODO move that, fifo trick only
          do_ping
          do_ping
          do_ping
          log.info.put_line(once "Sending master password")
-         send(once "master #(1)" # master_pass)
+         call_server(create {QUERY_MASTER}.make(master_pass), agent when_master)
+      end
+
+   when_master (a_reply: MESSAGE) is
+      local
+         reply: REPLY_MASTER
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.error /= Void then
+               log.error.put_line(reply.error)
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+         end
       end
 
    send_save is
       do
-         send(once "save #(1)" # shared.vault_file)
+         call_server(create {QUERY_SAVE}.make(shared.vault_file), agent when_save)
       end
 
-   send (string: ABSTRACT_STRING) is
+   when_save (a_reply: MESSAGE) is
+      local
+         reply: REPLY_SAVE
       do
-         channel.send(string)
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.error /= Void then
+               log.error.put_line(reply.error)
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+         end
       end
 
 feature {} -- xclip
@@ -306,16 +337,6 @@ feature {} -- create a brand new vault
             by_construction: pass1.is_equal(pass2)
          end
          master_pass.copy(pass1)
-      end
-
-   create_vault is
-      local
-         new_vault: VAULT
-      do
-         create new_vault.make(shared.vault_file)
-         new_vault.open_new(master_pass)
-         new_vault.save(shared.vault_file.out)
-         new_vault.close
       end
 
 end

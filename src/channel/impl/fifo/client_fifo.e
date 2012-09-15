@@ -89,39 +89,31 @@ feature {CLIENT}
          extern.exists(server_fifo)
       end
 
-   send (string: ABSTRACT_STRING) is
+   call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]]) is
       local
-         tfw: TEXT_FILE_WRITE
+         tfw: TEXT_FILE_WRITE; tfr: TEXT_FILE_READ
+         reply: MESSAGE
       do
+         extern.make(client_fifo)
          extern.sleep(25)
          create tfw.connect_to(server_fifo)
          if tfw.is_connected then
-            tfw.put_line(string)
-            tfw.flush
-
-            -- give time to the OS and the server to get the message before closing the connection
-            extern.sleep(25)
-
+            streamer.write_message(query, tfw)
             tfw.disconnect
-         end
-      end
 
-   call (verb, arguments: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
-      local
-         tfr: TEXT_FILE_READ
-      do
-         extern.make(client_fifo)
-         if arguments = Void then
-            send(once "#(1) #(2)" # verb # client_fifo)
-         else
-            send(once "#(1) #(2) #(3)" # verb # client_fifo # arguments)
-         end
-         extern.wait_for(client_fifo)
-         create tfr.connect_to(client_fifo)
-         if tfr.is_connected then
-            action.call([tfr])
-            tfr.disconnect
-            delete(client_fifo)
+            extern.wait_for(client_fifo)
+            create tfr.connect_to(client_fifo)
+            if tfr.is_connected then
+               streamer.read_message(tfr)
+               tfr.disconnect
+
+               if streamer.error /= Void then
+                  log.error.put_line(streamer.error)
+               else
+                  when_reply.call([streamer.last_message])
+               end
+               delete(client_fifo)
+            end
          end
       end
 
@@ -151,6 +143,11 @@ feature {}
          tmpdir /= Void
       do
          client_fifo := ("#(1)/fifo" # tmpdir).intern
+      end
+
+   streamer: MESSAGE_STREAMER is
+      once
+         create Result.make
       end
 
 invariant

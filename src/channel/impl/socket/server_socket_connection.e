@@ -20,7 +20,6 @@ inherit
 
 insert
    LOGGING
-   JSON_HANDLER
 
 create {SERVER_SOCKET}
    make
@@ -39,22 +38,18 @@ feature {LOOP_ITEM}
 
    continue is
       local
-         json: JSON_TEXT; obj: JSON_OBJECT; query, reply: MESSAGE
-         factory: MESSAGE_FACTORY
+         query, reply: MESSAGE
       do
-         error := Void
-         json := parser.parse_json_text(channel)
-
-         if error /= Void or else not obj ?:= json then
-            log.warning.put_line(once "Malformed request (#(1)). Discarding." # error)
+         streamer.read_message(channel)
+         if streamer.error /= Void then
+            log.warning.put_line(once "Error: #(1). Discarding." # streamer.error)
          else
-            obj ::= json
-            query := factory.from_json(obj)
+            query := streamer.last_message
             reply := server.fire_receive(query)
             if reply = Void then
                log.warning.put_line("No reply to the query #(1)!" # query.command)
             else
-               encoder.encode_in(reply.json, channel)
+               streamer.write_message(reply, channel)
             end
          end
          channel.disconnect
@@ -77,24 +72,15 @@ feature {}
       do
          server := a_server
          channel := a_channel
-         create parser.make(agent json_parse_error)
       ensure
          server = a_server
          channel = a_channel
       end
 
-   json_parse_error (msg: ABSTRACT_STRING) is
-      do
-         error := msg.out
-      end
-
    server: SERVER_SOCKET
    channel: SOCKET_INPUT_OUTPUT_STREAM
 
-   parser: JSON_PARSER
-   error: STRING
-
-   encoder: JSON_ENCODER is
+   streamer: MESSAGE_STREAMER is
       once
          create Result.make
       end
@@ -102,6 +88,5 @@ feature {}
 invariant
    server /= Void
    channel /= Void
-   parser /= Void
 
 end

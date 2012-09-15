@@ -56,21 +56,17 @@ feature {CLIENT}
          end
       end
 
-   send (string: ABSTRACT_STRING) is
-      do
-         channel.put_line(string)
-      end
-
-   call (verb, arguments: ABSTRACT_STRING; action: PROCEDURE[TUPLE[INPUT_STREAM]]) is
+   call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]]) is
       do
          busy := True
-         if arguments = Void then
-            channel.put_line(once "#(1) #(2)" # verb # socket.port.out)
-         else
-            channel.put_line(once "#(1) #(2) #(3)" # verb # socket.port.out # arguments)
-         end
+         streamer.write_message(query, channel)
          channel.flush
-         action.call([channel])
+         streamer.read_message(channel)
+         if streamer.error /= Void then
+            log.error.put_line(streamer.error)
+         else
+            when_reply.call([streamer.last_message])
+         end
          busy := False
       end
 
@@ -105,6 +101,11 @@ feature {}
    socket: SOCKET
 
    busy: BOOLEAN
+
+   streamer: MESSAGE_STREAMER is
+      once
+         create Result.make
+      end
 
 invariant
    channel /= Void
