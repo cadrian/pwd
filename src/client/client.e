@@ -160,8 +160,7 @@ feature {} -- get a password from the server
          callback /= Void
          when_unknown /= Void
       do
-         call_server(create {QUERY_GET}.make(key.out),
-                     agent get_back(?, key, callback, when_unknown))
+         call_server(create {QUERY_GET}.make(key.out), agent get_back(?, key, callback, when_unknown))
       end
 
    unknown_key (key: ABSTRACT_STRING) is
@@ -170,8 +169,7 @@ feature {} -- get a password from the server
 
    do_ping is
       do
-         call_server(create {QUERY_PING}.make(once ""),
-                     agent when_ping)
+         call_server(create {QUERY_PING}.make(once ""), agent when_ping)
       end
 
    when_ping (a_reply: MESSAGE) is
@@ -264,7 +262,7 @@ feature {} -- master phrase
 
    send_save is
       do
-         call_server(create {QUERY_SAVE}.make(shared.vault_file), agent when_save)
+         call_server(create {QUERY_SAVE}.make, agent when_save)
       end
 
    when_save (a_reply: MESSAGE) is

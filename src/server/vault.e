@@ -108,7 +108,7 @@ feature {SERVER}
          Result := once ""
       end
 
-   save (file: STRING): ABSTRACT_STRING is
+   save: ABSTRACT_STRING is
       require
          is_open
       local

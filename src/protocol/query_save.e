@@ -30,19 +30,12 @@ feature {ANY}
          v.visit_save(Current)
       end
 
-feature {ANY}
-   file: STRING is
-      do
-         Result := string(once "file")
-      end
-
 feature {}
-   make (a_file: ABSTRACT_STRING) is
+   make is
       do
          create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
                            json_string(once "save"), json_string(once "type");
                            json_string(once "query"), json_string(once "command");
-                           create {JSON_STRING}.from_string(a_file), json_string(once "file");
                            >>})
       end
 

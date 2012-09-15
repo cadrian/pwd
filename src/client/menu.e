@@ -33,8 +33,7 @@ feature {}
       require
          channel.is_ready
       do
-         call_server(create {QUERY_LIST}.make
-                     agent when_list)
+         call_server(create {QUERY_LIST}.make, agent when_list)
          if list /= Void and then not list.is_empty then
             display_menu
          end
