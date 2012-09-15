@@ -3,5 +3,6 @@ channel/loadpath.se
 client/loadpath.se
 config/
 generator/
+protocol/
 server/
 extern/

@@ -20,6 +20,7 @@ inherit
 
 insert
    LOGGING
+   JSON_HANDLER
 
 create {SERVER_SOCKET}
    make
@@ -37,17 +38,26 @@ feature {LOOP_ITEM}
       end
 
    continue is
+      local
+         json: JSON_TEXT; obj: JSON_OBJECT; query, reply: MESSAGE
+         factory: MESSAGE_FACTORY
       do
-         channel.read_line
-         command.clear_count
-         channel.last_string.split_in(command)
-         if command.is_empty then
-            log.info.put_line(once "Received empty command, disconnecting")
-            channel.disconnect
+         error := Void
+         json := parser.parse_json_text(channel)
+
+         if error /= Void or else not obj ?:= json then
+            log.warning.put_line(once "Malformed request (#(1)). Discarding." # error)
          else
-            log.info.put_line(once "Received command: #(1)" # command.first)
-            server.fire_receive(command)
+            obj ::= json
+            query := factory.from_json(obj)
+            reply := server.fire_receive(query)
+            if reply = Void then
+               log.warning.put_line("No reply to the query #(1)!" # query.command)
+            else
+               encoder.encode_in(reply.json, channel)
+            end
          end
+         channel.disconnect
       end
 
    done: BOOLEAN is
@@ -65,21 +75,33 @@ feature {}
          a_server /= Void
          a_channel /= Void
       do
-         create command.make(1, 0)
          server := a_server
          channel := a_channel
+         create parser.make(agent json_parse_error)
       ensure
          server = a_server
          channel = a_channel
       end
 
-   command: RING_ARRAY[STRING]
+   json_parse_error (msg: ABSTRACT_STRING) is
+      do
+         error := msg.out
+      end
+
    server: SERVER_SOCKET
    channel: SOCKET_INPUT_OUTPUT_STREAM
 
+   parser: JSON_PARSER
+   error: STRING
+
+   encoder: JSON_ENCODER is
+      once
+         create Result.make
+      end
+
 invariant
-   command /= Void
    server /= Void
    channel /= Void
+   parser /= Void
 
 end

@@ -25,45 +25,9 @@ create {ANY}
    make
 
 feature {ANY}
-   open_new (pass: STRING) is
-      require
-         pass /= Void
-         not is_open
-      do
-         log.info.put_line(once "open vault as new")
-         set_environment_variable(once "VAULT_MASTER", pass)
-         dirty := True
-         is_open := True
-      end
+   is_open: BOOLEAN
 
-   open (pass: STRING) is
-      require
-         pass /= Void
-         not is_open
-      local
-         proc: PROCESS; vault_file: TEXT_FILE_READ
-      do
-         log.info.put_line(once "open vault")
-         create vault_file.connect_to(file)
-         if vault_file.is_connected then
-            set_environment_variable(once "VAULT_MASTER", pass)
-            proc := processor.execute_redirect(once "openssl", once "#(1) -d -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
-            if proc.is_connected then
-               extern.splice(vault_file, proc.input)
-               proc.input.disconnect
-               read_data(proc.output)
-               proc.wait
-               is_open := proc.status = 0
-            end
-            vault_file.disconnect
-         end
-         if is_open then
-            log.info.put_line(once "Vault open: #(1)" # file)
-         else
-            log.error.put_line(once "VAULT NOT OPEN! #(1)" # file)
-         end
-      end
-
+feature {SERVER}
    close is
       do
          if is_open then
@@ -76,208 +40,146 @@ feature {ANY}
          not is_open
       end
 
-   is_open: BOOLEAN
-
-   list (filename: STRING) is
+   open (master: STRING) is
       require
-         filename /= Void
+         master /= Void
+         not is_open
+      local
+         proc: PROCESS; vault_file: TEXT_FILE_READ
       do
-         log.info.put_line(once "#(1): list" # filename)
-         run_open(filename, agent do_list)
+         set_environment_variable(once "VAULT_MASTER", master)
+         create vault_file.connect_to(file)
+         if vault_file.is_connected then
+            log.info.put_line(once "open vault")
+            proc := processor.execute_redirect(once "openssl", once "#(1) -d -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
+            if proc.is_connected then
+               extern.splice(vault_file, proc.input)
+               proc.input.disconnect
+               read_data(proc.output)
+               proc.wait
+               if proc.status = 0 then
+                  is_open := True
+               else
+                  set_environment_variable(once "VAULT_MASTER", once "")
+               end
+            end
+            vault_file.disconnect
+         else
+            log.info.put_line(once "open vault as new")
+            dirty := True
+            is_open := True
+         end
+         if is_open then
+            log.info.put_line(once "Vault open: #(1)" # file)
+         else
+            log.error.put_line(once "VAULT NOT OPEN! #(1)" # file)
+         end
       end
 
-   save (filename: STRING) is
+   pass (key_name: STRING): STRING is
       require
-         filename /= Void
+         is_open
+         key_name /= Void
+      local
+         key: KEY
       do
-         log.info.put_line(once "#(1): save" # filename)
-         run_open(filename, agent do_save)
+         key := data.reference_at(key_name.intern)
+         if key /= Void then
+            Result := key.pass
+         end
       end
 
-   get (filename, name: STRING) is
+   do_all_keys (action: PROCEDURE[TUPLE[FIXED_STRING]]) is
       require
-         filename /= Void
-         name /= Void
+         is_open
+         action /= Void
       do
-         log.info.put_line(once "#(1): get #(2)" # filename # name)
-         run_open(filename, agent do_get(?, name))
+         data.do_all(agent (a: PROCEDURE[TUPLE[FIXED_STRING]]; k: KEY; n: FIXED_STRING) is do a.call([n]) end (action, ?, ?))
       end
 
-   set_random (filename, name: STRING; recipe: ABSTRACT_STRING) is
+   merge (other: like Current): ABSTRACT_STRING is
       require
-         filename /= Void
-         name /= Void
-         recipe /= Void
-      do
-         log.info.put_line(once "#(1): set random #(2) using recipe: #(3)" # filename # name # recipe)
-         run_open(filename, agent do_set_random(?, name, recipe))
-      end
-
-   set (filename, name, pass: STRING) is
-      require
-         filename /= Void
-         name /= Void
-         pass /= Void
-      do
-         log.info.put_line(once "#(1): set #(2) using given password" # filename # name)
-         run_open(filename, agent do_set(?, name, pass))
-      end
-
-   unset (filename, name: STRING) is
-      require
-         filename /= Void
-         name /= Void
-      do
-         log.info.put_line(once "#(1): unset #(2)" # filename # name)
-         run_open(filename, agent do_unset(?, name))
-      end
-
-   merge (filename: STRING; other: like Current) is
-         -- The greatest id is kept.
-         -- If the ids are equal the local is kept.
-      require
-         filename /= Void
+         is_open
          other.is_open
       do
-         log.info.put_line(once "#(1): merge vault #(2) + #(3)" # filename # file # other.file)
-         run_open(filename, agent do_merge(?, other))
+         data.do_all_items(agent merge_other(other.data, ?))
+         other.data.do_all_items(agent add_key(?))
+         dirty := True
+         Result := once ""
       end
 
-   ping (filename: STRING) is
-      require
-         filename /= Void
-      do
-         log.info.put_line(once "#(1): ping" # filename)
-         reply_pong(filename)
-      end
-
-feature {}
-   do_list (stream: OUTPUT_STREAM) is
+   save: ABSTRACT_STRING is
       require
          is_open
-         stream.is_connected
-      do
-         print_all_names(stream)
-      end
-
-   do_save (stream: OUTPUT_STREAM) is
-      require
-         is_open
-         stream.is_connected
       local
          proc: PROCESS
       do
          if dirty then
-            proc := processor.execute_redirect(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
+            proc := processor.execute_to_dev_null(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
             if proc.is_connected then
                print_all_keys(proc.input)
                proc.input.flush
                proc.input.disconnect
-               extern.splice(proc.output, stream)
                proc.wait
-            end
-         end
-      end
-
-   do_get (stream: OUTPUT_STREAM; name: STRING) is
-      require
-         is_open
-         stream.is_connected
-         name /= Void
-      do
-         display_name_and_pass(name.intern, stream)
-      end
-
-   do_set (stream: OUTPUT_STREAM; name, pass: STRING) is
-      require
-         is_open
-         stream.is_connected
-         name /= Void
-         pass /= Void
-      do
-         set_key(name, pass, stream)
-      end
-
-   do_set_random (stream: OUTPUT_STREAM; name: STRING; recipe: ABSTRACT_STRING) is
-      require
-         is_open
-         stream.is_connected
-         name /= Void
-         recipe /= Void
-      do
-         set_random_key(name, recipe, stream)
-      end
-
-   do_unset (stream: OUTPUT_STREAM; name: STRING) is
-      require
-         is_open
-         stream.is_connected
-         name /= Void
-      do
-         delete_key(name.intern, stream)
-      end
-
-   do_merge (stream: OUTPUT_STREAM; other: like Current) is
-      require
-         is_open
-         stream.is_connected
-         other.is_open
-      do
-         -- merge existing
-         data.do_all(agent merge_other(other.data, ?))
-         -- add missing
-         other.data.do_all(agent add_key(?))
-         stream.put_line(once "Merge done.")
-         dirty := True
-      end
-
-feature {}
-   reply_not_open (filename: STRING) is
-      require
-         filename /= Void
-         not is_open
-      local
-         tfw: TEXT_FILE_WRITE
-      do
-         log.warning.put_line("#(1): command called on closed vault #(2)" # filename # file)
-         create tfw.connect_to(filename)
-         if tfw.is_connected then
-            tfw.put_line(once "VAULT NOT OPEN")
-            tfw.disconnect
-         end
-      end
-
-   run_open (filename: STRING; if_open: PROCEDURE[TUPLE[OUTPUT_STREAM]]) is
-      require
-         filename /= Void
-      local
-         tfw: OUTPUT_STREAM
-      do
-         if is_open then
-            create {TEXT_FILE_WRITE} tfw.connect_to(filename)
-            if tfw.is_connected then
-               log.trace.put_line(once "found fifo #(1)" # filename)
-               if_open.call([tfw])
-               tfw.disconnect
-            else
-               log.info.put_line(once "fifo #(1) not found!" # filename)
+               if proc.status = 0 then
+                  Result := once ""
+               else
+                  Result := once "openssl returned status #(1)" # proc.status.out
+               end
             end
          else
-            reply_not_open(filename)
+            Result := once ""
          end
       end
 
-   reply_pong (filename: STRING) is
+   set_random (a_name, a_recipe: STRING): ABSTRACT_STRING is
       require
-         filename /= Void
+         is_open
+         a_name /= Void
+         a_recipe /= Void
       local
-         tfw: TEXT_FILE_WRITE
+         pass_: STRING
       do
-         create tfw.connect_to(filename)
-         if tfw.is_connected then
-            tfw.put_line(once "pong")
-            tfw.disconnect
+         pass_ := generate_pass(a_recipe)
+         if pass_ = Void then
+            Result := once "Invalid recipe"
+         else
+            Result := set(a_name, pass_)
          end
+      end
+
+   set (a_name, a_pass: STRING): ABSTRACT_STRING is
+      require
+         is_open
+         a_name /= Void
+         a_pass /= Void
+      local
+         key: KEY
+      do
+         key := data.reference_at(a_name.intern)
+         if key = Void then
+            create key.new(a_name, a_pass)
+            data.add(key, key.name)
+         else
+            key.set_pass(a_pass)
+         end
+         dirty := True
+         Result := once ""
+      end
+
+   unset (a_name: STRING): ABSTRACT_STRING is
+      require
+         is_open
+         a_name /= Void
+      local
+         key: KEY
+      do
+         key := data.reference_at(a_name.intern)
+         if key /= Void and then not key.is_deleted then
+            key.delete
+            dirty := True
+         end
+         Result := once ""
       end
 
 feature {}
@@ -297,54 +199,6 @@ feature {}
       end
 
 feature {}
-   set_random_key (name, recipe: ABSTRACT_STRING; stream: OUTPUT_STREAM) is
-      require
-         name /= Void
-         recipe /= Void
-         stream.is_connected
-      do
-         set_key(name, generate_pass(recipe), stream)
-      end
-
-   set_key (name: ABSTRACT_STRING; pass: STRING; stream: OUTPUT_STREAM) is
-      require
-         name /= Void
-         pass /= Void
-         stream.is_connected
-      local
-         key: KEY
-      do
-         key := data.reference_at(name.intern)
-         if key = Void then
-            create key.new(name, pass)
-            data.add(key, key.name)
-         else
-            key.set_pass(pass)
-         end
-
-         check
-            key.pass = pass
-            not key.is_deleted
-         end
-
-         display_key(key, stream)
-         dirty := True
-      end
-
-   print_all_names (stream: OUTPUT_STREAM) is
-      require
-         stream.is_connected
-      do
-         data.do_all(agent print_name(?, ?, stream))
-      end
-
-   print_name (key: KEY; name: FIXED_STRING; stream: OUTPUT_STREAM) is
-      require
-         stream.is_connected
-      do
-         stream.put_line(name)
-      end
-
    print_all_keys (stream: OUTPUT_STREAM) is
       require
          stream.is_connected
@@ -357,60 +211,6 @@ feature {}
          stream.is_connected
       do
          stream.put_line(key.encoded)
-      end
-
-   display_key (key: KEY; stream: OUTPUT_STREAM) is
-      require
-         not key.is_deleted
-         stream.is_connected
-      do
-         stream.put_line(once "#(1) #(2)" # key.name # key.pass)
-      end
-
-   display_name_and_pass (name: FIXED_STRING; stream: OUTPUT_STREAM) is
-      require
-         name /= Void
-         stream.is_connected
-      local
-         key: KEY
-      do
-         key := data.reference_at(name)
-         if key /= Void and then not key.is_deleted then
-            log.trace.put_line(once "found key '#(1)'" # name)
-            display_key(key, stream)
-         else
-            log.info.put_line(once "key '#(1)' not fount" # name)
-            stream.put_line(name)
-         end
-      end
-
-   display_or_add_key (name: FIXED_STRING; stream: OUTPUT_STREAM) is
-      require
-         name /= Void
-         stream.is_connected
-      local
-         key: KEY
-      do
-         key := data.reference_at(name)
-         if key /= Void and then not key.is_deleted then
-            display_key(key, stream)
-         else
-            set_key(name, Void, stream)
-         end
-      end
-
-   delete_key (name: FIXED_STRING; stream: OUTPUT_STREAM) is
-      require
-         name /= Void
-         stream.is_connected
-      local
-         key: KEY
-      do
-         key := data.reference_at(name)
-         if key /= Void and then not key.is_deleted then
-            key.delete
-            stream.put_line(name)
-         end
       end
 
    read_data (a_data: INPUT_STREAM) is
@@ -444,15 +244,12 @@ feature {}
       do
          log.trace.put_line(once "generating random pass (may take time, depending on the system entropy)")
 
-         Result := ""
          create g.parse(recipe)
          if g.is_valid then
             Result := g.generated
          else
             log.warning.put_line(once "Invalid recipe: #(1)" # recipe)
          end
-      ensure
-         Result /= Void
       end
 
 feature {}

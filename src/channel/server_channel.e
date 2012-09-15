@@ -20,16 +20,17 @@ insert
       export {SERVER}
          prepare, is_ready, continue, done, restart
       end
+   LOGGING
 
 feature {SERVER}
-   on_receive (command: PROCEDURE[TUPLE[RING_ARRAY[STRING]]]) is
+   on_receive (message: FUNCTION[TUPLE[MESSAGE], MESSAGE]) is
       require
-         command /= Void
+         message /= Void
       do
-         if commands = Void then
-            create commands.make(0)
+         if messages = Void then
+            create messages.make(0)
          end
-         commands.add_last(command)
+         messages.add_last(message)
       end
 
    on_new_job (job: PROCEDURE[TUPLE[JOB]]) is
@@ -51,17 +52,42 @@ feature {SERVER}
       end
 
 feature {}
-   commands: FAST_ARRAY[PROCEDURE[TUPLE[RING_ARRAY[STRING]]]]
+   messages: FAST_ARRAY[FUNCTION[TUPLE[MESSAGE], MESSAGE]]
    jobs: FAST_ARRAY[PROCEDURE[TUPLE[JOB]]]
 
-   fire_receive (command: RING_ARRAY[STRING]) is
+   fire_receive (query: MESSAGE): MESSAGE is
+      require
+         query /= Void
+      local
+         reply: REFERENCE[MESSAGE]; replied: BOOLEAN
       do
-         if commands /= Void then
-            commands.do_all(agent (cmd: PROCEDURE[TUPLE[RING_ARRAY[STRING]]]; c: RING_ARRAY[STRING]) is do cmd.call([c]) end (?, command))
+         if messages /= Void then
+            create reply
+            replied := messages.exists(agent reply_to(?, query, reply))
+            if replied then
+               Result := reply.item
+            end
          end
       end
 
+   reply_to (action: FUNCTION[TUPLE[MESSAGE], MESSAGE]; query: MESSAGE; reply_ref: REFERENCE[MESSAGE]): BOOLEAN is
+      require
+         reply_ref = Void
+      local
+         reply: MESSAGE
+      do
+         reply := action.item([query])
+         if reply /= Void then
+            reply_ref.set_item(reply)
+            Result := True -- stop iterating
+         end
+      ensure
+         Result implies reply_ref /= Void
+      end
+
    fire_new_job (job: JOB) is
+      require
+         job /= Void
       do
          if jobs /= Void then
             jobs.do_all(agent (jb: PROCEDURE[TUPLE[JOB]]; j: JOB) is do jb.call([j]) end (?, job))

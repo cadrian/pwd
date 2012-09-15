@@ -15,6 +15,13 @@
 --
 class SERVER_FIFO
 
+   --
+   -- Expect a message from a fifo
+   --
+   -- Message structure: reply fifo name on the first line, then a
+   -- JSON object
+   --
+
 inherit
    SERVER_CHANNEL
 
@@ -22,6 +29,7 @@ insert
    SHARED_FIFO
    LOGGING
    FILE_TOOLS
+   JSON_HANDLER
 
 create {CHANNEL_FACTORY}
    make
@@ -52,14 +60,32 @@ feature {SERVER}
       end
 
    continue is
+      local
+         json: JSON_TEXT; obj: JSON_OBJECT; query, reply: MESSAGE; tfw: TEXT_FILE_WRITE
+         factory: MESSAGE_FACTORY
       do
-         command.clear_count
-         channel.last_string.split_in(command)
-         if command.is_empty then
-            log.info.put_line(once "Received empty command")
+         if channel.last_string.is_empty then
+            log.info.put_line(once "Received empty query")
          else
-            log.info.put_line(once "Received command: #(1)" # command.first)
-            fire_receive(command)
+            log.info.put_line(once "Received query for fifo: #(1)" # channel.last_string)
+            create tfw.connect_to(channel.last_string)
+            if tfw.is_connected then
+               error := Void
+               json := parser.parse_json_text(channel)
+               if error /= Void or else not obj ?:= json then
+                  log.warning.put_line(once "Malformed request (#(1)). Discarding." # error)
+               else
+                  obj ::= json
+                  query := factory.from_json(obj)
+                  reply := fire_receive(query)
+                  if reply = Void then
+                     log.warning.put_line("No reply to the query #(1)!" # query.command)
+                  else
+                     encoder.encode_in(reply.json, tfw)
+                  end
+               end
+               tfw.disconnect
+            end
          end
       end
 
@@ -99,19 +125,30 @@ feature {}
             die_with_code(1)
          end
 
-         create command.with_capacity(16, 0)
          create channel.make
+         create parser.make(agent json_parse_error)
+      end
+
+   json_parse_error (msg: ABSTRACT_STRING) is
+      do
+         error := msg.out
       end
 
    channel: TEXT_FILE_READ_WRITE
          -- There must be at least one writer for the server_fifo to be blocking in select(2)
          -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo
 
-   command: RING_ARRAY[STRING]
+   parser: JSON_PARSER
+   error: STRING
+
+   encoder: JSON_ENCODER is
+      once
+         create Result.make
+      end
 
 invariant
    channel /= Void
    server_fifo /= Void
-   command /= Void
+   parser /= Void
 
 end

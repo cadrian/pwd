@@ -21,6 +21,8 @@ inherit
          default_create
       end
 
+   QUERY_VISITOR
+
 insert
    GLOBALS
    FILE_TOOLS
@@ -89,7 +91,7 @@ feature {}
 
             create vault.make(shared.vault_file)
             create loop_stack.make
-            channel.on_receive(agent run_command)
+            channel.on_receive(agent run_message)
             channel.on_new_job(agent loop_stack.add_job)
             loop_stack.add_job(Current)
             restart
@@ -120,129 +122,141 @@ feature {}
          die_with_code(0)
       end
 
-   run_command (command: RING_ARRAY[STRING]) is
+   run_message (message: MESSAGE): MESSAGE is
       require
-         not command.is_empty
-      local
-         cmd, file, name, setcmd: STRING; merge_vault: VAULT
+         message /= Void
       do
-         cmd := command.first
-         command.remove_first
-         inspect
-            cmd
-
-         when "ping" then
-            file := command.last
-            vault.ping(file)
-
-         when "master" then
-            vault.close
-            if command.count = 1 then
-               vault.open(command.last)
-            end
-            if not vault.is_open then
-               log.warning.put_line(once "Invalid master password -- vault not open")
-            end
-
-         when "list" then
-            if command.count = 1 then
-               file := command.last
-               vault.list(file)
-            else
-               log.warning.put_line(once "Invalid list file name")
-            end
-
-         when "get" then
-            if command.count = 2 then
-               file := command.first
-               name := command.last
-               vault.get(file, name)
-            else
-               log.warning.put_line(once "Invalid get file name")
-            end
-
-         when "set" then
-            if command.count >= 2 then
-               file := command.first
-               command.remove_first
-               name := command.first
-               command.remove_first
-               if command.is_empty then
-                  vault.set_random(file, name, shared.default_recipe)
-               else
-                  setcmd := command.first
-                  command.remove_first
-                  inspect
-                     setcmd
-                  when "random" then
-                     if command.is_empty then
-                        vault.set_random(file, name, shared.default_recipe)
-                     else
-                        vault.set_random(file, name, command.first)
-                     end
-                  when "given" then
-                     if command.is_empty then
-                        log.warning.put_line(once "Missing given password")
-                     else
-                        vault.set(file, name, command.first)
-                     end
-                  else
-                     log.warning.put_line(once "Invalid set command")
-                  end
-               end
-            else
-               log.warning.put_line(once "Invalid set file name")
-            end
-
-         when "unset" then
-            if command.count = 2 then
-               file := command.first
-               name := command.last
-               vault.unset(file, name)
-            else
-               log.warning.put_line(once "Invalid unset file name")
-            end
-
-         when "save" then
-            if command.count = 1 then
-               file := command.last
-               vault.save(file)
-            else
-               log.warning.put_line(once "Invalid save file name")
-            end
-
-         when "merge" then
-            if command.count = 3 then
-               file := command.first
-               command.remove_first
-               create merge_vault.make(command.first)
-               merge_vault.open(command.last)
-               if merge_vault.is_open then
-                  vault.merge(file, merge_vault)
-                  merge_vault.close
-               else
-                  log.warning.put_line(once "Invalid merge vault password")
-               end
-               merge_vault := Void
-               collect_garbage
-            else
-               log.warning.put_line(once "Invalid merge file name")
-            end
-
-         when "close" then
-            vault.close
-            collect_garbage
-
-         when "stop" then
-            vault.close
-            log.info.put_line(once "Terminating...")
-            collect_garbage
-            channel.disconnect
-
-         else
-            log.warning.put_line(once "Unknown command: #(1)" # command.first)
+         check
+            reply = Void
          end
+         message.accept(Current)
+         Result := reply
+         reply := Void
       end
+
+   reply: MESSAGE
+
+
+--      local
+--         cmd, file, name, setcmd: STRING; merge_vault: VAULT
+--      do
+--         cmd := command.first
+--         command.remove_first
+--         inspect
+--            cmd
+--
+--         when "ping" then
+--            file := command.last
+--            vault.ping(file)
+--
+--         when "master" then
+--            vault.close
+--            if command.count = 1 then
+--               vault.open(command.last)
+--            end
+--            if not vault.is_open then
+--               log.warning.put_line(once "Invalid master password -- vault not open")
+--            end
+--
+--         when "list" then
+--            if command.count = 1 then
+--               file := command.last
+--               vault.list(file)
+--            else
+--               log.warning.put_line(once "Invalid list file name")
+--            end
+--
+--         when "get" then
+--            if command.count = 2 then
+--               file := command.first
+--               name := command.last
+--               vault.get(file, name)
+--            else
+--               log.warning.put_line(once "Invalid get file name")
+--            end
+--
+--         when "set" then
+--            if command.count >= 2 then
+--               file := command.first
+--               command.remove_first
+--               name := command.first
+--               command.remove_first
+--               if command.is_empty then
+--                  vault.set_random(file, name, shared.default_recipe)
+--               else
+--                  setcmd := command.first
+--                  command.remove_first
+--                  inspect
+--                     setcmd
+--                  when "random" then
+--                     if command.is_empty then
+--                        vault.set_random(file, name, shared.default_recipe)
+--                     else
+--                        vault.set_random(file, name, command.first)
+--                     end
+--                  when "given" then
+--                     if command.is_empty then
+--                        log.warning.put_line(once "Missing given password")
+--                     else
+--                        vault.set(file, name, command.first)
+--                     end
+--                  else
+--                     log.warning.put_line(once "Invalid set command")
+--                  end
+--               end
+--            else
+--               log.warning.put_line(once "Invalid set file name")
+--            end
+--
+--         when "unset" then
+--            if command.count = 2 then
+--               file := command.first
+--               name := command.last
+--               vault.unset(file, name)
+--            else
+--               log.warning.put_line(once "Invalid unset file name")
+--            end
+--
+--         when "save" then
+--            if command.count = 1 then
+--               file := command.last
+--               vault.save(file)
+--            else
+--               log.warning.put_line(once "Invalid save file name")
+--            end
+--
+--         when "merge" then
+--            if command.count = 3 then
+--               file := command.first
+--               command.remove_first
+--               create merge_vault.make(command.first)
+--               merge_vault.open(command.last)
+--               if merge_vault.is_open then
+--                  vault.merge(file, merge_vault)
+--                  merge_vault.close
+--               else
+--                  log.warning.put_line(once "Invalid merge vault password")
+--               end
+--               merge_vault := Void
+--               collect_garbage
+--            else
+--               log.warning.put_line(once "Invalid merge file name")
+--            end
+--
+--         when "close" then
+--            vault.close
+--            collect_garbage
+--
+--         when "stop" then
+--            vault.close
+--            log.info.put_line(once "Terminating...")
+--            collect_garbage
+--            channel.disconnect
+--
+--         else
+--            log.warning.put_line(once "Unknown command: #(1)" # command.first)
+--         end
+--      end
 
    preload is
       do
@@ -302,6 +316,139 @@ feature {}
       end
 
    detach: BOOLEAN
+
+feature {QUERY_CLOSE}
+   visit_close (query: QUERY_CLOSE) is
+      do
+         vault.close
+         collect_garbage
+         create {REPLY_CLOSE} reply.make(once "")
+      end
+
+feature {QUERY_GET}
+   visit_get (query: QUERY_GET) is
+      local
+         pass: STRING
+      do
+         if vault.is_open then
+            pass := vault.pass(query.key)
+            if pass /= Void then
+               create {REPLY_GET} reply.make(once "", query.key, pass)
+            else
+               create {REPLY_GET} reply.make(once "Unknown key", query.key, once "")
+            end
+         else
+            create {REPLY_GET} reply.make(once "Vault not open", query.key, once "")
+         end
+      end
+
+feature {QUERY_LIST}
+   visit_list (query: QUERY_LIST) is
+      local
+         names: FAST_ARRAY[FIXED_STRING]
+      do
+         if vault.is_open then
+            vault.do_all_keys(agent (key: FIXED_STRING; a: FAST_ARRAY[FIXED_STRING]) is do a.add_last(key) end (?, names))
+            create {REPLY_LIST} reply.make(once "", names)
+         else
+            create {REPLY_LIST} reply.make(once "Vault not open", create {FAST_ARRAY[FIXED_STRING]}.make(0))
+         end
+      end
+
+feature {QUERY_MASTER}
+   visit_master (query: QUERY_MASTER) is
+      do
+         if vault.is_open then
+            create {REPLY_MASTER} reply.make(once "Vault already open")
+         else
+            vault.open(query.master)
+            if vault.is_open then
+               create {REPLY_MASTER} reply.make(once "")
+            else
+               create {REPLY_MASTER} reply.make(once "Vault not open")
+            end
+         end
+      end
+
+feature {QUERY_MERGE}
+   visit_merge (query: QUERY_MERGE) is
+      local
+         other: VAULT; error: ABSTRACT_STRING
+      do
+         if vault.is_open then
+            create other.make(query.vault)
+            other.open(query.master)
+            if other.is_open then
+               error := vault.merge(other)
+               other.close
+               create {REPLY_MERGE} reply.make(error, query.vault)
+            else
+               create {REPLY_MERGE} reply.make(once "Merge vault not open", query.vault)
+            end
+         else
+            create {REPLY_MERGE} reply.make(once "Vault not open", query.vault)
+         end
+      end
+
+feature {QUERY_PING}
+   visit_ping (query: QUERY_PING) is
+      do
+         create {REPLY_PING} reply.make(once "", query.id)
+      end
+
+feature {QUERY_SAVE}
+   visit_save (query: QUERY_SAVE) is
+      local
+         error: ABSTRACT_STRING
+      do
+         if vault.is_open then
+            error := vault.save
+            create {REPLY_SAVE} reply.make(error)
+         else
+            create {REPLY_SAVE} reply.make(once "Vault not open")
+         end
+      end
+
+feature {QUERY_SET}
+   visit_set (query: QUERY_SET) is
+      local
+         error: ABSTRACT_STRING; pass: STRING
+      do
+         if vault.is_open then
+            if query.recipe /= Void then
+               error := vault.set_random(query.key, query.recipe)
+            else
+               error := vault.set(query.key, query.pass)
+            end
+            pass := vault.pass(query.key)
+            create {REPLY_SET} reply.make(error, query.key, pass)
+         else
+            create {REPLY_SET} reply.make(once "Vault not open", query.key, once "")
+         end
+      end
+
+feature {QUERY_STOP}
+   visit_stop (query: QUERY_STOP) is
+      do
+         vault.close
+         log.info.put_line(once "Terminating...")
+         collect_garbage
+         channel.disconnect
+         create {REPLY_STOP} reply.make(once "")
+      end
+
+feature {QUERY_UNSET}
+   visit_unset (query: QUERY_UNSET) is
+      local
+         error: ABSTRACT_STRING
+      do
+         if vault.is_open then
+            error := vault.unset(query.key)
+            create {REPLY_UNSET} reply.make(error, query.key)
+         else
+            create {REPLY_UNSET} reply.make(once "Vault not open", query.key)
+         end
+      end
 
 invariant
    is_running implies vault /= Void

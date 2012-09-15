@@ -55,7 +55,7 @@ feature {ANY}
 
    encoded: ABSTRACT_STRING is
       do
-         Result := encoder # name # &add_count # &del_count # pass
+         Result := encoder # name # add_count.out # del_count.out # pass
       end
 
    merge (other: like Current) is
