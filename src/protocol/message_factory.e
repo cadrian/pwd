@@ -109,6 +109,14 @@ feature {ANY}
                when "reply" then
                   create {REPLY_STOP} Result.from_json(json)
                end
+            when "is_open" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_IS_OPEN} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_IS_OPEN} Result.from_json(json)
+               end
             end
          end
       end

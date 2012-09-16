@@ -220,12 +220,19 @@ feature {QUERY_GET}
          end
       end
 
+feature {QUERY_IS_OPEN}
+   visit_is_open (query: QUERY_IS_OPEN) is
+      do
+         create {REPLY_IS_OPEN} reply.make(once "", vault.is_open)
+      end
+
 feature {QUERY_LIST}
    visit_list (query: QUERY_LIST) is
       local
          names: FAST_ARRAY[FIXED_STRING]
       do
          if vault.is_open then
+            create names.with_capacity(vault.count)
             vault.do_all_keys(agent (key: FIXED_STRING; a: FAST_ARRAY[FIXED_STRING]) is do a.add_last(key) end (?, names))
             create {REPLY_LIST} reply.make(once "", names)
          else

@@ -89,6 +89,11 @@ feature {SERVER}
          end
       end
 
+   count: INTEGER is
+      do
+         Result := data.count
+      end
+
    do_all_keys (action: PROCEDURE[TUPLE[FIXED_STRING]]) is
       require
          is_open

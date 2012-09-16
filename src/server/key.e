@@ -133,6 +133,5 @@ feature {KEY}
 
 invariant
    is_valid implies name /= Void
-   del_count <= add_count
 
 end

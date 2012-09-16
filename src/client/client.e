@@ -105,6 +105,8 @@ feature {}
             server_bootstrap
          elseif not channel.server_running then
             server_restart
+         else
+            server_open
          end
       end
 
@@ -113,7 +115,7 @@ feature {}
          log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
          read_new_master(once "This is a new vault")
          channel.server_start
-         send_master
+         send_master(True)
       end
 
    server_restart is
@@ -122,10 +124,32 @@ feature {}
          channel.server_start
          if channel.server_running then
             master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
-            send_master
+            send_master(True)
          else
             log.error.put_line(once "Could not start server!")
             die_with_code(1)
+         end
+      end
+
+   server_open is
+      do
+         call_server(create {QUERY_IS_OPEN}.make, agent when_open)
+      end
+
+   when_open (a_reply: MESSAGE) is
+      local
+         reply: REPLY_IS_OPEN
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.is_open then
+               log.info.put_line(once "Server vault is already open")
+            else
+               master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
+               send_master(False)
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
          end
       end
 
@@ -241,14 +265,16 @@ feature {} -- master phrase
          Result := once "--entry --hide-text --title=Password --text=%"#(1)%"" # text
       end
 
-   send_master is
+   send_master (settle: BOOLEAN) is
       require
          channel.server_running
       do
-         log.info.put_line(once "Pinging server to settle queues") -- TODO move that, fifo trick only
-         do_ping
-         do_ping
-         do_ping
+         if settle then
+            log.info.put_line(once "Pinging server to settle queues") -- TODO move that, fifo trick only
+            do_ping
+            do_ping
+            do_ping
+         end
          log.info.put_line(once "Sending master password")
          call_server(create {QUERY_MASTER}.make(master_pass), agent when_master)
       end

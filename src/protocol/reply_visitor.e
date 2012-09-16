@@ -32,6 +32,13 @@ feature {REPLY_GET}
       deferred
       end
 
+feature {REPLY_IS_OPEN}
+   visit_is_open (reply: REPLY_IS_OPEN) is
+      require
+         reply /= Void
+      deferred
+      end
+
 feature {REPLY_LIST}
    visit_list (reply: REPLY_LIST) is
       require

@@ -32,6 +32,13 @@ feature {QUERY_GET}
       deferred
       end
 
+feature {QUERY_IS_OPEN}
+   visit_is_open (query: QUERY_IS_OPEN) is
+      require
+         query /= Void
+      deferred
+      end
+
 feature {QUERY_LIST}
    visit_list (query: QUERY_LIST) is
       require

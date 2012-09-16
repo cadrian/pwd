@@ -34,8 +34,9 @@ feature {CLIENT}
 
    server_start is
       local
-         proc: PROCESS; arg: ABSTRACT_STRING
+         proc: PROCESS; arg: ABSTRACT_STRING; tries: INTEGER
          processor: PROCESSOR
+         extern: EXTERN
       do
          log.info.put_line(once "starting server...")
          if configuration.argument_count = 1 then
@@ -47,8 +48,20 @@ feature {CLIENT}
          if proc.is_connected then
             proc.wait
             if proc.status = 0 then
-               log.info.put_line(once "server started.")
-               channel := access.stream
+               from
+                  tries := 5
+               until
+                  server_running or else tries = 0
+               loop
+                  extern.sleep(50)
+                  channel := access.stream
+                  tries := tries - 1
+               end
+               if not server_running then
+                  log.error.put_line(once "server could not be started (or time out while waiting)")
+                  sedb_breakpoint
+                  die_with_code(1)
+               end
             else
                log.error.put_line(once "server not started! (exit=#(1))" # proc.status.out)
                sedb_breakpoint
@@ -64,12 +77,12 @@ feature {CLIENT}
          channel.put_new_line
          channel.flush
          streamer.read_message(channel)
+         busy := False
          if streamer.error /= Void then
             log.error.put_line(streamer.error)
          else
             when_reply.call([streamer.last_message])
          end
-         busy := False
       end
 
    is_ready: BOOLEAN is

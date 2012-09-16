@@ -42,7 +42,8 @@ feature {LOOP_ITEM}
       do
          streamer.read_message(channel)
          if streamer.error /= Void then
-            log.warning.put_line(once "Error: #(1). Discarding." # streamer.error)
+            log.warning.put_line(once "Error: #(1). Closing connection." # streamer.error)
+            channel.disconnect
          else
             query := streamer.last_message
             log.info.put_line(once "Connection received: type #(1) command #(2)." # query.type # query.command)
@@ -52,10 +53,9 @@ feature {LOOP_ITEM}
             else
                log.info.put_line(once "Replying: type #(1) command #(2)." # reply.type # reply.command)
                streamer.write_message(reply, channel)
+               channel.flush
             end
          end
-         log.info.put_line(once "Disconnecting.")
-         channel.disconnect
       end
 
    done: BOOLEAN is
