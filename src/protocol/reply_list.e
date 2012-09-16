@@ -63,13 +63,13 @@ feature {}
          json_names: FAST_ARRAY[JSON_STRING]
       do
          create json_names.with_capacity(a_names.count)
-         a_names.do_all(agent (a: FAST_ARRAY[JSON_STRING]; n: FIXED_STRING) is do a.add_last(create {JSON_STRING}.from_string(n)) end (json_names, ?))
          create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
                            json_string(once "reply"), json_string(once "type");
                            json_string(once "list"), json_string(once "command");
                            json_string(a_error), json_string(once "error");
                            create {JSON_ARRAY}.make(json_names), json_string(once "names");
                            >>})
+         a_names.do_all(agent (a: FAST_ARRAY[JSON_STRING]; n: FIXED_STRING) is do a.add_last(create {JSON_STRING}.from_string(n)) end (json_names, ?))
       end
 
 end
