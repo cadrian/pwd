@@ -76,7 +76,9 @@ feature {}
 
    cleanup is
       do
-         channel.cleanup
+         if channel /= Void then
+            channel.cleanup
+         end
       end
 
    run is
@@ -118,8 +120,13 @@ feature {}
       do
          log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
          channel.server_start
-         master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
-         send_master
+         if channel.server_running then
+            master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
+            send_master
+         else
+            log.error.put_line(once "Could not start server!")
+            die_with_code(1)
+         end
       end
 
    call_server (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]]) is

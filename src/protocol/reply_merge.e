@@ -48,8 +48,8 @@ feature {}
          a_vault /= Void
       do
          create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
-                           json_string(once "merge"), json_string(once "type");
-                           json_string(once "reply"), json_string(once "command");
+                           json_string(once "reply"), json_string(once "type");
+                           json_string(once "merge"), json_string(once "command");
                            json_string(a_error), json_string(once "error");
                            create {JSON_STRING}.from_string(a_vault), json_string(once "vault");
                            >>})

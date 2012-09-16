@@ -28,7 +28,7 @@ create {CHANNEL_FACTORY}
 feature {CLIENT}
    server_running: BOOLEAN is
       do
-         Result := channel.is_connected
+         Result := channel /= Void and then channel.is_connected
          log.info.put_line(once "Server is running: #(1)" # Result.out)
       end
 
@@ -48,6 +48,7 @@ feature {CLIENT}
             proc.wait
             if proc.status = 0 then
                log.info.put_line(once "server started.")
+               channel := access.stream
             else
                log.error.put_line(once "server not started! (exit=#(1))" # proc.status.out)
                sedb_breakpoint
@@ -60,6 +61,7 @@ feature {CLIENT}
       do
          busy := True
          streamer.write_message(query, channel)
+         channel.put_new_line
          channel.flush
          streamer.read_message(channel)
          if streamer.error /= Void then
@@ -82,7 +84,9 @@ feature {CLIENT}
 
    cleanup is
       do
-         channel.disconnect
+         if channel /= Void then
+            channel.disconnect
+         end
       end
 
 feature {}
@@ -90,13 +94,13 @@ feature {}
       require
          tmpdir /= Void
       local
-         access: TCP_ACCESS
       do
          create access.make(create {IPV4_ADDRESS}.make(127,0,0,1), socket.port)
          channel := access.stream
          log.info.put_line(once "Starting client on port #(1)" # socket.port.out)
       end
 
+   access: TCP_ACCESS
    channel: SOCKET_INPUT_OUTPUT_STREAM
    socket: SOCKET
 
@@ -108,6 +112,6 @@ feature {}
       end
 
 invariant
-   channel /= Void
+   access /= Void
 
 end

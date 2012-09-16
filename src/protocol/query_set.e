@@ -66,8 +66,8 @@ feature {}
          a_pass /= Void
       do
          create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
-                           json_string(once "set"), json_string(once "type");
-                           json_string(once "query"), json_string(once "command");
+                           json_string(once "query"), json_string(once "type");
+                           json_string(once "set"), json_string(once "command");
                            create {JSON_STRING}.from_string(a_key), json_string(once "key");
                            create {JSON_STRING}.from_string(a_pass), json_string(once "pass");
                            >>})

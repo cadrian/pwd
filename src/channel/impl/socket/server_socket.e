@@ -44,6 +44,7 @@ feature {SERVER}
          stream: SOCKET_INPUT_OUTPUT_STREAM
          job: SERVER_SOCKET_CONNECTION
       do
+         log.info.put_line(once "Connection received")
          stream := server.new_stream(True)
          create job.make(Current, stream)
          fire_new_job(job)

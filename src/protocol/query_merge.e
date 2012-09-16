@@ -45,8 +45,8 @@ feature {}
    make (a_vault, a_master: ABSTRACT_STRING) is
       do
          create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
-                           json_string(once "merge"), json_string(once "type");
-                           json_string(once "query"), json_string(once "command");
+                           json_string(once "query"), json_string(once "list");
+                           json_string(once "merge"), json_string(once "command");
                            create {JSON_STRING}.from_string(a_vault), json_string(once "vault");
                            create {JSON_STRING}.from_string(a_master), json_string(once "master");
                            >>})

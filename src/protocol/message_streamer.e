@@ -37,6 +37,9 @@ feature {ANY}
             else
                obj ::= json
                last_message := factory.from_json(obj)
+               if last_message = Void then
+                  error := once "Invalid object"
+               end
             end
          end
       ensure

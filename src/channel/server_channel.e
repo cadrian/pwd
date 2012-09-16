@@ -72,7 +72,7 @@ feature {}
 
    reply_to (action: FUNCTION[TUPLE[MESSAGE], MESSAGE]; query: MESSAGE; reply_ref: REFERENCE[MESSAGE]): BOOLEAN is
       require
-         reply_ref = Void
+         reply_ref.item = Void
       local
          reply: MESSAGE
       do
@@ -82,7 +82,7 @@ feature {}
             Result := True -- stop iterating
          end
       ensure
-         Result implies reply_ref /= Void
+         Result implies reply_ref.item /= Void
       end
 
    fire_new_job (job: JOB) is

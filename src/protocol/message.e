@@ -50,7 +50,7 @@ feature {}
       do
          json_value ::= json.members.reference_at(json_string(a_key))
          if json_value /= Void then
-            Result := json_value.string.as_utf8
+            Result := json_value.string.to_utf8
          end
       end
 

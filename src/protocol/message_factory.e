@@ -23,87 +23,92 @@ feature {ANY}
       local
          type, command: JSON_STRING
       do
-         inspect
-            command.string.as_utf8
-         when "ping" then
+         if json.members.has(json_type) and then json.members.has(json_command) then
+            type ::= json.members.at(json_type)
+            command ::= json.members.at(json_command)
+
             inspect
-               type.string.as_utf8
-            when "query" then
-               create {QUERY_PING} Result.from_json(json)
-            when "reply" then
-               create {REPLY_PING} Result.from_json(json)
-            end
-         when "master" then
-            inspect
-               type.string.as_utf8
-            when "query" then
-               create {QUERY_MASTER} Result.from_json(json)
-            when "reply" then
-               create {REPLY_MASTER} Result.from_json(json)
-            end
-         when "list" then
-            inspect
-               type.string.as_utf8
-            when "query" then
-               create {QUERY_LIST} Result.from_json(json)
-            when "reply" then
-               create {REPLY_LIST} Result.from_json(json)
-            end
-         when "get" then
-            inspect
-               type.string.as_utf8
-            when "query" then
-               create {QUERY_GET} Result.from_json(json)
-            when "reply" then
-               create {REPLY_GET} Result.from_json(json)
-            end
-         when "set" then
-            inspect
-               type.string.as_utf8
-            when "query" then
-               create {QUERY_SET} Result.from_json(json)
-            when "reply" then
-               create {REPLY_SET} Result.from_json(json)
-            end
-         when "unset" then
-            inspect
-               type.string.as_utf8
-            when "query" then
-               create {QUERY_UNSET} Result.from_json(json)
-            when "reply" then
-               create {REPLY_UNSET} Result.from_json(json)
-            end
-         when "save" then
-            inspect
-               type.string.as_utf8
-            when "query" then
-               create {QUERY_SAVE} Result.from_json(json)
-            when "reply" then
-               create {REPLY_SAVE} Result.from_json(json)
-            end
-         when "merge" then
-            inspect
-               type.string.as_utf8
-            when "query" then
-               create {QUERY_MERGE} Result.from_json(json)
-            when "reply" then
-               create {REPLY_MERGE} Result.from_json(json)
-            end
-         when "close" then
-            inspect
-               type.string.as_utf8
-            when "query" then
-               create {QUERY_CLOSE} Result.from_json(json)
-            when "reply" then
-               create {REPLY_CLOSE} Result.from_json(json)
-            end
-         when "stop" then
-            inspect
-               type.string.as_utf8
-            when "query" then
-               create {QUERY_STOP} Result.from_json(json)
-            when "reply" then
-               create {REPLY_STOP} Result.from_json(json)
+               command.string.as_utf8
+            when "ping" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_PING} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_PING} Result.from_json(json)
+               end
+            when "master" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_MASTER} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_MASTER} Result.from_json(json)
+               end
+            when "list" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_LIST} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_LIST} Result.from_json(json)
+               end
+            when "get" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_GET} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_GET} Result.from_json(json)
+               end
+            when "set" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_SET} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_SET} Result.from_json(json)
+               end
+            when "unset" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_UNSET} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_UNSET} Result.from_json(json)
+               end
+            when "save" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_SAVE} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_SAVE} Result.from_json(json)
+               end
+            when "merge" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_MERGE} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_MERGE} Result.from_json(json)
+               end
+            when "close" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_CLOSE} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_CLOSE} Result.from_json(json)
+               end
+            when "stop" then
+               inspect
+                  type.string.as_utf8
+               when "query" then
+                  create {QUERY_STOP} Result.from_json(json)
+               when "reply" then
+                  create {REPLY_STOP} Result.from_json(json)
+               end
             end
          end
       end
