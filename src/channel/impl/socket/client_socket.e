@@ -108,7 +108,7 @@ feature {}
          tmpdir /= Void
       local
       do
-         create access.make(create {IPV4_ADDRESS}.make(127,0,0,1), socket.port)
+         create access.make(create {IPV4_ADDRESS}.make(127,0,0,1), socket.port, True)
          channel := access.stream
          log.info.put_line(once "Starting client on port #(1)" # socket.port.out)
       end

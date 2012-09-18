@@ -33,38 +33,43 @@ feature {LOOP_ITEM}
 
    is_ready (events: EVENTS_SET): BOOLEAN is
       do
-         Result := events.event_occurred(channel.event_can_read)
+         Result := done or else events.event_occurred(channel.event_can_read)
       end
 
    continue is
       local
          query, reply: MESSAGE
       do
-         streamer.read_message(channel)
-         if streamer.error /= Void then
-            log.warning.put_line(once "Error: #(1). Closing connection." # streamer.error)
-            channel.disconnect
-         else
-            query := streamer.last_message
-            log.info.put_line(once "Connection received: type #(1) command #(2)." # query.type # query.command)
-            reply := server.fire_receive(query)
-            if reply = Void then
-               log.warning.put_line("No reply to the query #(1)!" # query.command)
+         if not done then
+            streamer.read_message(channel)
+            if streamer.error /= Void then
+               log.warning.put_line(once "Error: #(1). Closing connection." # streamer.error)
+               channel.disconnect
             else
-               log.info.put_line(once "Replying: type #(1) command #(2)." # reply.type # reply.command)
-               streamer.write_message(reply, channel)
-               channel.flush
+               query := streamer.last_message
+               if query = Void then
+                  log.trace.put_line(once "No query, connection closed?")
+                  channel.disconnect
+               else
+                  log.info.put_line(once "Connection received: type #(1) command #(2)." # query.type # query.command)
+                  reply := server.fire_receive(query)
+                  if reply = Void then
+                     log.warning.put_line("No reply to the query #(1)!" # query.command)
+                  else
+                     log.info.put_line(once "Replying: type #(1) command #(2)." # reply.type # reply.command)
+                     streamer.write_message(reply, channel)
+                     channel.flush
+                  end
+               end
             end
          end
       end
 
-   done: BOOLEAN is
-      do
-         Result := not channel.is_connected
-      end
+   done: BOOLEAN
 
    restart is
       do
+         check False end
       end
 
 feature {}
@@ -75,6 +80,7 @@ feature {}
       do
          server := a_server
          channel := a_channel
+         a_channel.when_disconnect(agent on_channel_disconnect)
       ensure
          server = a_server
          channel = a_channel
@@ -86,6 +92,14 @@ feature {}
    streamer: MESSAGE_STREAMER is
       once
          create Result.make
+      end
+
+   on_channel_disconnect (a_channel: like channel) is
+      do
+         check
+            a_channel = channel
+         end
+         done := True
       end
 
 invariant

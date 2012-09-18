@@ -225,9 +225,9 @@ feature {REMOTE}
          create pass
          do_get(key,
                 agent (p: STRING; p_ref: REFERENCE[STRING]) is
-                   do
-                      p_ref.set_item(p)
-                   end (?, pass),
+                do
+                   p_ref.set_item(p)
+                end (?, pass),
                 agent unknown_key)
          Result := pass.item
       end

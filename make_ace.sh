@@ -8,12 +8,24 @@ CLASS=$(echo $name | tr '[a-z]' '[A-Z]')
 clean=${2:+no}
 clean=${clean:-yes}
 
+trace=no
+rescue=yes
+debug_pwd=no
+debug_liberty=no
+
 case $name in
     console)
-        trace=no
+        #trace=yes
+        #rescue=no
+        #debug_pwd=yes
+        #debug_liberty='"json/parser"); debug("socket"'
         ;;
-    *)
-        trace=no
+    server)
+        #trace=yes
+        #rescue=no
+        #debug_pwd=yes
+        #debug_liberty='"json/parser"); debug("socket"'
+        #debug_liberty='"socket"'
         ;;
 esac
 
@@ -29,14 +41,19 @@ default
     debug(no)
     trace($trace)
     verbose(no)
+    rescue($rescue)
 
 cluster
     pwdmgr: "src/loadpath.se"
         default
             assertion(invariant)
+            debug($debug_pwd)
         end
 
     liberty: "\${path_liberty}src/loadpath.se"
+        default
+            debug($debug_liberty)
+        end
 
 generate
     no_strip(no)

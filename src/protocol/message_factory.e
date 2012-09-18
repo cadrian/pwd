@@ -23,7 +23,7 @@ feature {ANY}
       local
          type, command: JSON_STRING
       do
-         if json.members.has(json_type) and then json.members.has(json_command) then
+         if json /= Void and then json.members.has(json_type) and then json.members.has(json_command) then
             type ::= json.members.at(json_type)
             command ::= json.members.at(json_command)
 

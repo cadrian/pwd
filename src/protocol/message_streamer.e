@@ -31,7 +31,9 @@ feature {ANY}
          last_message := Void
          error := Void
          json := parser.parse_json_text(input)
-         if error = Void then
+         if json = Void then
+            -- no object (closed connection?)
+         elseif error = Void then
             if not obj ?:= json then
                error := once "Malformed request"
             else
@@ -43,7 +45,7 @@ feature {ANY}
             end
          end
       ensure
-         last_message = Void implies error /= Void
+         error /= Void implies last_message = Void
       end
 
    last_message: MESSAGE

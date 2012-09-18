@@ -60,7 +60,7 @@ feature {SERVER}
          address: IPV4_ADDRESS
       do
          create address.make(127,0,0,1)
-         create access.make(address, socket.port)
+         create access.make(address, socket.port, False)
          server := access.server
          if server = Void then
             log.error.put_line(once "Server *not* started on port #(1)" # socket.port.out)
