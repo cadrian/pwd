@@ -34,7 +34,7 @@ feature {CLIENT}
 
    server_start is
       local
-         proc: PROCESS; arg: ABSTRACT_STRING; tries: INTEGER
+         proc: PROCESS; arg: ABSTRACT_STRING
          processor: PROCESSOR
          extern: EXTERN
       do
@@ -47,21 +47,9 @@ feature {CLIENT}
          proc := processor.execute_to_dev_null(once "nohup", arg)
          if proc.is_connected then
             proc.wait
+            extern.sleep(200)
             if proc.status = 0 then
-               from
-                  tries := 5
-               until
-                  server_running or else tries = 0
-               loop
-                  extern.sleep(50)
-                  channel := access.stream
-                  tries := tries - 1
-               end
-               if not server_running then
-                  log.error.put_line(once "server could not be started (or time out while waiting)")
-                  sedb_breakpoint
-                  die_with_code(1)
-               end
+               log.error.put_line(once "server is starting")
             else
                log.error.put_line(once "server not started! (exit=#(1))" # proc.status.out)
                sedb_breakpoint

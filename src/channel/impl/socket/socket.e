@@ -24,7 +24,7 @@ feature {ANY}
       local
          conf_: FIXED_STRING
       do
-         Result := 47999
+         Result := 4793
          if has_conf(once "port") then
             conf_ := conf(once "port")
             if conf_ /= Void and then conf_.is_integer then

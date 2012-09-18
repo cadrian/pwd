@@ -20,6 +20,12 @@ case $name in
         #debug_pwd=yes
         #debug_liberty='"json/parser"); debug("socket"'
         ;;
+    menu)
+        #trace=yes
+        #rescue=no
+        #debug_pwd=yes
+        #debug_liberty='"json/parser"); debug("socket"'
+        ;;
     server)
         #trace=yes
         #rescue=no

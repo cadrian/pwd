@@ -46,6 +46,7 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
+               create list.with_capacity(reply.count_names)
                reply.do_all_names(agent list.add_last)
             else
                log.error.put_line(reply.error)

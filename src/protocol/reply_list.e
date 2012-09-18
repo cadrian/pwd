@@ -54,6 +54,14 @@ feature {ANY}
          end
       end
 
+   count_names: INTEGER is
+      local
+         array: JSON_ARRAY
+      do
+         array ::= json.members.reference_at(json_string(once "names"))
+         Result := array.count
+      end
+
 feature {}
    make (a_error: ABSTRACT_STRING; a_names: COLLECTION[FIXED_STRING]) is
       require

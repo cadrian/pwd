@@ -115,16 +115,20 @@ feature {}
          log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
          read_new_master(once "This is a new vault")
          channel.server_start
-         send_master(True)
+         do_ping
+         if channel.server_running then
+            send_master
+         end
       end
 
    server_restart is
       do
          log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
          channel.server_start
+         do_ping
          if channel.server_running then
             master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
-            send_master(True)
+            send_master
          else
             log.error.put_line(once "Could not start server!")
             die_with_code(1)
@@ -146,7 +150,7 @@ feature {}
                log.info.put_line(once "Server vault is already open")
             else
                master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
-               send_master(False)
+               send_master
             end
          else
             log.error.put_line(once "Unexpected reply")
@@ -265,16 +269,10 @@ feature {} -- master phrase
          Result := once "--entry --hide-text --title=Password --text=%"#(1)%"" # text
       end
 
-   send_master (settle: BOOLEAN) is
+   send_master is
       require
          channel.server_running
       do
-         if settle then
-            log.info.put_line(once "Pinging server to settle queues") -- TODO move that, fifo trick only
-            do_ping
-            do_ping
-            do_ping
-         end
          log.info.put_line(once "Sending master password")
          call_server(create {QUERY_MASTER}.make(master_pass), agent when_master)
       end

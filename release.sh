@@ -8,13 +8,28 @@
 #                                                                        #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
+JOBS=-j$((2 * $(cat /proc/cpuinfo | grep ^processor | wc -l)))
+
 ON_KEY=false
-[ "$1" == "-onkey" ] && ON_KEY=true
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -onkey)
+            ON_KEY=true
+            ;;
+        -j*)
+            JOBS=$1
+            ;;
+        *)
+            echo "Unknown option: $1 (ignored)" >&2
+            ;;
+    esac
+    shift
+done
 
 dir=$(dirname $(readlink -f $0))
 cd $dir
 
-make -j$((2 * $(cat /proc/cpuinfo | grep ^processor | wc -l)))
+make $JOBS
 
 release_dir=$dir/target/release
 $ON_KEY && release_dir=${release_dir}-onkey
