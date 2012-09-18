@@ -38,7 +38,7 @@ feature {CLIENT}
          processor: PROCESSOR
          extern: EXTERN
       do
-         log.info.put_line(once "starting server...")
+         log.trace.put_line(once "starting server...")
          if configuration.argument_count = 1 then
             arg := once "server %"#(1)%"" # configuration.argument(1)
          else
@@ -49,7 +49,7 @@ feature {CLIENT}
             proc.wait
             extern.sleep(200)
             if proc.status = 0 then
-               log.error.put_line(once "server is starting")
+               log.trace.put_line(once "server is starting")
             else
                log.error.put_line(once "server not started! (exit=#(1))" # proc.status.out)
                sedb_breakpoint

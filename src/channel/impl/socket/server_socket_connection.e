@@ -27,7 +27,7 @@ create {SERVER_SOCKET}
 feature {LOOP_ITEM}
    prepare (events: EVENTS_SET) is
       do
-         log.info.put_line(once "Connection established, awaiting command")
+         log.trace.put_line(once "Connection established, awaiting command")
          events.expect(channel.event_can_read)
       end
 
@@ -56,7 +56,7 @@ feature {LOOP_ITEM}
                   if reply = Void then
                      log.warning.put_line("No reply to the query #(1)!" # query.command)
                   else
-                     log.info.put_line(once "Replying: type #(1) command #(2)." # reply.type # reply.command)
+                     log.trace.put_line(once "Replying: type #(1) command #(2)." # reply.type # reply.command)
                      streamer.write_message(reply, channel)
                      channel.flush
                   end

@@ -66,7 +66,7 @@ feature {CLIENT}
          proc: PROCESS; arg: ABSTRACT_STRING
          processor: PROCESSOR
       do
-         log.info.put_line(once "starting server...")
+         log.trace.put_line(once "starting server...")
          if configuration.argument_count = 1 then
             arg := once "server %"#(1)%"" # configuration.argument(1)
          else
@@ -76,7 +76,7 @@ feature {CLIENT}
          if proc.is_connected then
             proc.wait
             if proc.status = 0 then
-               log.info.put_line(once "server started.")
+               log.trace.put_line(once "server started.")
             else
                log.error.put_line(once "server not started! (exit=#(1))" # proc.status.out)
                sedb_breakpoint

@@ -50,7 +50,7 @@ feature {SERVER}
          set_environment_variable(once "VAULT_MASTER", master)
          create vault_file.connect_to(file)
          if vault_file.is_connected then
-            log.info.put_line(once "open vault")
+            log.trace.put_line(once "open vault")
             proc := processor.execute_redirect(once "openssl", once "#(1) -d -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
             if proc.is_connected then
                extern.splice(vault_file, proc.input)
@@ -65,7 +65,7 @@ feature {SERVER}
             end
             vault_file.disconnect
          else
-            log.info.put_line(once "open vault as new")
+            log.trace.put_line(once "open vault as new")
             dirty := True
             is_open := True
          end
@@ -231,7 +231,7 @@ feature {}
       local
          line: STRING; key: KEY
       do
-         log.info.put_line(once "reading vault data...")
+         log.trace.put_line(once "reading vault data...")
          from
             a_data.read_line
          until
@@ -244,7 +244,7 @@ feature {}
             end
             a_data.read_line
          end
-         log.info.put_line(once "vault data read.")
+         log.trace.put_line(once "vault data read.")
       end
 
    generate_pass (recipe: ABSTRACT_STRING): STRING is

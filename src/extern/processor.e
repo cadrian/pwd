@@ -90,12 +90,17 @@ feature {}
          factory: PROCESS_FACTORY
          args: FAST_ARRAY[STRING]
       do
-         log.info.put_string(command)
          if arguments /= Void then
             args := parse_arguments(arguments.intern)
-            args.do_all(agent (s: STRING) is do log.info.put_character(' '); log.info.put_string(s) end)
          end
-         log.info.put_new_line
+
+         if log.is_trace then
+            log.trace.put_string(command)
+            if args /= Void then
+               args.do_all(agent (s: STRING) is do log.trace.put_character(' '); log.trace.put_string(s) end)
+            end
+            log.trace.put_new_line
+         end
 
          factory.set_direct_input(direct_input)
          factory.set_direct_output(direct_output)

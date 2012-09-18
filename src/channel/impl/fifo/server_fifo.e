@@ -39,7 +39,7 @@ feature {SERVER}
          t: TIME_EVENTS
       do
          if channel.is_connected then
-            log.info.put_line(once "Awaiting connection.")
+            log.trace.put_line(once "Awaiting connection.")
             events.expect(channel.event_can_read)
          else
             log.info.put_line(once "Channel not connected!")
@@ -53,7 +53,7 @@ feature {SERVER}
             channel.read_line
             Result := not channel.end_of_input and then not channel.last_string.is_empty
             if Result then
-               log.info.put_line(once "Connection received")
+               log.trace.put_line(once "Connection received")
             end
          end
       end
@@ -63,7 +63,7 @@ feature {SERVER}
          query, reply: MESSAGE; tfw: TEXT_FILE_WRITE
       do
          if channel.last_string.is_empty then
-            log.info.put_line(once "Received empty query")
+            log.trace.put_line(once "Received empty query")
          else
             log.info.put_line(once "Received query for fifo: #(1)" # channel.last_string)
             create tfw.connect_to(channel.last_string)

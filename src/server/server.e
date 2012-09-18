@@ -106,6 +106,8 @@ feature {}
             vault.close
          end
          channel.cleanup
+
+         log.info.put_line(once "Terminated.")
       rescue
          if exceptions.is_signal then
             log.info.put_line(once "Killed by signal #(1), exitting gracefully." # exceptions.signal_number.out)
@@ -182,14 +184,12 @@ feature {}
             proc := processor.fork
             if proc.is_child then
                run_in_child
-               log.info.put_line(once "Terminated.")
             else
                run_in_parent(proc)
             end
          else
             log.info.put_line(once "Running not detached.")
             run_in_child
-            log.info.put_line(once "Terminated.")
          end
       end
 

@@ -35,7 +35,7 @@ feature {COMMANDER}
          if not command.is_empty then
             error_and_help(message_invalid_arguments, command)
          else
-            log.info.put_line(once "stopping server.")
+            log.trace.put_line(once "stopping server.")
             client.do_stop
          end
       end

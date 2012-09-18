@@ -30,7 +30,7 @@ create {CHANNEL_FACTORY}
 feature {SERVER}
    prepare (events: EVENTS_SET) is
       do
-         log.info.put_line(once "Awaiting connection")
+         log.trace.put_line(once "Awaiting connection")
          events.expect(server.event_connection)
       end
 
@@ -44,7 +44,7 @@ feature {SERVER}
          stream: SOCKET_INPUT_OUTPUT_STREAM
          job: SERVER_SOCKET_CONNECTION
       do
-         log.info.put_line(once "Connection received")
+         log.trace.put_line(once "Connection received")
          stream := server.new_stream(True)
          create job.make(Current, stream)
          fire_new_job(job)
