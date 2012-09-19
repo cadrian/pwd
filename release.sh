@@ -8,7 +8,8 @@
 #                                                                        #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-JOBS=-j$((2 * $(cat /proc/cpuinfo | grep ^processor | wc -l)))
+JOBS=${NB_JOBS:+-j$NB_JOBS}
+JOBS=${JOBS:--j$((2 * $(cat /proc/cpuinfo | grep ^processor | wc -l)))}
 
 ON_KEY=false
 while [ $# -gt 0 ]; do

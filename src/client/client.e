@@ -26,6 +26,8 @@ feature {}
    channel: CLIENT_CHANNEL
    restart: BOOLEAN
 
+   new_channel: FUNCTION[TUPLE, CLIENT_CHANNEL]
+
    preload is
       do
          inspect
@@ -56,7 +58,7 @@ feature {}
             die_with_code(1)
          end
 
-         channel := channel_factory.new_client_channel(tmpdir)
+         new_channel := agent channel_factory.new_client_channel(tmpdir)
 
          from
             restart := True
@@ -97,6 +99,9 @@ feature {}
 
    check_server is
       do
+         if channel = Void then
+            channel := new_channel.item([])
+         end
          if not file_exists(shared.vault_file) then
             check
                not channel.server_running
@@ -110,29 +115,44 @@ feature {}
          end
       end
 
+   server_start is
+      local
+         tries: INTEGER; extern: EXTERN
+      do
+         from
+            channel.server_start
+            tries := 5
+         until
+            channel.server_running or else tries = 0
+         loop
+            extern.sleep(50)
+            channel := new_channel.item([])
+            tries := tries - 1
+         end
+         if not channel.server_running then
+            log.error.put_line(once "Could not start server")
+            die_with_code(1)
+         else
+            do_ping
+         end
+      ensure
+         channel.server_running
+      end
+
    server_bootstrap is
       do
          log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
          read_new_master(once "This is a new vault")
-         channel.server_start
-         do_ping
-         if channel.server_running then
-            send_master
-         end
+         server_start
+         send_master
       end
 
    server_restart is
       do
          log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
-         channel.server_start
-         do_ping
-         if channel.server_running then
-            master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
-            send_master
-         else
-            log.error.put_line(once "Could not start server!")
-            die_with_code(1)
-         end
+         server_start
+         master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
+         send_master
       end
 
    server_open is
@@ -257,7 +277,7 @@ feature {} -- master phrase
                   on_cancel.call([])
                   Result := Void
                else
-                  std_error.put_line(once "Cancelled.")
+                  log.info.put_line(once "Cancelled.")
                   die_with_code(1)
                end
             end

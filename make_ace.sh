@@ -6,12 +6,14 @@ exe=$name.exe
 CLASS=$(echo $name | tr '[a-z]' '[A-Z]')
 
 clean=${2:+no}
-clean=${clean:-yes}
+clean=${clean:-${DO_CLEAN:-yes}}
 
 trace=no
 rescue=yes
 debug_pwd=no
 debug_liberty=no
+no_strip=no
+no_split=yes
 
 case $name in
     console)
@@ -62,8 +64,8 @@ cluster
         end
 
 generate
-    no_strip(no)
-    no_split(yes)
+    no_strip($no_strip)
+    no_split($no_split)
     clean($clean)
 
 end

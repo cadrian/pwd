@@ -28,6 +28,9 @@ create {CHANNEL_FACTORY}
 feature {CLIENT}
    server_running: BOOLEAN is
       do
+         if channel = Void or else not channel.is_connected then
+            channel := access.stream
+         end
          Result := channel /= Void and then channel.is_connected
          log.info.put_line(once "Server is running: #(1)" # Result.out)
       end
