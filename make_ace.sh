@@ -12,8 +12,13 @@ trace=no
 rescue=yes
 debug_pwd=no
 debug_liberty=no
-no_strip=no
-no_split=yes
+if [ $clean = yes ]; then
+    no_strip=no
+    no_split=yes
+else
+    no_strip=yes
+    no_split=no
+fi
 
 case $name in
     console)
