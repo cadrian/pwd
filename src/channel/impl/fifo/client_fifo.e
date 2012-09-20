@@ -97,22 +97,26 @@ feature {CLIENT}
          extern.sleep(25)
          create tfw.connect_to(server_fifo)
          if tfw.is_connected then
+            tfw.put_line(client_fifo)
             streamer.write_message(query, tfw)
-            tfw.disconnect
+            tfw.put_new_line
+            tfw.flush
 
             extern.wait_for(client_fifo)
             create tfr.connect_to(client_fifo)
             if tfr.is_connected then
                streamer.read_message(tfr)
                tfr.disconnect
+               delete(client_fifo)
 
                if streamer.error /= Void then
                   log.error.put_line(streamer.error)
                else
                   when_reply.call([streamer.last_message])
                end
-               delete(client_fifo)
             end
+
+            tfw.disconnect
          end
       end
 
