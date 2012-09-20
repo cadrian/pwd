@@ -74,18 +74,18 @@ if $ON_KEY; then
 dir=\$(dirname \$(readlink -f \$0))
 
 if test -z "\$1"; then
-    echo "Please provide the install directory, which will act as portable HOME" >&2
+    echo "Please provide the install directory, which will behave as a portable HOME" >&2
     exit 1
 fi
 
 mkdir -p "\$1"/local
-mkdir -p "\$1"/config
-mkdir -p "\$1"/cache
+mkdir -p "\$1"/config/pwdmgr
+mkdir -p "\$1"/cache/pwdmgr
 
 cp -a \$dir/data/*   "\$1"/local/
 
-for src in \$dir/config/*; do
-    tgt="\$1"/\${src#\$dir/config/}
+for src in \$dir/config/pwdmgr/*.rc; do
+    tgt="\$1"/\${src#\$dir/}
     if test -e \$tgt; then
         echo "There is already a config file named \$tgt -- not overriding."
         echo " The new config file is installed as \$tgt.pkg (please check)"
@@ -97,7 +97,9 @@ done
 
 chmod +w "\$1"/config/pwdmgr/*.rc
 EOF
+
 else
+
     cat <<EOF
 #!/bin/sh
 

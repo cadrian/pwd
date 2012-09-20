@@ -1,5 +1,6 @@
-0.0.7 (not yet released)
+0.0.7 (released 2012-09-20)
         * #28 - Implement sockets
+        * #22 - Strenghtened protocol
 
 0.0.6 (released 2012-06-05)
         * #27 - Remote discovery
