@@ -259,7 +259,10 @@ feature {} -- helpers
          if not name.is_empty then
             remote := remote_factory.load_remote(name, Current)
             if remote /= Void then
+               log.info.put_line(once "Adding remote: #(1)" # name)
                remote_map.add(remote, name)
+            else
+               log.warning.put_line(once "Invalid remote #(1) -- not added" # name)
             end
          end
       end
