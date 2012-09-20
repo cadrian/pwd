@@ -68,11 +68,9 @@ feature {CLIENT}
       do
          log.trace.put_line(once "starting server...")
          if configuration.argument_count = 1 then
-            arg := once "server %"#(1)%"" # configuration.argument(1)
-         else
-            arg := once "server"
+            arg := configuration.argument(1)
          end
-         proc := processor.execute_to_dev_null(once "nohup", arg)
+         proc := processor.execute_to_dev_null(once "server", arg)
          if proc.is_connected then
             proc.wait
             if proc.status = 0 then

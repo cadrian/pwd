@@ -76,26 +76,31 @@ feature {}
          loop_stack: LOOP_STACK
          tfw: TEXT_FILE_WRITE
          pid: INTEGER
-         is_killed: BOOLEAN
+         is_killed, initialized: BOOLEAN
       do
          if not is_killed then
-            pid := processor.pid
-            log.info.put_line(once "Starting server (#(1))." # pid.out)
+            if initialized then
+               log.info.put_line(once "Resuming main loop.")
+            else
+               pid := processor.pid
+               log.info.put_line(once "Starting server (#(1))." # pid.out)
 
-            create tfw.connect_to(shared.server_pidfile)
-            if tfw.is_connected then
-               tfw.put_integer(pid)
-               tfw.put_new_line
-               tfw.disconnect
+               create tfw.connect_to(shared.server_pidfile)
+               if tfw.is_connected then
+                  tfw.put_integer(pid)
+                  tfw.put_new_line
+                  tfw.disconnect
+               end
+
+               create vault.make(shared.vault_file)
+               create loop_stack.make
+               channel.on_receive(agent run_message)
+               channel.on_new_job(agent loop_stack.add_job)
+               loop_stack.add_job(Current)
+               restart
+               initialized := True
+               log.info.put_line(once "Starting main loop.")
             end
-
-            create vault.make(shared.vault_file)
-            create loop_stack.make
-            channel.on_receive(agent run_message)
-            channel.on_new_job(agent loop_stack.add_job)
-            loop_stack.add_job(Current)
-            restart
-            log.info.put_line(once "Starting main loop.")
 
             is_running := True
             loop_stack.run
@@ -110,8 +115,12 @@ feature {}
          log.info.put_line(once "Terminated.")
       rescue
          if exceptions.is_signal then
-            log.info.put_line(once "Killed by signal #(1), exitting gracefully." # exceptions.signal_number.out)
-            is_killed := True
+            if exceptions.signal_number = 1 then
+               log.info.put_line(once "Received SIGHUP, ignored.")
+            else
+               log.info.put_line(once "Killed by signal #(1), exitting gracefully." # exceptions.signal_number.out)
+               is_killed := True
+            end
             retry
          else
             log.info.put_line(once "Killed by exception #(1)." # exceptions.exception_name)
