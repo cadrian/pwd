@@ -54,7 +54,7 @@ for exe in $EXE
 do
     {
         echo
-        echo "exe/$exe: exe c/$exe.[ch]"
+        echo "exe/$exe: exe c/$exe*.[ch]"
         printf '\t$(CC) -o $@ $< $(LINKFLAGS)\n'
     } >> $MAKEFILE_BOOT
 
@@ -62,7 +62,7 @@ do
     ./make_ace.sh $ace dontclean
     se c2c $ace
     rm $ace $exe.id $exe.make
-    mv $exe.[ch] $bootstrap_dir/c/
+    mv $exe*.[ch] $bootstrap_dir/c/
 done
 
 {
