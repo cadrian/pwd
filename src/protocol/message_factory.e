@@ -17,6 +17,7 @@ expanded class MESSAGE_FACTORY
 
 insert
    JSON_HANDLER
+   LOGGING
 
 feature {ANY}
    from_json (json: JSON_OBJECT): MESSAGE is
@@ -26,6 +27,8 @@ feature {ANY}
          if json /= Void and then json.members.has(json_type) and then json.members.has(json_command) then
             type ::= json.members.at(json_type)
             command ::= json.members.at(json_command)
+
+            log.trace.put_line("MESSAGE_FACTORY: command '#(1)' type '#(2)'" # command.string.to_utf8 # type.string.to_utf8)
 
             inspect
                command.string.as_utf8
