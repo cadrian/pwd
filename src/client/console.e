@@ -18,7 +18,7 @@ class CONSOLE
 inherit
    CLIENT
       export {COMMAND} -- commands need access to a lot of client stuff
-         xclip, read_password, call_server, send_save, tmpdir, master_pass
+         copy_to_clipboard, read_password, call_server, send_save, tmpdir, master_pass
       redefine
          make, cleanup
       end
@@ -154,7 +154,7 @@ feature {} -- local vault commands
 
    run_get is
       do
-         do_get(command_line.first, agent xclip, agent unknown_key)
+         do_get(command_line.first, agent copy_to_clipboard, agent unknown_key)
       end
 
 feature {COMMAND}

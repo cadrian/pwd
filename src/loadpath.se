@@ -1,6 +1,7 @@
 ./
 channel/loadpath.se
 client/loadpath.se
+clipboard/loadpath.se
 config/
 generator/
 protocol/

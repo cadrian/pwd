@@ -12,6 +12,7 @@ trace=no
 rescue=yes
 debug_pwd=no
 debug_liberty=no
+assert=boost
 if [ $clean = yes ]; then
     no_strip=no
     no_split=yes
@@ -26,12 +27,14 @@ case $name in
         #rescue=no
         #debug_pwd=yes
         #debug_liberty='"json/parser"); debug("socket"'
+        #assert=invariant
         ;;
     menu)
         #trace=yes
         #rescue=no
         #debug_pwd=yes
         #debug_liberty='"json/parser"); debug("socket"'
+        #assert=invariant
         ;;
     server)
         #trace=yes
@@ -39,6 +42,7 @@ case $name in
         #debug_pwd=yes
         #debug_liberty='"json/parser"); debug("socket"'
         #debug_liberty='"socket"'
+        #assert=invariant
         ;;
 esac
 
@@ -59,7 +63,7 @@ default
 cluster
     pwdmgr: "src/loadpath.se"
         default
-            assertion(invariant)
+            assertion($assert)
             debug($debug_pwd)
         end
 

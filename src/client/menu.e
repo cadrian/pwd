@@ -73,7 +73,7 @@ feature {}
             end
             proc.wait
             if proc.status = 0 and then entry /= Void and then not entry.is_empty then
-               do_get(entry, agent xclip, agent is do end)
+               do_get(entry, agent copy_to_clipboard, agent is do end)
             end
          end
       end

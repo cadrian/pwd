@@ -29,6 +29,8 @@ feature {}
    new_channel: FUNCTION[TUPLE, CLIENT_CHANNEL]
 
    preload is
+      local
+         clipboard_factory: CLIPBOARD_FACTORY
       do
          inspect
             configuration.argument_count
@@ -45,6 +47,8 @@ feature {}
             std_error.put_line(once "Could not find any valid configuration file")
             die_with_code(1)
          end
+
+         clipboard := clipboard_factory.new_clipboard
       end
 
    main is
@@ -330,37 +334,14 @@ feature {} -- master phrase
          end
       end
 
-feature {} -- xclip
-   xclip (string: ABSTRACT_STRING) is
+feature {} -- copy_to_clipboard
+   clipboard: CLIPBOARD
+
+   copy_to_clipboard (string: ABSTRACT_STRING) is
       require
          string /= Void
-      local
-         procs: FAST_ARRAY[PROCESS]
       do
-         create procs.with_capacity(xclipboards.count)
-         xclipboards.do_all(agent xclip_select(string, ?, procs))
-         procs.do_all(agent {PROCESS}.wait)
-      end
-
-   xclip_select (string: ABSTRACT_STRING; selection: STRING; procs: FAST_ARRAY[PROCESS]) is
-      require
-         procs /= Void
-      local
-         proc: PROCESS
-      do
-         proc := processor.execute(once "xclip", once "-selection #(1)" # selection)
-         if proc.is_connected then
-            proc.input.put_line(string)
-            proc.input.disconnect
-            procs.add_last(proc)
-         end
-      ensure
-         procs.count = old procs.count + 1
-      end
-
-   xclipboards: FAST_ARRAY[STRING] is
-      once
-         Result := {FAST_ARRAY[STRING] << "primary", "clipboard" >>}
+         clipboard.copy(string)
       end
 
 feature {} -- create a brand new vault
