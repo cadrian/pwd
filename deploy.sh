@@ -13,6 +13,7 @@ dir=$(dirname $(readlink -f $0))
 cd $dir
 
 rm -rf target
+$dir/protocols.sh
 
 BOOTSTRAP=false
 RELEASE=false

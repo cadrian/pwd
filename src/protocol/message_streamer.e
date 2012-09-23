@@ -17,6 +17,7 @@ class MESSAGE_STREAMER
 
 insert
    JSON_HANDLER
+   LOGGING
 
 create {ANY}
    make
@@ -56,6 +57,10 @@ feature {ANY}
          message /= Void
          output.is_connected
       do
+         debug
+            encoder.encode_in(message.json, log.trace)
+            log.trace.put_new_line
+         end
          encoder.encode_in(message.json, output)
       end
 

@@ -73,6 +73,25 @@ feature {}
          create Result.make
       end
 
+   json_boolean (bool: BOOLEAN): JSON_VALUE is
+      do
+         if bool then
+            Result := json_true
+         else
+            Result := json_false
+         end
+      end
+
+   json_true: JSON_TRUE is
+      once
+         create Result.make
+      end
+
+   json_false: JSON_FALSE is
+      once
+         create Result.make
+      end
+
 invariant
    json /= Void
 
