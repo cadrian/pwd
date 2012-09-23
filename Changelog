@@ -1,3 +1,7 @@
+0.0.8 (not yet released)
+        * fixed a critical bug: could not set passwords
+        * generate most protocol classes and factory
+
 0.0.7 (released 2012-09-20)
         * #28 - Implement sockets
         * #22 - Strenghtened protocol
