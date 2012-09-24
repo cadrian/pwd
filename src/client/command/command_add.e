@@ -65,7 +65,9 @@ feature {COMMANDER}
          end
          if query /= Void then
             client.call_server(query, agent when_reply)
-            client.send_save
+            if not client.send_save then
+               std_output.put_line(once "Failed to save the vault!")
+            end
          end
       end
 

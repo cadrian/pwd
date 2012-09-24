@@ -41,7 +41,11 @@ feature {}
       local
          shared: SHARED
       do
-         remote.save(shared.vault_file)
+         if client.send_save then
+            remote.save(shared.vault_file)
+         else
+            std_output.put_line(once "Failed to save the vault!")
+         end
       end
 
 end

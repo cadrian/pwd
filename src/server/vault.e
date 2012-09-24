@@ -120,26 +120,26 @@ feature {SERVER}
          proc: PROCESS; tfw: TEXT_FILE_WRITE
       do
          if dirty then
-            create tfw.connect_to(file)
-            if tfw.is_connected then
-               proc := processor.execute_redirect(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
-               if proc.is_connected then
-                  print_all_keys(proc.input)
-                  proc.input.flush
-                  proc.input.disconnect
-                  proc.wait
-                  if proc.status = 0 then
+            proc := processor.execute_redirect(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
+            if proc.is_connected then
+               print_all_keys(proc.input)
+               proc.input.flush
+               proc.input.disconnect
+               proc.wait
+               if proc.status = 0 then
+                  create tfw.connect_to(file)
+                  if tfw.is_connected then
                      extern.splice(proc.output, tfw)
                      tfw.flush
+                     tfw.disconnect
                      Result := once ""
                   else
-                     Result := once "openssl returned status #(1)" # proc.status.out
+                     Result := once "could not write to file #(1)" # file
                   end
+               else
+                  Result := once "openssl returned status #(1)" # proc.status.out
                end
-               tfw.disconnect
             end
-         else
-            Result := once ""
          end
       end
 

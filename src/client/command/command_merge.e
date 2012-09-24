@@ -60,8 +60,11 @@ feature {}
                merge_pass.copy(merge_pass0)
             end
             client.call_server(create {QUERY_MERGE}.make(merge_vault, merge_pass), agent when_reply)
-            client.send_save
-            remote.save(shared.vault_file)
+            if client.send_save then
+               remote.save(shared.vault_file)
+            else
+               std_output.put_line(once "Failed to save the vault!")
+            end
          end
 
          delete(merge_vault)

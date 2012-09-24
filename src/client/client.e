@@ -315,18 +315,26 @@ feature {} -- master phrase
          end
       end
 
-   send_save is
+   send_save: BOOLEAN is
+      local
+         saved: REFERENCE[BOOLEAN]
       do
-         call_server(create {QUERY_SAVE}.make, agent when_save)
+         create saved
+         call_server(create {QUERY_SAVE}.make, agent when_save(?, saved))
+         Result := saved.item
       end
 
-   when_save (a_reply: MESSAGE) is
+   when_save (a_reply: MESSAGE; saved: REFERENCE[BOOLEAN]) is
+      require
+         saved /= Void
       local
          reply: REPLY_SAVE
       do
          if reply ?:= a_reply then
             reply ::= a_reply
-            if not reply.error.is_empty then
+            if reply.error.is_empty then
+               saved.set_item(True)
+            else
                log.error.put_line(reply.error)
             end
          else
