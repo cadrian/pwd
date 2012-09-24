@@ -10,7 +10,7 @@ int xclip_native(void) {
 #if defined __USE_POSIX || defined __unix__ || defined _POSIX_C_SOURCE || defined __APPLE__
      return 0; /* not yet implemented */
 #elif defined WIN32
-     return 1; /* not yet implemented */
+     return 1;
 #else
      return 0;
 #endif
