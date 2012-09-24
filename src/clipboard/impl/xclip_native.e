@@ -13,21 +13,31 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class CLIPBOARD_FACTORY
+class XCLIP_NATIVE
+
+inherit
+   CLIPBOARD
 
 insert
    XCLIP_PLUGIN
+      rename
+         copy as any_copy
+      end
+
+create {CLIPBOARD_FACTORY}
+   make
 
 feature {ANY}
-   new_clipboard: CLIPBOARD is
+   copy (a_string: ABSTRACT_STRING) is
       do
-         if is_native then
-            create {XCLIP_NATIVE} Result.make
-         else
-            create {XCLIP} Result.make
-         end
-      ensure
-         Result /= Void
+         xclip(a_string)
+      end
+
+feature {}
+   make is
+      require
+         is_native
+      do
       end
 
 end

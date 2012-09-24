@@ -13,21 +13,41 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class CLIPBOARD_FACTORY
-
-insert
-   XCLIP_PLUGIN
+expanded class XCLIP_PLUGIN
 
 feature {ANY}
-   new_clipboard: CLIPBOARD is
+   is_native: BOOLEAN is
       do
-         if is_native then
-            create {XCLIP_NATIVE} Result.make
-         else
-            create {XCLIP} Result.make
-         end
-      ensure
-         Result /= Void
+         Result := plugin_is_native /= 0
+      end
+
+   xclip (string: ABSTRACT_STRING) is
+      require
+         string /= Void
+      local
+         s: POINTER
+      do
+         s := string.to_external
+         plugin_copy(s)
+      end
+
+feature {}
+   plugin_is_native: INTEGER is
+      external "plug_in"
+      alias "{
+         location: "."
+         module_name: "plugin"
+         feature_name: "xclip_native()"
+      }"
+      end
+
+   plugin_copy (s: POINTER) is
+      external "plug_in"
+      alias "{
+         location: "."
+         module_name: "plugin"
+         feature_name: "xclip_copy"
+      }"
       end
 
 end
