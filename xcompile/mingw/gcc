@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for ptf in 586 386; do
+    gcc=i${ptf}-mingw32msvc-gcc
+    which $gcc && exec $gcc "$@"
+done
+exec /usr/bin/gcc "$@"

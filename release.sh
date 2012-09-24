@@ -12,10 +12,15 @@ JOBS=${NB_JOBS:+-j$NB_JOBS}
 JOBS=${JOBS:--j$((2 * $(cat /proc/cpuinfo | grep ^processor | wc -l)))}
 
 ON_KEY=false
+MINGW=false
 while [ $# -gt 0 ]; do
     case "$1" in
         -onkey)
             ON_KEY=true
+            ;;
+        -mingw)
+            MINGW=true
+            PATH=$(dirname $(readlink -f $0))/xcompile/mingw:$PATH # use a specific gcc launcher
             ;;
         -j*)
             JOBS=$1
@@ -33,6 +38,7 @@ cd $dir
 make $JOBS
 
 release_dir=$dir/target/release
+$MINGW && release_dir=${release_dir}-mingw
 $ON_KEY && release_dir=${release_dir}-onkey
 test -d $release_dir && rm -rf $release_dir
 
