@@ -57,6 +57,7 @@ feature {SERVER}
 
    restart is
       local
+         access: TCP_ACCESS
          address: IPV4_ADDRESS
       do
          create address.make(127,0,0,1)
@@ -85,9 +86,7 @@ feature {}
       do
       end
 
-   access: TCP_ACCESS
    server: SOCKET_SERVER
-
    socket: SOCKET
 
 invariant
