@@ -36,35 +36,37 @@ feature {}
       local
          logconf: LOG_CONFIGURATION
          config: STRING_INPUT_STREAM
+         config_string: ABSTRACT_STRING
       do
          preload
 
-         create config.from_string(("[
-                                     log configuration
+         config_string := "[
+                           log configuration
 
-                                     root #(1)
+                           root #(1)
 
-                                     output
-                                        default is
-                                           file "#(2)"
-                                           rotated each day keeping 3
-                                           format "(@t) @C #(3) - @m%N"
-                                        end
+                           output
+                              default is
+                                 file "#(2)"
+                                 rotated each day keeping 3
+                                 format "(@t) @C #(3) - @m%N"
+                              end
 
-                                     logger
-                                        #(1) is
-                                           output default
-                                           level #(4)
-                                        end
+                           logger
+                              #(1) is
+                                 output default
+                                 level #(4)
+                              end
 
-                                     end
+                           end
 
-                                     ]"
-                                       # generating_type
-                                       # log_file
-                                       # command_name
-                                       # shared.log_level
-                                     ).out)
+                           ]"
+                           # generating_type
+                           # log_file
+                           # command_name
+                           # shared.log_level
+
+         create config.from_string(config_string.out)
 
          logconf.load(config, Void, Void, agent start_main)
       end

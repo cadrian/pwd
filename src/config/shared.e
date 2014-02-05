@@ -66,6 +66,22 @@ feature {ANY}
          end
       end
 
+   master_command: FIXED_STRING is
+      once
+         Result := conf(config_master_command)
+         if Result = Void then
+            Result := "zenity".intern
+         end
+      end
+
+   master_arguments: FIXED_STRING is
+      once
+         Result := conf(config_master_arguments)
+         if Result = Void then
+            Result := "--entry --hide-text --title=Password --text=%"#(1)%"".intern
+         end
+      end
+
 feature {}
    xdg: XDG
 
@@ -96,6 +112,16 @@ feature {}
    config_channel_method: FIXED_STRING is
       once
          Result := "channel.method".intern
+      end
+
+   config_master_command: FIXED_STRING is
+      once
+         Result := "master.command".intern
+      end
+
+   config_master_arguments: FIXED_STRING is
+      once
+         Result := "master.arguments".intern
       end
 
 end

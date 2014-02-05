@@ -179,10 +179,46 @@ feature {}
    eval (string: ABSTRACT_STRING): FIXED_STRING is
          -- takes care of environment variables etc.
       local
+         buffer: STRING; i, j: INTEGER; args: COLLECTION[STRING]
+         arg: STRING; c: CHARACTER
          processor: PROCESSOR
       do
          if string /= Void then
-            Result := processor.split_arguments(string).first.intern
+            buffer := once ""
+            buffer.clear_count
+            args := processor.split_arguments(string)
+            from
+               i := args.lower
+            until
+               i > args.upper
+            loop
+               arg := args.item(i)
+               if not arg.is_empty then
+                  if i > args.lower then
+                     buffer.extend(' ')
+                  end
+                  if arg.valid_index(arg.first_index_of(' ')) then
+                     buffer.extend('"')
+                     from
+                        j := arg.lower
+                     until
+                        j > arg.upper
+                     loop
+                        c := arg.item(j)
+                        if c = '"' or else c = '\' then
+                           buffer.extend('\')
+                        end
+                        buffer.extend(c)
+                        j := j + 1
+                     end
+                     buffer.extend('"')
+                  else
+                     buffer.append(arg)
+                  end
+               end
+               i := i + 1
+            end
+            Result := buffer.intern
          end
       end
 

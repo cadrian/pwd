@@ -269,7 +269,7 @@ feature {} -- master phrase
       local
          proc: PROCESS
       do
-         proc := processor.execute_redirect(once "zenity", zenity_args(text))
+         proc := processor.execute_redirect(shared.master_command, read_password_arguments(text))
          if proc.is_connected then
             proc.output.read_line
             if not proc.output.end_of_input then
@@ -288,9 +288,9 @@ feature {} -- master phrase
          end
       end
 
-   zenity_args (text: ABSTRACT_STRING): ABSTRACT_STRING is
+   read_password_arguments (text: ABSTRACT_STRING): ABSTRACT_STRING is
       do
-         Result := once "--entry --hide-text --title=Password --text=%"#(1)%"" # text
+         Result := shared.master_arguments # text
       end
 
    send_master is

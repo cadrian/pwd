@@ -203,7 +203,7 @@ feature {}
                   when '%'' then
                      state := State_word
                   when '\' then
-                     state := State_escape
+                     state := State_simple_quote_escape
                   else
                      word.extend(c)
                   end
@@ -223,7 +223,7 @@ feature {}
                      var.clear_count
                      state := State_simple_variable_quoted
                   when '\' then
-                     state := State_escape
+                     state := State_double_quote_escape
                   else
                      word.extend(c)
                   end
@@ -272,7 +272,7 @@ feature {}
             i := i + 1
          end
          if state < 0 then
-            std_error.put_line(once "Syntax error while parsing arguments:%N#(1)" # arguments)
+            std_error.put_line("Syntax error while parsing arguments:%N#(1)" # arguments)
             die_with_code(1)
          else
             if not var.is_empty then
