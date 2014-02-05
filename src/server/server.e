@@ -94,8 +94,8 @@ feature {}
 
                create vault.make(shared.vault_file)
                create loop_stack.make
-               channel.on_receive(agent run_message)
-               channel.on_new_job(agent loop_stack.add_job)
+               channel.on_receive(agent run_message({MESSAGE}))
+               channel.on_new_job(agent loop_stack.add_job({JOB}))
                loop_stack.add_job(Current)
                restart
                initialized := True

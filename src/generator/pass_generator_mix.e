@@ -34,7 +34,7 @@ feature {PASS_GENERATOR}
       end
 
 feature {}
-   quantity: INTEGER
+   quantity: INTEGER_8
    ingredient: FIXED_STRING
 
 feature {}
@@ -57,16 +57,17 @@ feature {}
       end
 
 feature {}
-   make (a_quantity: like quantity; a_ingredient: like ingredient) is
+   make (a_quantity: INTEGER; a_ingredient: like ingredient) is
       require
          a_quantity > 0
+         a_quantity.fit_integer_8
          a_ingredient.count.in_range(1, 16383)
       do
-         quantity := a_quantity
+         quantity := a_quantity.to_integer_8
          ingredient := a_ingredient
          log.trace.put_line(once "  ingredient: #(1) x #(2)" # a_quantity.out # a_ingredient)
       ensure
-         quantity = a_quantity
+         quantity = a_quantity.to_integer_8
          ingredient = a_ingredient
       end
 

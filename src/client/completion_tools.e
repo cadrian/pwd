@@ -27,16 +27,15 @@ feature {}
          word /= Void
       do
          create Result.make
-         completions.do_all(agent (completions: AVL_SET[FIXED_STRING]; word, completion: FIXED_STRING) is
+         completions.do_all(agent (completions_set: AVL_SET[FIXED_STRING]; completion: FIXED_STRING) is
                             require
-                               completions /= Void
-                               word /= Void
+                               completions_set /= Void
                                completion /= Void
                             do
                                if completion.has_prefix(word) then
-                                  completions.add(completion)
+                                  completions_set.add(completion)
                                end
-                            end (Result, word, ?))
+                            end (Result, ?))
       end
 
 end

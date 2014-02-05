@@ -53,7 +53,7 @@ feature {ANY}
                                               agent (tmp: ABSTRACT_STRING): ABSTRACT_STRING is
                                               do
                                                  Result := "#(1)/pwdmgr" # tmp
-                                              end,
+                                              end(?),
                                               agent: ABSTRACT_STRING is
                                               do
                                                  Result := "/tmp/pwdmgr-#(1)" # user

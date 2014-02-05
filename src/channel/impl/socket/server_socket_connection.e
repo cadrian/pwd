@@ -80,7 +80,7 @@ feature {}
       do
          server := a_server
          channel := a_channel
-         a_channel.when_disconnect(agent on_channel_disconnect)
+         a_channel.when_disconnect(agent on_channel_disconnect(?))
       ensure
          server = a_server
          channel = a_channel

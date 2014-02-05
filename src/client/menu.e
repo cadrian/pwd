@@ -33,7 +33,7 @@ feature {}
       require
          channel.is_ready
       do
-         call_server(create {QUERY_LIST}.make, agent when_list)
+         call_server(create {QUERY_LIST}.make, agent when_list({MESSAGE}))
          if list /= Void and then not list.is_empty then
             display_menu
          end
@@ -47,7 +47,7 @@ feature {}
             reply ::= a_reply
             if reply.error.is_empty then
                create list.with_capacity(reply.count_names)
-               reply.do_all_names(agent list.add_last)
+               reply.do_all_names(agent list.add_last({STRING}))
             else
                log.error.put_line(reply.error)
             end
@@ -73,7 +73,7 @@ feature {}
             end
             proc.wait
             if proc.status = 0 and then entry /= Void and then not entry.is_empty then
-               do_get(entry, agent copy_to_clipboard, agent is do end)
+               do_get(entry, agent copy_to_clipboard(?), agent is do end)
             end
          end
       end

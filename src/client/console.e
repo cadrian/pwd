@@ -154,13 +154,13 @@ feature {} -- local vault commands
 
    run_get is
       do
-         do_get(command_line.first, agent copy_to_clipboard, agent unknown_key)
+         do_get(command_line.first, agent copy_to_clipboard(?), agent unknown_key(?))
       end
 
 feature {COMMAND}
    do_stop is
       do
-         call_server(create {QUERY_STOP}.make, agent when_stop)
+         call_server(create {QUERY_STOP}.make, agent when_stop(?))
          stop := True
       end
 
@@ -234,7 +234,7 @@ feature {} -- helpers
          remote_map.clear_count
 
          create config_dir.scan(xdg.config_home)
-         config_dir.new_iterator.do_all(agent load_remote)
+         config_dir.new_iterator.do_all(agent load_remote(?))
       end
 
    load_remote (name: FIXED_STRING) is
@@ -302,7 +302,7 @@ feature {} -- helpers
 
          commands := commands_map
 
-         rio.completion.set_completion_agent(agent complete)
+         rio.completion.set_completion_agent(agent complete(?, ?, ?))
          Precursor
       end
 

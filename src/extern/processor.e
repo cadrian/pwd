@@ -97,7 +97,7 @@ feature {}
          if log.is_trace then
             log.trace.put_string(command)
             if args /= Void then
-               args.do_all(agent (s: STRING) is do log.trace.put_character(' '); log.trace.put_string(s) end)
+               args.do_all(agent (s: STRING) is do log.trace.put_character(' '); log.trace.put_string(s) end(?))
             end
             log.trace.put_new_line
          end

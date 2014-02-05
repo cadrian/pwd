@@ -32,7 +32,7 @@ feature {COMMANDER}
          if command.count /= 1 then
             error_and_help(message_invalid_arguments, command)
          else
-            client.call_server(create {QUERY_UNSET}.make(command.first), agent when_reply)
+            client.call_server(create {QUERY_UNSET}.make(command.first), agent when_reply(?))
             if not client.send_save then
                std_output.put_line(once "Failed to save the vault!")
             end

@@ -32,7 +32,7 @@ feature {COMMANDER}
          if not command.is_empty then
             error_and_help(message_invalid_arguments, command)
          else
-            client.call_server(create {QUERY_LIST}.make, agent when_reply)
+            client.call_server(create {QUERY_LIST}.make, agent when_reply(?))
          end
       end
 

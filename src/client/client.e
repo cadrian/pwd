@@ -161,7 +161,7 @@ feature {}
 
    server_open is
       do
-         call_server(create {QUERY_IS_OPEN}.make, agent when_open)
+         call_server(create {QUERY_IS_OPEN}.make, agent when_open(?))
       end
 
    when_open (a_reply: MESSAGE) is
@@ -228,7 +228,7 @@ feature {} -- get a password from the server
 
    do_ping is
       do
-         call_server(create {QUERY_PING}.make(once ""), agent when_ping)
+         call_server(create {QUERY_PING}.make(once ""), agent when_ping(?))
       end
 
    when_ping (a_reply: MESSAGE) is
@@ -256,7 +256,7 @@ feature {REMOTE}
                 do
                    p_ref.set_item(p)
                 end (?, pass),
-                agent unknown_key)
+                agent unknown_key(?))
          Result := pass.item
       end
 
@@ -298,7 +298,7 @@ feature {} -- master phrase
          channel.server_running
       do
          log.info.put_line(once "Sending master password")
-         call_server(create {QUERY_MASTER}.make(master_pass), agent when_master)
+         call_server(create {QUERY_MASTER}.make(master_pass), agent when_master(?))
       end
 
    when_master (a_reply: MESSAGE) is

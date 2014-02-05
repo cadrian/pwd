@@ -67,7 +67,7 @@ feature {ANY}
 feature {}
    make is
       do
-         create parser.make(agent json_parse_error)
+         create parser.make(agent json_parse_error(?))
          create encoder.make
       end
 
