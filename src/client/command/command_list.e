@@ -1,5 +1,5 @@
 -- This file is part of pwdmgr.
--- Copyright (C) 2012 Cyril Adrian <cyril.adrian@gmail.com>
+-- Copyright (C) 2012-2014 Cyril Adrian <cyril.adrian@gmail.com>
 --
 -- pwdmgr is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by

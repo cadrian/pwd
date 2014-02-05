@@ -1,5 +1,5 @@
 -- This file is part of pwdmgr.
--- Copyright (C) 2012 Cyril Adrian <cyril.adrian@gmail.com>
+-- Copyright (C) 2012-2014 Cyril Adrian <cyril.adrian@gmail.com>
 --
 -- pwdmgr is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ feature {COMMANDER}
                              If that key exists the password is stored in the clipboard.
 
                              [1m--------[0m
-                             [32mpwdmgr Copyright (C) 2012 Cyril Adrian <cyril.adrian@gmail.com>[0m
+                             [32mpwdmgr Copyright (C) 2012-2014 Cyril Adrian <cyril.adrian@gmail.com>[0m
                              [32mThis program comes with ABSOLUTELY NO WARRANTY; for details type [33mshow w[32m.[0m
                              [32mThis is free software, and you are welcome to redistribute it[0m
                              [32munder certain conditions; type [33mshow c[32m for details.[0m
