@@ -40,32 +40,31 @@ cat > $MAKEFILE_BOOT <<EOF
 
 PREFIX    ?= /usr/local
 CONFIG    ?= /usr/local/etc
-LINKFLAGS  = -lm
 
-all: $EXE
+all:$(for exe in $EXE; do printf ' %s' exe/$exe; done; echo)
 EOF
 
 for exe in $EXE
 do
-    printf '\texe/%s\n' $exe
-done >> $MAKEFILE_BOOT
-
-for exe in $EXE
-do
-    {
-        echo
-        echo "exe/$exe: exe c/$exe*.[ch]"
-        printf '\t$(CC) -o $@ $< $(LINKFLAGS)\n'
-    } >> $MAKEFILE_BOOT
-
+    mkdir -p $bootstrap_dir/c/$exe
     ace=$exe.ace
     ./make_ace.sh $ace dontclean
     se c2c $ace
+
+    {
+        echo
+        echo "exe/$exe: exe "$(ls -1 $exe*.c | sed 's!^!c/'$exe'/!;s!\.c$!.o!')
+        tail -1 $exe.make | sed 's!gcc!$(CC)!g;s!'$exe'.exe!$@!;s!'$exe'!c/'$exe'/'$exe'!g' | awk '{printf("\t%s\n", $0)}'
+    } >> $MAKEFILE_BOOT
+
     rm $ace $exe.id $exe.make
-    mv $exe*.[ch] $bootstrap_dir/c/
+    mv *.[ch] $bootstrap_dir/c/$exe/
 done
 
 {
+    echo
+    echo "%.o: %.c"
+    printf '\t%s\n' '$(CC) -pipe -g -c -x c $< -o $@'
     echo
     echo "exe:"
     printf '\t%s\n' 'mkdir exe'
@@ -91,8 +90,8 @@ done
     do
         printf '\tinstall -m555 %s $(PREFIX)/bin/\n' $bin
     done
-    printf '\tinstall -m444 conf/pwdmgr-remote.properties $(CONFIG)/pwdmgr/config.rc\n'
-    printf '\tinstall -m444 conf/*.rc $(CONFIG)/pwdmgr/\n'
+    printf '\tinstall -b -m444 conf/pwdmgr-remote.properties $(CONFIG)/pwdmgr/config.rc\n'
+    printf '\tinstall -b -m444 conf/*.rc $(CONFIG)/pwdmgr/\n'
     printf '\tinstall -m444 conf/pwdmgr-local.properties $(PREFIX)/share/doc/pwdmgr/sample-local-config.rc\n'
     printf '\tinstall -m444 conf/pwdmgr-remote-curl.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-curl-config.rc\n'
     printf '\tinstall -m444 conf/pwdmgr-remote-scp.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-scp-config.rc\n'
@@ -106,3 +105,9 @@ cat > $bootstrap_dir/c/README <<EOF
 Those files were generated using LibertyEiffel
 (http://github.com/LibertyEiffel/Liberty)
 EOF
+
+cat > $bootstrap_dir/install_local.sh <<EOF
+#!/bin/sh
+PREFIX=$HOME/.local CONFIG=$HOME/.config make install
+EOF
+chmod +x $bootstrap_dir/install_local.sh
