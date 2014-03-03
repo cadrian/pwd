@@ -32,18 +32,29 @@ create {}
 
 feature {LOOP_ITEM}
    prepare (events: EVENTS_SET) is
+      local
+         t: TIME_EVENTS
       do
+         events.expect(t.timeout(1000)) -- 1 second
          channel.prepare(events)
       end
 
    is_ready (events: EVENTS_SET): BOOLEAN is
       do
-         Result := channel.is_ready(events)
+         channel_ready := channel.is_ready(events)
+         Result := True
       end
 
    continue is
       do
-         channel.continue
+         if channel_ready then
+            channel.continue
+            sandglass := 60*60*4 -- 4 hours before timeout
+         elseif sandglass > 0 then
+            sandglass := sandglass - 1
+         elseif vault.is_open then
+            vault.close
+         end
       end
 
    done: BOOLEAN is
@@ -64,6 +75,9 @@ feature {LOOP_ITEM}
       end
 
 feature {}
+   sandglass: INTEGER
+   channel_ready: BOOLEAN
+
    processor: PROCESSOR
    exceptions: EXCEPTIONS
    channel: SERVER_CHANNEL

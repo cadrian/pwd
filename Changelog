@@ -1,48 +1,49 @@
 0.0.8 (not yet released)
-        * fixed a critical bug: could not set passwords
-        * generate most protocol classes and factory
+	* fixed a critical bug: could not set passwords
+	* generate most protocol classes and factory
+	* vault time-out: after 4 hours without access, the server will close the vault
 
 0.0.7 (released 2012-09-20)
-        * #28 - Implement sockets
-        * #22 - Strenghtened protocol
+	* #28 - Implement sockets
+	* #22 - Strenghtened protocol
 
 0.0.6 (released 2012-06-05)
-        * #27 - Remote discovery
-        * #24 - GNU readline does not like invisible characters (e.g. ANSI color sequences)
-        * #25 - CLI arguments
-        * #26 - New remote commands (list and show)
+	* #27 - Remote discovery
+	* #24 - GNU readline does not like invisible characters (e.g. ANSI color sequences)
+	* #25 - CLI arguments
+	* #26 - New remote commands (list and show)
 
 0.0.5 (released 2012-05-18)
-        * #18 - Client/server handshake
-        * #15 - Install in user mode
-        * #19 - Pour the Changelog in the release
-        * Now allowing more than one remotes (in that case, the requested remote must be selected in the load/save/merge commands)
-        * Password generation customization
-        * Renamed pwdsrv (ugly) as server
-        * #16 - XDG (freedesktop.org base directories) compliance
-        * Standalone install on USB key
-        * Standalong config files for each remote
-        * Remote configuration on the console command line
-        * #23 - jugulate fifo manipulation and ugly sleeps in the fifo channels implementation
+	* #18 - Client/server handshake
+	* #15 - Install in user mode
+	* #19 - Pour the Changelog in the release
+	* Now allowing more than one remotes (in that case, the requested remote must be selected in the load/save/merge commands)
+	* Password generation customization
+	* Renamed pwdsrv (ugly) as server
+	* #16 - XDG (freedesktop.org base directories) compliance
+	* Standalone install on USB key
+	* Standalong config files for each remote
+	* Remote configuration on the console command line
+	* #23 - jugulate fifo manipulation and ugly sleeps in the fifo channels implementation
 
 0.0.4 (released 2012-01-25)
-        * #10, #12, #13 - Packaging: standard layout
-        * #2 - Creation of missing empty directories
-        * #4 - Ensure that passwords are never visible; provide a suitable way to enter a known password at "add" time
-        * #9 - Configuration: ignore keys with empty values
-        * #14 - Renamed daemon as pwdsrv (aka "the server")
-        * #8 - Moved dmenu handling in the menu client instead of being managed by the server
-        * #11 - Modified the generated Makefile for the C bootstrap package
-        * #7 - Provide remote vault backup via either curl or scp
-        * #5 - Documentation
+	* #10, #12, #13 - Packaging: standard layout
+	* #2 - Creation of missing empty directories
+	* #4 - Ensure that passwords are never visible; provide a suitable way to enter a known password at "add" time
+	* #9 - Configuration: ignore keys with empty values
+	* #14 - Renamed daemon as pwdsrv (aka "the server")
+	* #8 - Moved dmenu handling in the menu client instead of being managed by the server
+	* #11 - Modified the generated Makefile for the C bootstrap package
+	* #7 - Provide remote vault backup via either curl or scp
+	* #5 - Documentation
 
 0.0.3 (released 2012-01-22)
-        * Changelog
-        * fixed release & bootstrap package contents
-        * configuration
+	* Changelog
+	* fixed release & bootstrap package contents
+	* configuration
 
 0.0.2 (released 2012-01-19)
-        * fixed #1: empty vault creation
+	* fixed #1: empty vault creation
 
 0.0.1 (released 2012-01-18)
-        * initial version
+	* initial version
