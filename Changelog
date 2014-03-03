@@ -1,7 +1,9 @@
-0.0.8 (not yet released)
+0.0.9 (not yet released)
+	* vault time-out: after 4 hours without access, the server will close the vault
+
+0.0.8 (released 2012-09-22)
 	* fixed a critical bug: could not set passwords
 	* generate most protocol classes and factory
-	* vault time-out: after 4 hours without access, the server will close the vault
 
 0.0.7 (released 2012-09-20)
 	* #28 - Implement sockets
