@@ -118,25 +118,32 @@ feature {SERVER}
          is_open
       local
          proc: PROCESS; tfw: TEXT_FILE_WRITE
+         ft: FILE_TOOLS; backup: STRING
       do
          if dirty then
+            backup := once ""
+            backup.make_from_string(file)
+            backup.extend('~')
+            ft.copy_to(file, backup)
             proc := processor.execute_redirect(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
             if proc.is_connected then
                print_all_keys(proc.input)
                proc.input.flush
                proc.input.disconnect
-               proc.wait
-               if proc.status = 0 then
-                  create tfw.connect_to(file)
-                  if tfw.is_connected then
-                     extern.splice(proc.output, tfw)
-                     tfw.flush
-                     tfw.disconnect
-                     Result := once ""
-                  else
-                     Result := once "could not write to file #(1)" # file
-                  end
+
+               create tfw.connect_to(file)
+               if tfw.is_connected then
+                  extern.splice(proc.output, tfw)
+                  tfw.flush
+                  tfw.disconnect
+                  Result := once ""
                else
+                  Result := once "could not write to file #(1)" # file
+               end
+
+               proc.wait
+               if proc.status /= 0 then
+                  ft.copy_to(backup, file)
                   Result := once "openssl returned status #(1)" # proc.status.out
                end
             end
