@@ -10,7 +10,7 @@ before_install:
 install:
   - "./deploy.sh install"
 script:
-  - "test -d test && se test test"
+  - "test -d test && se test -verbose test"
 cache:
   apt: true
   directories:
