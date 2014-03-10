@@ -28,6 +28,8 @@ case $name in
         #debug_pwd=yes
         #debug_liberty='"json/parser"); debug("socket"'
         #assert=invariant
+        #no_strip=yes
+        #clean=no
         ;;
     menu)
         #trace=yes

@@ -41,7 +41,7 @@ feature {COMMANDER}
 
    complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
       do
-         create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
+         Result := no_completion
       end
 
    help (command: COLLECTION[STRING]): STRING is
