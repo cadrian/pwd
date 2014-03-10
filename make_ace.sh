@@ -20,6 +20,7 @@ else
     no_strip=yes
     no_split=no
 fi
+verbose=${VERBOSE:-no}
 
 case $name in
     console)
@@ -59,7 +60,7 @@ default
     collect(yes)
     debug(no)
     trace($trace)
-    verbose(no)
+    verbose($verbose)
     rescue($rescue)
 
 cluster
