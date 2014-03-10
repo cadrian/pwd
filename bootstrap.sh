@@ -49,7 +49,11 @@ do
     mkdir -p $bootstrap_dir/c/$exe
     ace=$exe.ace
     ./make_ace.sh $ace dontclean
-    se c2c $ace
+    if [ ${VERBOSE:-no} = yes ]; then
+        se c2c -verbose $ace
+    else
+        se c2c $ace
+    fi
 
     {
         echo
