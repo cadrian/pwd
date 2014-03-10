@@ -4,7 +4,9 @@ compiler:
 before_install:
   - "sudo apt-get update -qq"
   - "sudo apt-get install -qq curl"
-  - "mkdir liberty; curl -s http://apt.liberty-eiffel.org/dists/snapshot/main/binary-amd64/Packages.gz | zcat | awk '/^Package:/ {pkg=$2} /^Version:/ {ver=$2} /^Architecture:/ {arch=$2} /^$/ {printf(\"http://apt.liberty-eiffel.org/pool/main/libe/liberty-eiffel/%s_%s_%s.deb\\n\", pkg, ver, arch)}' | while read pkg; do curl $pkg -o liberty/$(basename $pkg); done; dpkg -i liberty/*.deb"
+  - "mkdir liberty"
+  - "curl -s http://apt.liberty-eiffel.org/dists/snapshot/main/binary-amd64/Packages.gz | zcat | awk '/^Package:/ {pkg=$2} /^Version:/ {ver=$2} /^Architecture:/ {arch=$2} /^$/ {printf(\"http://apt.liberty-eiffel.org/pool/main/libe/liberty-eiffel/%s_%s_%s.deb\\n\", pkg, ver, arch)}' | while read pkg; do curl $pkg -o liberty/$(basename $pkg); done"
+  - "sudo dpkg -i liberty/*.deb"
 install:
   - "./deploy.sh install"
 script:
