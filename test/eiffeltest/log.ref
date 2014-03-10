@@ -55,36 +55,22 @@ Excluded command: "se c -no_gc -flat_check -loop_check test_pass_generator_01.e 
 By excluded.lst:  "se c -no_gc".
 Excluded command: "se c -no_gc -flat_check -all_check test_pass_generator_01.e -o test_pass_generator_01.exe".
 By excluded.lst:  "se c -no_gc".
-se c -boost -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe
-Running (-boost -bdw_gc) "test_pass_generator_01.exe".
-se clean test_pass_generator_01.e
-Removing (-boost -bdw_gc) "test_pass_generator_01.exe".
-se c -boost -debug -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe
-Running (-boost -debug -bdw_gc) "test_pass_generator_01.exe".
-se clean test_pass_generator_01.e
-Removing (-boost -debug -bdw_gc) "test_pass_generator_01.exe".
-se c -no_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe
-Running (-no_check -bdw_gc) "test_pass_generator_01.exe".
-se clean test_pass_generator_01.e
-Removing (-no_check -bdw_gc) "test_pass_generator_01.exe".
-se c -flat_check -require_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe
-Running (-flat_check -require_check -bdw_gc) "test_pass_generator_01.exe".
-se clean test_pass_generator_01.e
-Removing (-flat_check -require_check -bdw_gc) "test_pass_generator_01.exe".
+Excluded command: "se c -boost -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
+By excluded.lst:  "bdw_gc".
+Excluded command: "se c -boost -debug -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
+By excluded.lst:  "bdw_gc".
+Excluded command: "se c -no_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
+By excluded.lst:  "bdw_gc".
+Excluded command: "se c -flat_check -require_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
+By excluded.lst:  "bdw_gc".
 Excluded command: "se c -ensure_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
 By excluded.lst:  "se c -ensure_check".
-se c -flat_check -invariant_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe
-Running (-flat_check -invariant_check -bdw_gc) "test_pass_generator_01.exe".
-se clean test_pass_generator_01.e
-Removing (-flat_check -invariant_check -bdw_gc) "test_pass_generator_01.exe".
-se c -flat_check -loop_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe
-Running (-flat_check -loop_check -bdw_gc) "test_pass_generator_01.exe".
-se clean test_pass_generator_01.e
-Removing (-flat_check -loop_check -bdw_gc) "test_pass_generator_01.exe".
-se c -flat_check -all_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe
-Running (-flat_check -all_check -bdw_gc) "test_pass_generator_01.exe".
-se clean test_pass_generator_01.e
-Removing (-flat_check -all_check -bdw_gc) "test_pass_generator_01.exe".
+Excluded command: "se c -flat_check -invariant_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
+By excluded.lst:  "bdw_gc".
+Excluded command: "se c -flat_check -loop_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
+By excluded.lst:  "bdw_gc".
+Excluded command: "se c -flat_check -all_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
+By excluded.lst:  "bdw_gc".
 Excluded command: "se c -all_check -debug test_pass_generator_01.e -o test_pass_generator_01.exe".
 By excluded.lst:  "se c -all_check -debug".
 se c -require_check test_pass_generator_01.e -o test_pass_generator_01.exe
@@ -109,10 +95,8 @@ Excluded command: "se c -no_gc -loop_check test_pass_generator_01.e -o test_pass
 By excluded.lst:  "se c -no_gc".
 Excluded command: "se c -no_gc -all_check test_pass_generator_01.e -o test_pass_generator_01.exe".
 By excluded.lst:  "se c -no_gc".
-se c -require_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe
-Running (-require_check -bdw_gc) "test_pass_generator_01.exe".
-se clean test_pass_generator_01.e
-Removing (-require_check -bdw_gc) "test_pass_generator_01.exe".
+Excluded command: "se c -require_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
+By excluded.lst:  "bdw_gc".
 Excluded command: "se c -ensure_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
 By excluded.lst:  "se c -ensure_check".
 Excluded command: "se c -invariant_check -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
@@ -183,10 +167,8 @@ se c -no_split -no_gc -boost test_pass_generator_01.e -o test_pass_generator_01.
 Running (-no_split -no_gc -boost) "test_pass_generator_01.exe".
 se clean test_pass_generator_01.e
 Removing (-no_split -no_gc -boost) "test_pass_generator_01.exe".
-se c -no_split -boost -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe
-Running (-no_split -boost -bdw_gc) "test_pass_generator_01.exe".
-se clean test_pass_generator_01.e
-Removing (-no_split -boost -bdw_gc) "test_pass_generator_01.exe".
+Excluded command: "se c -no_split -boost -bdw_gc test_pass_generator_01.e -o test_pass_generator_01.exe".
+By excluded.lst:  "bdw_gc".
 --------------------------------------------------------------------------------
 All entries of the "excluded.lst" file are used (good).
 --------------------------------------------------------------------------------
