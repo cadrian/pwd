@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/cadrian/pwd.png?branch=master)](https://travis-ci.org/cadrian/pwd)
+
 # General description
 
 `pwdmgr` is a small and simple password manager utility.
