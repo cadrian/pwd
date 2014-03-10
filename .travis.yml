@@ -11,6 +11,8 @@ install:
   - "./deploy.sh install"
 script:
   - "test -d test && se test -verbose test"
+after_failure:
+  - "cat test/eiffeltest/log.ref"
 cache:
   apt: true
   directories:
