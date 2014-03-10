@@ -1,0 +1,13 @@
+language: c
+compiler:
+  - gcc
+before_install:
+  - "sudo apt-get update -qq"
+  - "sudo apt-get install -qq curl"
+  - "sudo dpkg -i $(curl -s http://apt.liberty-eiffel.org/dists/snapshot/main/binary-i386/Packages.gz | zgrep '^Package:' | awk '{print $2}')"
+install:
+  - "./deploy.sh install"
+script:
+  - "test -d test && se test test"
+cache:
+  - apt
