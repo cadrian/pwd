@@ -12,6 +12,7 @@ trace=no
 rescue=yes
 debug_pwd=no
 debug_liberty=no
+debug_extra=no
 assert=boost
 if [ $clean = yes ]; then
     no_strip=no
@@ -49,6 +50,9 @@ case $name in
         ;;
 esac
 
+path_liberty_core=$(se -environment|egrep '^path_(.+_)?core='|awk -F= '{print $1}')
+path_liberty_extra=$(se -environment|egrep '^path_(.+_)?extra='|awk -F= '{print $1}')
+
 cat > $target <<EOF
 system "$exe"
 
@@ -70,9 +74,14 @@ cluster
             debug($debug_pwd)
         end
 
-    liberty: "\${path_liberty}src/loadpath.se"
+    liberty_core: "\${$path_liberty_core}loadpath.se"
         default
             debug($debug_liberty)
+        end
+
+    liberty_extra: "\${$path_liberty_extra}loadpath.se"
+        default
+            debug($debug_extra)
         end
 
 generate
