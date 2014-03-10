@@ -1,8 +1,9 @@
-se c -profile
-se c -no_gc
-se c -all_check -debug
-se c -all_check
-se c -loop_check
-se c -invariant_check
-se c -ensure_check
-bdw_gc
+-profile
+-debug
+-all_check
+-loop_check
+-invariant_check
+-ensure_check
+-bdw_gc
+-no_gc
+-flat_check
