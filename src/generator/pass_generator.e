@@ -21,6 +21,9 @@ insert
 create {VAULT}
    parse
 
+create {PWD_TEST}
+   test_parse
+
 feature {ANY}
    is_valid: BOOLEAN
 
@@ -32,9 +35,9 @@ feature {ANY}
       do
          Result := ""
          create bfr.with_buffer_size(3 * length) -- 3 bytes read for each random character (two bytes to select a character, one byte to select its position)
-         bfr.connect_to(once "/dev/random")
+         bfr.connect_to(random_file)
          if bfr.is_connected then
-            recipe.do_all(agent {PASS_GENERATOR_MIX}.extend(bfr, Result))
+            recipe.do_all(extend.item([bfr, Result]))
             bfr.disconnect
          end
       ensure
@@ -44,6 +47,14 @@ feature {ANY}
 feature {}
    recipe: FAST_ARRAY[PASS_GENERATOR_MIX]
    length: INTEGER
+
+   random_file: STRING
+   extend: FUNCTION[TUPLE[BINARY_FILE_READ, STRING], PROCEDURE[TUPLE[PASS_GENERATOR_MIX]]]
+
+   default_extend (bfr: BINARY_FILE_READ; pass: STRING): PROCEDURE[TUPLE[PASS_GENERATOR_MIX]] is
+      do
+         Result := agent {PASS_GENERATOR_MIX}.extend(bfr, pass)
+      end
 
    parse (a_recipe: ABSTRACT_STRING) is
       require
@@ -56,10 +67,28 @@ feature {}
             is_valid := True
             recipe := parser.recipe
             length := parser.total_quantity
+            random_file := once "/dev/random"
+            extend := agent default_extend(?, ?)
          end
+      end
+
+   test_parse (a_recipe: ABSTRACT_STRING; a_random_file: like random_file; a_extend: like extend) is
+      require
+         a_recipe /= Void
+         a_random_file /= Void
+         a_extend /= Void
+      do
+         parse(a_recipe)
+         random_file := a_random_file
+         extend := a_extend
+      ensure
+         random_file = a_random_file
+         extend = a_extend
       end
 
 invariant
    is_valid implies not recipe.is_empty
+   random_file /= Void
+   extend /= Void
 
 end

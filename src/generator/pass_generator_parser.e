@@ -15,6 +15,9 @@
 --
 class PASS_GENERATOR_PARSER
 
+insert
+   PASS_GENERATOR_PARSER_CONSTANTS
+
 create {PASS_GENERATOR}
    parse
 
@@ -114,21 +117,6 @@ feature {}
          if Result and then source.valid_index(index) then
             index := index + 1
          end
-      end
-
-   letters: FIXED_STRING is
-      once
-         Result := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".intern
-      end
-
-   figures: FIXED_STRING is
-      once
-         Result := "0123456789".intern
-      end
-
-   symbols: FIXED_STRING is
-      once
-         Result := "(-_)~#{[|^@]}+=<>,?./!§".intern
       end
 
 invariant

@@ -33,7 +33,7 @@ feature {PASS_GENERATOR}
          pass.substring(old pass.lower, old pass.upper).is_equal(old pass.twin)
       end
 
-feature {}
+feature {ANY}
    quantity: INTEGER_8
    ingredient: FIXED_STRING
 
