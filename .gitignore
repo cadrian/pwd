@@ -4,3 +4,4 @@
 target
 log
 data/vault*
+travis_key.yml
