@@ -89,7 +89,7 @@ before_install:
 install:
   - "./deploy.sh"
 script:
-  - "test -d test && se test -verbose test"
+  - "test -d test && se test -verbose test coreutils"
 after_failure:
   - "cat test/eiffeltest/log.ref"
 after_success:
