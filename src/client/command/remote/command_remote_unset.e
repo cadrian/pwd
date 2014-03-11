@@ -35,6 +35,7 @@ feature {COMMANDER}
             Result := filter_completions(remote_map.new_iterator_on_keys, word)
          when 3 then
             -- TODO
+            Result := no_completion
          else
             Result := no_completion
          end
