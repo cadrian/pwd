@@ -93,7 +93,7 @@ script:
 after_failure:
   - "cat test/eiffeltest/log.ref"
 after_success:
-  - "rsync -aSH --stats -e 'ssh -i ~/.ssh/id_rsa_travis -q -C -o StrictHostKeyChecking=no' target/*.tgz $RSYNC:~/pwd/target/"
+  - "rsync -aSH --stats -e 'ssh -i $HOME/.ssh/id_rsa_travis -q -C -o StrictHostKeyChecking=no' target/*.tgz $RSYNC:~/pwd/target/"
 cache:
   apt: true
   directories:
