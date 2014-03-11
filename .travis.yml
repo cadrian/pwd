@@ -3,7 +3,7 @@ compiler:
   - gcc
 env:
   global:
-    -  secure: "mBM7b8Qji+nchfR9VpxXf1CsnkCdH2RZ4Bf+WYzbLqQtyiIWU7YfbK3BqbSGHac7Vd6ztB8EuyiJHv7po2wqYka7QIsmmOTiTJk9y4N7Gqb+0P53Ni6yo2CmkUyC9ziRBaO3fWQ85mQx236sCYQluAD0z0QtOc74ywjxD6ONNy8="
+    - secure: "mBM7b8Qji+nchfR9VpxXf1CsnkCdH2RZ4Bf+WYzbLqQtyiIWU7YfbK3BqbSGHac7Vd6ztB8EuyiJHv7po2wqYka7QIsmmOTiTJk9y4N7Gqb+0P53Ni6yo2CmkUyC9ziRBaO3fWQ85mQx236sCYQluAD0z0QtOc74ywjxD6ONNy8="
     - secure: "o/nvCup/bxMMjBrUwy2lIA9Cv6hLWjigIwyfqZ8beorhVwoeqMN+tvXwn8urchkhCfBOe6wB95n86IJh5fV2QQ9bdXQAzM6VsYiWKGjIGTAGYEAcrGy54vKrHeBQhFR/Ym2TcZshk6pB2ttpeS8x1YWDT1vfLyZHPlmNLkhZDW0="
     - secure: "KB4loorDsUH/BPgTKcfsCLPEeKYC5mIhnNkKE9qMc73K3k6rETgYBj+a4erxTjW/UmvjKq4r8+0H350GKD7Qu2McAnhtP8Y9Lffexk5uQb1huFFi9i2Na4eJhcNp3g2is3KyCVArunOe18qsfKxHXaKXb14fFPISqT4at3Th6vA="
     - secure: "AOpMqZcwlnBcCBB28k+gePrKl2p/sRpqZH11FpS9xD476iIQ1B+/ynkpuJ8Qw4aDT1iNo98aXTtCkqYII6/EZae3cbuMInPuLNEDQRqs6wiiz6QEEhkKx2teq3pqJDJm3KwoIPMu+ZH9EN586ozCmqX674MZ20mlPtpi8LQ7uJM="
@@ -85,6 +85,7 @@ before_install:
   - "mkdir $HOME/liberty"
   - "curl -s http://apt.liberty-eiffel.org/dists/snapshot/main/binary-amd64/Packages.gz | zcat | awk '/^Package:/ {pkg=$2} /^Version:/ {ver=$2} /^Architecture:/ {arch=$2} /^$/ {printf(\"http://apt.liberty-eiffel.org/pool/main/libe/liberty-eiffel/%s_%s_%s.deb\\n\", pkg, ver, arch)}' | while read pkg; do wget -nd -nH -P $HOME/liberty -m $pkg; done"
   - "sudo dpkg -i $HOME/liberty/*.deb"
+  - ".travis.conf/splice_key.sh"
 install:
   - "./deploy.sh"
 script:
@@ -92,7 +93,7 @@ script:
 after_failure:
   - "cat test/eiffeltest/log.ref"
 after_success:
-  - "eval $(ssh-agent) && rsync -aSH --stats -e 'ssh -q -C -o StrictHostKeyChecking=no' target/*.tgz $RSYNC:~/pwd/target/"
+  - "rsync -aSH --stats -e 'ssh -i ~/.ssh/id_rsa_travis -q -C -o StrictHostKeyChecking=no' target/*.tgz $RSYNC:~/pwd/target/"
 cache:
   apt: true
   directories:
