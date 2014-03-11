@@ -9,6 +9,8 @@ before_install:
   - "mkdir $HOME/liberty"
   - "curl -s http://apt.liberty-eiffel.org/dists/snapshot/main/binary-amd64/Packages.gz | zcat | awk '/^Package:/ {pkg=$2} /^Version:/ {ver=$2} /^Architecture:/ {arch=$2} /^$/ {printf(\"http://apt.liberty-eiffel.org/pool/main/libe/liberty-eiffel/%s_%s_%s.deb\\n\", pkg, ver, arch)}' | while read pkg; do wget -nd -nH -P $HOME/liberty -m $pkg; done"
   - "sudo dpkg -i $HOME/liberty/*.deb"
+  - eval "$(ssh-agent)"
+  - ssh-add
 install:
   - "./deploy.sh"
 script:
@@ -16,7 +18,6 @@ script:
 after_failure:
   - "cat test/eiffeltest/log.ref"
 after_success:
-  - "ls -lR $HOME/.ssh"
   - "rsync -aSH --stats -e 'ssh -q -C -o StrictHostKeyChecking=no' target/*.tgz $RSYNC:~/pwd/target/"
 cache:
   apt: true
