@@ -6,9 +6,9 @@ env:
 before_install:
   - "sudo apt-get update -qq"
   - "sudo apt-get install -qq curl wget libgc1c2"
-  - "mkdir liberty"
-  - "curl -s http://apt.liberty-eiffel.org/dists/snapshot/main/binary-amd64/Packages.gz | zcat | awk '/^Package:/ {pkg=$2} /^Version:/ {ver=$2} /^Architecture:/ {arch=$2} /^$/ {printf(\"http://apt.liberty-eiffel.org/pool/main/libe/liberty-eiffel/%s_%s_%s.deb\\n\", pkg, ver, arch)}' | while read pkg; do wget -nd -nH -P liberty -m $pkg; done"
-  - "sudo dpkg -i liberty/*.deb"
+  - "mkdir $HOME/liberty"
+  - "curl -s http://apt.liberty-eiffel.org/dists/snapshot/main/binary-amd64/Packages.gz | zcat | awk '/^Package:/ {pkg=$2} /^Version:/ {ver=$2} /^Architecture:/ {arch=$2} /^$/ {printf(\"http://apt.liberty-eiffel.org/pool/main/libe/liberty-eiffel/%s_%s_%s.deb\\n\", pkg, ver, arch)}' | while read pkg; do wget -nd -nH -P $HOME/liberty -m $pkg; done"
+  - "sudo dpkg -i $HOME/liberty/*.deb"
 install:
   - "./deploy.sh"
 script:
@@ -16,10 +16,9 @@ script:
 after_failure:
   - "cat test/eiffeltest/log.ref"
 after_success:
-  - "chmod 600 .travis/deploy_key.pem"
-  - "ssh-add .travis/deploy_key.pem"
+  - "ls -lR $HOME/.ssh"
   - "rsync -aSH --stats -e 'ssh -q -C -o StrictHostKeyChecking=no' target/*.tgz $RSYNC:~/pwd/target/"
 cache:
   apt: true
   directories:
-    - liberty
+    - "$HOME/liberty"
