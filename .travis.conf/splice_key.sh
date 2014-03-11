@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 ID_RSA=$HOME/.ssh/id_rsa_travis
 
