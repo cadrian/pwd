@@ -9,4 +9,3 @@ chmod 700 $HOME/.ssh
     echo
 } | base64 --decode --ignore-garbage > $ID_RSA
 chmod 600 $ID_RSA
-ls -l $ID_RSA
