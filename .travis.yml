@@ -16,7 +16,9 @@ script:
 after_failure:
   - "cat test/eiffeltest/log.ref"
 after_success:
-  - "rsync -aSHv --stats -e 'ssh -C -o StrictHostKeyChecking=no' target/*.tgz $RSYNC:~/pwd/target/"
+  - "chmod 600 .travis/deploy_key.pem"
+  - "ssh-add .travis/deploy_key.pem"
+  - "rsync -aSH --stats -e 'ssh -q -C -o StrictHostKeyChecking=no' target/*.tgz $RSYNC:~/pwd/target/"
 cache:
   apt: true
   directories:
