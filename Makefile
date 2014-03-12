@@ -5,6 +5,9 @@ COMMON_FILES = src/*.e src/config/*.e src/extern/*.e
 all: exe/server exe/menu exe/console
 
 clean:
+	test -e server.ace && se clean server.ace
+	test -e menu.ace && se clean menu.ace
+	test -e console.ace && se clean console.ace
 	rm -f exe/server exe/menu exe/console *.ace
 
 exe/server: exe server.ace src/server/*.e src/generator/*.e $(COMMON_FILES)
