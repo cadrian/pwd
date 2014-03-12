@@ -17,7 +17,13 @@ deferred class MESSAGE
 
 insert
    VISITABLE
+      redefine
+         is_equal
+      end
    JSON_HANDLER
+      redefine
+         is_equal
+      end
 
 feature {ANY}
    json: JSON_OBJECT
@@ -30,6 +36,13 @@ feature {ANY}
    command: STRING is
       do
          Result := string(once "command")
+      end
+
+   is_equal (other: like Current): BOOLEAN is
+      do
+         if same_dynamic_type(other) then
+            Result := json.is_equal(other.json)
+         end
       end
 
 feature {}

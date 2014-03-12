@@ -13,11 +13,23 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class PWD_TEST
-   -- This class is a parent to all the pwdmgr test files. It helps
-   -- reduce the visibility of the test-specific features.
+class TEST_QUERY_CLOSE_01
 
 insert
-   EIFFELTEST_TOOLS
+   PWD_MESSAGE_TEST
+
+create {}
+   test
+
+feature {}
+   test is
+      local
+         q_obj, q_json: QUERY_CLOSE
+      do
+         create q_obj.make
+         create q_json.from_json(json("{%"type%": %"query%", %"command%": %"close%"}"))
+         assert(last_error = Void)
+         assert(q_obj.is_equal(q_json))
+      end
 
 end
