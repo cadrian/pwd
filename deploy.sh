@@ -18,6 +18,7 @@ $dir/protocol.sh
 BOOTSTRAP=false
 RELEASE=false
 ONKEY=false
+DEBIAN=false
 INSTALL=false
 
 if [ x$1 == x ]; then
@@ -34,6 +35,10 @@ else
             ;;
         onkey)
             ONKEY=true
+            ;;
+        debian)
+            BOOTSTRAP=true
+            DEBIAN=true
             ;;
         install)
             RELEASE=true
@@ -60,6 +65,11 @@ if $ONKEY; then
     ./release.sh -onkey
 fi
 
+if $DEBIAN; then
+    echo release Debian
+    ./release.sh -debian
+fi
+
 echo deploy
 version=$(head -n 1 $dir/debian/changelog | awk -F'[()]' '{print $2}')
 target=$(gcc -v 2>&1 | awk '/^Target:/ {print $2}')
@@ -75,6 +85,15 @@ $BOOTSTRAP && tar cfz $boot.tgz --transform "s|^bootstrap|$pkg|" bootstrap/*
 if $INSTALL; then
     echo install
     $dir/target/release/install.sh
+fi
+
+if $DEBIAN; then
+    echo building Debian packages
+    for file in c Makefile; do
+        cp -a bootstrap/$file release-debian/
+    done
+    cd release-debian
+    debuild -us -uc -b
 fi
 
 echo done

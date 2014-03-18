@@ -38,8 +38,13 @@ cat > $MAKEFILE_BOOT <<EOF
 .PHONY: all clean install
 .SILENT:
 
+ifdef DESTDIR
+PREFIX    ?= \$(DESTDIR)/usr
+CONFIG    ?= \$(DESTDIR)/etc
+else
 PREFIX    ?= /usr/local
 CONFIG    ?= /usr/local/etc
+endif
 
 all:$(for exe in $EXE; do printf ' %s' exe/$exe; done; echo)
 EOF

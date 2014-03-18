@@ -13,6 +13,7 @@ JOBS=${JOBS:--j$((2 * $(cat /proc/cpuinfo | grep ^processor | wc -l)))}
 
 ON_KEY=false
 MINGW=false
+DEBIAN=false
 while [ $# -gt 0 ]; do
     case "$1" in
         -onkey)
@@ -21,6 +22,9 @@ while [ $# -gt 0 ]; do
         -mingw)
             MINGW=true
             PATH=$(dirname $(readlink -f $0))/xcompile/mingw:$PATH # use a specific gcc launcher
+            ;;
+        -debian)
+            DEBIAN=true
             ;;
         -j*)
             JOBS=$1
@@ -40,6 +44,7 @@ make $JOBS
 release_dir=$dir/target/release
 $MINGW && release_dir=${release_dir}-mingw
 $ON_KEY && release_dir=${release_dir}-onkey
+$DEBIAN && release_dir=${release_dir}-debian
 test -d $release_dir && rm -rf $release_dir
 
 BIN=$release_dir/data/bin
@@ -65,8 +70,12 @@ do
     chmod a+x $tgt
 done
 
+cp -a debian $release_dir/
+sed "s/#DATE#/$(date -R)/" -i $release_dir/debian/changelog
+
 cp exe/* $EXE/
-cp COPYING README.md debian/changelog $DOC/
+cp COPYING README.md $DOC/
+cp $release_dir/debian/changelog > $DOC/Changelog
 cp conf/pwdmgr-local.properties $DOC/sample-local-config.rc
 cp conf/pwdmgr-remote-curl.properties $DOC/sample-remote-curl-config.rc
 cp conf/pwdmgr-remote-scp.properties $DOC/sample-remote-scp-config.rc
