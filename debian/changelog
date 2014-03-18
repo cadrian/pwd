@@ -1,10 +1,18 @@
+pwd (0.0.10#SNAPSHOT#) unstable; urgency=low
+
+  * Using Travis CI to generate Debian packages
+
+ -- Cyril Adrian <cyril.adrian@gmail.com>  #DATE#
+
 pwd (0.0.9) unstable; urgency=low
 
   * vault time-out: after 4 hours without access,
     the server will close the vault
-  * unit tests!
+  * unit tests! (well, a few)
+  * never really released because of Debian automatic generation and reprepro
+    being quite strict on versionning
 
- -- Cyril Adrian <cyril.adrian@gmail.com>  #DATE#
+ -- Cyril Adrian <cyril.adrian@gmail.com>  Tue, 18 Mar 2014 21:11:33 +0100
 
 pwd (0.0.8) unstable; urgency=low
 
