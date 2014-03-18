@@ -75,7 +75,7 @@ sed "s/#DATE#/$(date -R)/" -i $release_dir/debian/changelog
 
 cp exe/* $EXE/
 cp COPYING README.md $DOC/
-cp $release_dir/debian/changelog > $DOC/Changelog
+cp $release_dir/debian/changelog $DOC/Changelog
 cp conf/pwdmgr-local.properties $DOC/sample-local-config.rc
 cp conf/pwdmgr-remote-curl.properties $DOC/sample-remote-curl-config.rc
 cp conf/pwdmgr-remote-scp.properties $DOC/sample-remote-scp-config.rc
