@@ -1,0 +1,16 @@
+Source: pwd
+Priority: extra
+Maintainer: Cyril ADRIAN <cyril.adrian@gmail.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+Section: libs
+Homepage: http://www.github.com/cadrian/pwd
+Vcs-Git: git://github.com/cadrian/pwd.git
+
+Package: pwd
+Section: admin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openssl
+Recommends: yad | zenity, xterm, xclip
+Description: Cad's password manager
+ A simple password manager.

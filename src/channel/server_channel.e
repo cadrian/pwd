@@ -90,7 +90,7 @@ feature {}
          job /= Void
       do
          if jobs /= Void then
-            jobs.do_all(agent (jb: PROCEDURE[TUPLE[JOB]]; j: JOB) is do jb.call([j]) end (?, job))
+            jobs.do_all(agent (jb: PROCEDURE[TUPLE[JOB]]) is do jb.call([job]) end (?))
          end
       end
 

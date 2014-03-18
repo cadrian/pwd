@@ -7,7 +7,7 @@
 --
 -- pwdmgr is distributed in the hope that it will be useful,
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
 -- GNU General Public License for more details.
 --
 -- You should have received a copy of the GNU General Public License
@@ -30,66 +30,66 @@ feature {}
 
    preload is
       local
-         clipboard_factory: CLIPBOARD_FACTORY
+	 clipboard_factory: CLIPBOARD_FACTORY
       do
-         inspect
-            configuration.argument_count
-         when 0 then
-            -- OK
-         when 1 then
-            configuration.parse_extra_conf(configuration.argument(1))
-         else
-            std_error.put_line("Usage: #(1) [<fallback conf>]")
-            die_with_code(1)
-         end
+	 inspect
+	    configuration.argument_count
+	 when 0 then
+	    -- OK
+	 when 1 then
+	    configuration.parse_extra_conf(configuration.argument(1))
+	 else
+	    std_error.put_line("Usage: #(1) [<fallback conf>]")
+	    die_with_code(1)
+	 end
 
-         if configuration.main_config = Void then
-            std_error.put_line(once "Could not find any valid configuration file")
-            die_with_code(1)
-         end
+	 if configuration.main_config = Void then
+	    std_error.put_line(once "Could not find any valid configuration file")
+	    die_with_code(1)
+	 end
 
-         clipboard := clipboard_factory.new_clipboard
+	 clipboard := clipboard_factory.new_clipboard
       end
 
    main is
       local
-         channel_factory: CHANNEL_FACTORY
-         extern: EXTERN
+	 channel_factory: CHANNEL_FACTORY
+	 extern: EXTERN
       do
-         tmpdir := extern.tmp
-         if tmpdir = Void then
-            log.error.put_line("#(1): could not create tmp directory!" # command_name)
-            die_with_code(1)
-         end
+	 tmpdir := extern.tmp
+	 if tmpdir = Void then
+	    log.error.put_line("#(1): could not create tmp directory!" # command_name)
+	    die_with_code(1)
+	 end
 
-         new_channel := agent channel_factory.new_client_channel(tmpdir)
+	 new_channel := agent channel_factory.new_client_channel(tmpdir)
 
-         from
-            restart := True
-         until
-            not restart
-         loop
-            restart := False
-            check_server
-            run
-         end
+	 from
+	    restart := True
+	 until
+	    not restart
+	 loop
+	    restart := False
+	    check_server
+	    run
+	 end
 
-         cleanup
+	 cleanup
       rescue
-         cleanup
-         crash
+	 cleanup
+	 crash
       end
 
    cleanup is
       do
-         if channel /= Void then
-            channel.cleanup
-         end
+	 if channel /= Void then
+	    channel.cleanup
+	 end
       end
 
    run is
       require
-         channel.is_ready
+	 channel.is_ready
       deferred
       end
 
@@ -98,128 +98,128 @@ feature {}
 
    server_pidfile: FIXED_STRING is
       do
-         Result := shared.server_pidfile
+	 Result := shared.server_pidfile
       end
 
    check_server is
       do
-         if channel = Void then
-            channel := new_channel.item([])
-         end
-         if not file_exists(shared.vault_file) then
-            check
-               not channel.server_running
-               not file_exists(server_pidfile)
-            end
-            server_bootstrap
-         elseif not channel.server_running then
-            server_restart
-         else
-            server_open
-         end
+	 if channel = Void then
+	    channel := new_channel.item([])
+	 end
+	 if not file_exists(shared.vault_file) then
+	    check
+	       not channel.server_running
+	       not file_exists(server_pidfile)
+	    end
+	    server_bootstrap
+	 elseif not channel.server_running then
+	    server_restart
+	 else
+	    server_open
+	 end
       end
 
    server_start is
       local
-         tries: INTEGER; extern: EXTERN
+	 tries: INTEGER; extern: EXTERN
       do
-         from
-            channel.server_start
-            tries := 5
-         until
-            channel.server_running or else tries = 0
-         loop
-            extern.sleep(50)
-            channel := new_channel.item([])
-            tries := tries - 1
-         end
-         if not channel.server_running then
-            log.error.put_line(once "Could not start server")
-            die_with_code(1)
-         else
-            do_ping
-         end
+	 from
+	    channel.server_start
+	    tries := 5
+	 until
+	    channel.server_running or else tries = 0
+	 loop
+	    extern.sleep(50)
+	    channel := new_channel.item([])
+	    tries := tries - 1
+	 end
+	 if not channel.server_running then
+	    log.error.put_line(once "Could not start server")
+	    die_with_code(1)
+	 else
+	    do_ping
+	 end
       ensure
-         channel.server_running
+	 channel.server_running
       end
 
    server_bootstrap is
       do
-         log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
-         read_new_master(once "This is a new vault")
-         server_start
-         send_master
+	 log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
+	 read_new_master(once "This is a new vault")
+	 server_start
+	 send_master
       end
 
    server_restart is
       do
-         log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
-         server_start
-         master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
-         send_master
+	 log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
+	 server_start
+	 master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
+	 send_master
       end
 
    server_open is
       do
-         call_server(create {QUERY_IS_OPEN}.make, agent when_open(?))
+	 call_server(create {QUERY_IS_OPEN}.make, agent when_open(?))
       end
 
    when_open (a_reply: MESSAGE) is
       local
-         reply: REPLY_IS_OPEN
+	 reply: REPLY_IS_OPEN
       do
-         if reply ?:= a_reply then
-            reply ::= a_reply
-            if reply.is_open then
-               log.info.put_line(once "Server vault is already open")
-            else
-               master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
-               send_master
-            end
-         else
-            log.error.put_line(once "Unexpected reply")
-         end
+	 if reply ?:= a_reply then
+	    reply ::= a_reply
+	    if reply.is_open then
+	       log.info.put_line(once "Server vault is already open")
+	    else
+	       master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
+	       send_master
+	    end
+	 else
+	    log.error.put_line(once "Unexpected reply")
+	 end
       end
 
    call_server (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]]) is
-         -- communication with the server
+	 -- communication with the server
       do
-         channel.call(query, when_reply)
+	 channel.call(query, when_reply)
       end
 
 feature {} -- get a password from the server
    data: RING_ARRAY[STRING] is
       once
-         create Result.with_capacity(16, 0)
+	 create Result.with_capacity(16, 0)
       end
 
    get_back (a_reply: MESSAGE; key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]; when_unknown: PROCEDURE[TUPLE[ABSTRACT_STRING]]) is
       require
-         callback /= Void
-         when_unknown /= Void
+	 callback /= Void
+	 when_unknown /= Void
       local
-         reply: REPLY_GET
+	 reply: REPLY_GET
       do
-         if reply ?:= a_reply then
-            reply ::= a_reply
-            if reply.error.is_empty then
-               callback.call([reply.pass])
-            else
-               log.error.put_line(reply.error)
-               when_unknown.call([key])
-            end
-         else
-            log.error.put_line(once "Unexpected reply")
-         end
+	 if reply ?:= a_reply then
+	    reply ::= a_reply
+	    if reply.error.is_empty then
+	       callback.call([reply.pass])
+	    else
+	       log.error.put_line(reply.error)
+	       when_unknown.call([key])
+	    end
+	 else
+	    log.error.put_line(once "Unexpected reply")
+	 end
       end
 
    do_get (key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]; when_unknown: PROCEDURE[TUPLE[ABSTRACT_STRING]]) is
-         -- get key
+	 -- get key
       require
-         callback /= Void
-         when_unknown /= Void
+	 callback /= Void
+	 when_unknown /= Void
       do
-         call_server(create {QUERY_GET}.make(key.out), agent get_back(?, key, callback, when_unknown))
+	 call_server(create {QUERY_GET}.make(key.out), agent get_back(?, key, callback, when_unknown))
       end
 
    unknown_key (key: ABSTRACT_STRING) is
@@ -228,36 +228,36 @@ feature {} -- get a password from the server
 
    do_ping is
       do
-         call_server(create {QUERY_PING}.make(once ""), agent when_ping(?))
+	 call_server(create {QUERY_PING}.make(once ""), agent when_ping(?))
       end
 
    when_ping (a_reply: MESSAGE) is
       local
-         reply: REPLY_PING
+	 reply: REPLY_PING
       do
-         if reply ?:= a_reply then
-            reply ::= a_reply
-            if not reply.error.is_empty then
-               log.error.put_line(reply.error)
-            end
-         else
-            log.error.put_line(once "Unexpected reply")
-         end
+	 if reply ?:= a_reply then
+	    reply ::= a_reply
+	    if not reply.error.is_empty then
+	       log.error.put_line(reply.error)
+	    end
+	 else
+	    log.error.put_line(once "Unexpected reply")
+	 end
       end
 
 feature {REMOTE}
    get_password (key: ABSTRACT_STRING): STRING is
       local
-         pass: REFERENCE[STRING]
+	 pass: REFERENCE[STRING]
       do
-         create pass
-         do_get(key,
-                agent (p: STRING; p_ref: REFERENCE[STRING]) is
-                do
-                   p_ref.set_item(p)
-                end (?, pass),
-                agent unknown_key(?))
-         Result := pass.item
+	 create pass
+	 do_get(key,
+		agent (p: STRING; p_ref: REFERENCE[STRING]) is
+		do
+		   p_ref.set_item(p)
+		end (?, pass),
+		agent unknown_key(?))
+	 Result := pass.item
       end
 
 feature {} -- master phrase
@@ -265,81 +265,82 @@ feature {} -- master phrase
 
    read_password (text: ABSTRACT_STRING; on_cancel: PROCEDURE[TUPLE]): STRING is
       require
-         text /= Void
+	 text /= Void
       local
-         proc: PROCESS
+	 proc: PROCESS
       do
-         proc := processor.execute_redirect(shared.master_command, read_password_arguments(text))
-         if proc.is_connected then
-            proc.output.read_line
-            if not proc.output.end_of_input then
-               Result := proc.output.last_string
-            end
-            proc.wait
-            if proc.status /= 0 then
-               if on_cancel /= Void then
-                  on_cancel.call([])
-                  Result := Void
-               else
-                  log.info.put_line(once "Cancelled.")
-                  die_with_code(1)
-               end
-            end
-         end
+	 proc := processor.execute_redirect(shared.master_command, read_password_arguments(text))
+	 if proc.is_connected then
+	    proc.output.read_line
+	    if not proc.output.end_of_input then
+	       Result := proc.output.last_string
+	    end
+	    proc.wait
+	    log.trace.put_line(once "Password reader returned #(1)" # proc.status.out)
+	    if proc.status /= 0 then
+	       if on_cancel /= Void then
+		  on_cancel.call([])
+		  Result := Void
+	       else
+		  log.info.put_line(once "Cancelled.")
+		  die_with_code(1)
+	       end
+	    end
+	 end
       end
 
    read_password_arguments (text: ABSTRACT_STRING): ABSTRACT_STRING is
       do
-         Result := shared.master_arguments # text
+	 Result := shared.master_arguments # text
       end
 
    send_master is
       require
-         channel.server_running
+	 channel.server_running
       do
-         log.info.put_line(once "Sending master password")
-         call_server(create {QUERY_MASTER}.make(master_pass), agent when_master(?))
+	 log.info.put_line(once "Sending master password")
+	 call_server(create {QUERY_MASTER}.make(master_pass), agent when_master(?))
       end
 
    when_master (a_reply: MESSAGE) is
       local
-         reply: REPLY_MASTER
+	 reply: REPLY_MASTER
       do
-         if reply ?:= a_reply then
-            reply ::= a_reply
-            if not reply.error.is_empty then
-               log.error.put_line(reply.error)
-            end
-         else
-            log.error.put_line(once "Unexpected reply")
-         end
+	 if reply ?:= a_reply then
+	    reply ::= a_reply
+	    if not reply.error.is_empty then
+	       log.error.put_line(reply.error)
+	    end
+	 else
+	    log.error.put_line(once "Unexpected reply")
+	 end
       end
 
    send_save: BOOLEAN is
       local
-         saved: REFERENCE[BOOLEAN]
+	 saved: REFERENCE[BOOLEAN]
       do
-         create saved
-         call_server(create {QUERY_SAVE}.make, agent when_save(?, saved))
-         Result := saved.item
+	 create saved
+	 call_server(create {QUERY_SAVE}.make, agent when_save(?, saved))
+	 Result := saved.item
       end
 
    when_save (a_reply: MESSAGE; saved: REFERENCE[BOOLEAN]) is
       require
-         saved /= Void
+	 saved /= Void
       local
-         reply: REPLY_SAVE
+	 reply: REPLY_SAVE
       do
-         if reply ?:= a_reply then
-            reply ::= a_reply
-            if reply.error.is_empty then
-               saved.set_item(True)
-            else
-               log.error.put_line(reply.error)
-            end
-         else
-            log.error.put_line(once "Unexpected reply")
-         end
+	 if reply ?:= a_reply then
+	    reply ::= a_reply
+	    if reply.error.is_empty then
+	       saved.set_item(True)
+	    else
+	       log.error.put_line(reply.error)
+	    end
+	 else
+	    log.error.put_line(once "Unexpected reply")
+	 end
       end
 
 feature {} -- copy_to_clipboard
@@ -347,34 +348,34 @@ feature {} -- copy_to_clipboard
 
    copy_to_clipboard (string: ABSTRACT_STRING) is
       require
-         string /= Void
+	 string /= Void
       do
-         clipboard.copy(string)
+	 clipboard.copy(string)
       end
 
 feature {} -- create a brand new vault
    read_new_master (reason: ABSTRACT_STRING) is
       local
-         pass1, pass2: STRING; text: ABSTRACT_STRING
+	 pass1, pass2: STRING; text: ABSTRACT_STRING
       do
-         from
-            text := once "#(1),%Nplease enter an encryption phrase." # reason
-         until
-            pass1 /= Void
-         loop
-            pass1 := once ""
-            pass1.copy(read_password(text, Void))
-            text := once "Please enter the same encryption phrase again." # reason
-            pass2 := read_password(text, Void)
-            if not pass1.is_equal(pass2) then
-               text := once "Your phrases did not match.%N#(1),%Nplease enter an encryption phrase." # reason
-               pass1 := Void
-            end
-         end
-         check
-            by_construction: pass1.is_equal(pass2)
-         end
-         master_pass.copy(pass1)
+	 from
+	    text := once "#(1),%Nplease enter an encryption phrase." # reason
+	 until
+	    pass1 /= Void
+	 loop
+	    pass1 := once ""
+	    pass1.copy(read_password(text, Void))
+	    text := once "Please enter the same encryption phrase again." # reason
+	    pass2 := read_password(text, Void)
+	    if not pass1.is_equal(pass2) then
+	       text := once "Your phrases did not match.%N#(1),%Nplease enter an encryption phrase." # reason
+	       pass1 := Void
+	    end
+	 end
+	 check
+	    by_construction: pass1.is_equal(pass2)
+	 end
+	 master_pass.copy(pass1)
       end
 
 end

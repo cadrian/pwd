@@ -30,13 +30,20 @@ create {CHANNEL_FACTORY}
 feature {SERVER}
    prepare (events: EVENTS_SET) is
       do
-         log.trace.put_line(once "Awaiting connection")
+         if not trace then
+            log.trace.put_line(once "Awaiting connection")
+            trace := True
+         end
          events.expect(server.event_connection)
       end
 
    is_ready (events: EVENTS_SET): BOOLEAN is
       do
          Result := events.event_occurred(server.event_connection)
+         if Result then
+            log.trace.put_line(once "Connection ready!")
+            trace := False
+         end
       end
 
    continue is
@@ -46,8 +53,12 @@ feature {SERVER}
       do
          log.trace.put_line(once "Connection received")
          stream := server.new_stream(True)
-         create job.make(Current, stream)
-         fire_new_job(job)
+         if stream.error = Void then
+            create job.make(Current, stream)
+            fire_new_job(job)
+         else
+            log.error.put_line(once "Network error: #(1)" # stream.error)
+         end
       end
 
    done: BOOLEAN is
@@ -88,6 +99,7 @@ feature {}
 
    server: SOCKET_SERVER
    socket: SOCKET
+   trace: BOOLEAN
 
 invariant
    done or else server /= Void

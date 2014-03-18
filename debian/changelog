@@ -1,22 +1,35 @@
-0.0.9 (not yet released)
+libcad (0.0.9) unstable; urgency=low
+
 	* vault time-out: after 4 hours without access, the server will close the vault
 	* unit tests!
 
-0.0.8 (released 2012-09-22)
+  -- Cyril Adrian <cyril.adrian@gmail.com> #DATE#
+
+libcad (0.0.8) unstable; urgency=low
+
 	* fixed a critical bug: could not set passwords
 	* generate most protocol classes and factory
 
-0.0.7 (released 2012-09-20)
+  -- Cyril Adrian <cyril.adrian@gmail.com>  Sat, 22 Sep 2012 00:00:00 +0200
+
+libcad (0.0.7) unstable; urgency=low
+
 	* #28 - Implement sockets
 	* #22 - Strenghtened protocol
 
-0.0.6 (released 2012-06-05)
+  -- Cyril Adrian <cyril.adrian@gmail.com>  Thu, 20 Sep 2012 00:00:00 +0200
+
+libcad (0.0.6) unstable; urgency=low
+
 	* #27 - Remote discovery
 	* #24 - GNU readline does not like invisible characters (e.g. ANSI color sequences)
 	* #25 - CLI arguments
 	* #26 - New remote commands (list and show)
 
-0.0.5 (released 2012-05-18)
+  -- Cyril Adrian <cyril.adrian@gmail.com>  Tue, 05 Jun 2012 00:00:00 +0200
+
+libcad (0.0.5) unstable; urgency=low
+
 	* #18 - Client/server handshake
 	* #15 - Install in user mode
 	* #19 - Pour the Changelog in the release
@@ -29,7 +42,10 @@
 	* Remote configuration on the console command line
 	* #23 - jugulate fifo manipulation and ugly sleeps in the fifo channels implementation
 
-0.0.4 (released 2012-01-25)
+  -- Cyril Adrian <cyril.adrian@gmail.com>  Fri, 18 May 2012 00:00:00 +0200
+
+libcad (0.0.4) unstable; urgency=low
+
 	* #10, #12, #13 - Packaging: standard layout
 	* #2 - Creation of missing empty directories
 	* #4 - Ensure that passwords are never visible; provide a suitable way to enter a known password at "add" time
@@ -40,13 +56,24 @@
 	* #7 - Provide remote vault backup via either curl or scp
 	* #5 - Documentation
 
-0.0.3 (released 2012-01-22)
+  -- Cyril Adrian <cyril.adrian@gmail.com>  Wed, 25 Jan 2012 00:00:00 +0100
+
+libcad (0.0.3) unstable; urgency=low
+
 	* Changelog
 	* fixed release & bootstrap package contents
 	* configuration
 
-0.0.2 (released 2012-01-19)
+  -- Cyril Adrian <cyril.adrian@gmail.com>  Sun, 22 Jan 2012 00:00:00 +0100
+
+libcad (0.0.2) unstable; urgency=low
+
 	* fixed #1: empty vault creation
 
-0.0.1 (released 2012-01-18)
+  -- Cyril Adrian <cyril.adrian@gmail.com>  Thu, 19 Jan 2012 00:00:00 +0100
+
+libcad (0.0.1) unstable; urgency=low
+
 	* initial version
+
+  -- Cyril Adrian <cyril.adrian@gmail.com>  Wed, 18 Jan 2012 00:00:00 +0100
