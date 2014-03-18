@@ -94,6 +94,9 @@ after_failure:
   - "cat test/eiffeltest/log.ref"
 after_success:
   - "rsync -aSH --stats -e 'ssh -i '$HOME'/.ssh/id_rsa_travis -q -C -o StrictHostKeyChecking=no' target/*.tgz $RSYNC:~/pwd/target/"
+  - "./deploy.sh debian"
+  - "rsync -aSH --stats -e 'ssh -i '$HOME'/.ssh/id_rsa_travis -q -C -o StrictHostKeyChecking=no' target/*.deb target/*.dsc target/*.tar.gz $RSYNC:~/apt/incoming/"
+  - "rsync -aSH --stats -e 'ssh -i '$HOME'/.ssh/id_rsa_travis -q -C -o StrictHostKeyChecking=no' target/*.changes $RSYNC:~/apt/incoming/"
 cache:
   apt: true
   directories:
