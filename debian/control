@@ -2,8 +2,8 @@ Source: pwd
 Priority: extra
 Maintainer: Cyril ADRIAN <cyril.adrian@gmail.com>
 Build-Depends: debhelper (>= 8.0.0)
-Standards-Version: 3.9.3
-Section: libs
+Standards-Version: 3.9.5
+Section: admin
 Homepage: http://www.github.com/cadrian/pwd
 Vcs-Git: git://github.com/cadrian/pwd.git
 

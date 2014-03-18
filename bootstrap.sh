@@ -22,7 +22,7 @@ mkdir -p $bootstrap_dir/c
 for src in bin/pwdmgr_*
 do
     tgt=$bootstrap_dir/bin/$(basename $src)
-    sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/share/pwdmgr/exe|;s| \$prop$||g' < $src > $tgt
+    sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/lib/pwdmgr/exe|;s| \$prop$||g' < $src > $tgt
     chmod a+x $tgt
 done
 
@@ -84,16 +84,17 @@ done
     echo "install: all"
     printf '\tinstall -d $(PREFIX)\n'
     printf '\tinstall -d $(PREFIX)/bin\n'
+    printf '\tinstall -d $(PREFIX)/lib\n'
+    printf '\tinstall -d $(PREFIX)/lib/pwdmgr\n'
+    printf '\tinstall -d $(PREFIX)/lib/pwdmgr/exe\n'
     printf '\tinstall -d $(PREFIX)/share\n'
-    printf '\tinstall -d $(PREFIX)/share/pwdmgr\n'
-    printf '\tinstall -d $(PREFIX)/share/pwdmgr/exe\n'
     printf '\tinstall -d $(PREFIX)/share/doc\n'
     printf '\tinstall -d $(PREFIX)/share/doc/pwdmgr\n'
     printf '\tinstall -d $(CONFIG)\n'
     printf '\tinstall -d $(CONFIG)/pwdmgr\n'
     for exe in $EXE
     do
-        printf '\tinstall -m555 exe/%s $(PREFIX)/share/pwdmgr/exe/\n' $exe
+        printf '\tinstall -m555 exe/%s $(PREFIX)/lib/pwdmgr/exe/\n' $exe
     done
     for bin in bin/pwdmgr_*
     do
@@ -105,7 +106,7 @@ done
     printf '\tinstall -m444 conf/pwdmgr-remote-curl.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-curl-config.rc\n'
     printf '\tinstall -m444 conf/pwdmgr-remote-scp.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-scp-config.rc\n'
     printf '\tinstall -m444 README.md $(PREFIX)/share/doc/pwdmgr/\n'
-    printf '\tinstall -m444 COPYING $(PREFIX)/share/doc/pwdmgr/\n'
+#    printf '\ttest -e COPYING && install -m444 COPYING $(PREFIX)/share/doc/pwdmgr/\n'
 } >> $MAKEFILE_BOOT
 
 chmod +x $MAKEFILE_BOOT

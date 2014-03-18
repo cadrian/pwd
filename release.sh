@@ -45,10 +45,10 @@ release_dir=$dir/target/release
 $MINGW && release_dir=${release_dir}-mingw
 $ON_KEY && release_dir=${release_dir}-onkey
 $DEBIAN && release_dir=${release_dir}-debian
-test -d $release_dir && rm -rf $release_dir
+rm -rf $release_dir
 
 BIN=$release_dir/data/bin
-EXE=$release_dir/data/share/pwdmgr/exe
+EXE=$release_dir/data/lib/pwdmgr/exe
 DOC=$release_dir/data/share/doc/pwdmgr
 CONF=$release_dir/config/pwdmgr
 
@@ -65,7 +65,7 @@ do
     if $ON_KEY; then
         sed 's|^dist=.*$|home=$(dirname $(dirname $(dirname $(readlink -f $0)))); echo home=$home\nXDG_DATA_HOME=$home/local/share; export XDG_DATA_HOME\nXDG_CONFIG_HOME=$home/config; export XDG_CONFIG_HOME\nXDG_CACHE_HOME=$home/cache; export XDG_CACHE_HOME\nexe=$XDG_DATA_HOME/pwdmgr/exe|;s| \$prop$| \$1|g' < $src > $tgt
     else
-        sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/share/pwdmgr/exe|;s| \$prop$| \$1|g' < $src > $tgt
+        sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/lib/pwdmgr/exe|;s| \$prop$| \$1|g' < $src > $tgt
     fi
     chmod a+x $tgt
 done
@@ -123,12 +123,14 @@ dir=\$(dirname \$(readlink -f \$0))
 if test \$(id -u) -eq 0; then
     echo Installing as root
     PREFIX_BIN=\${PREFIX:-/usr/local}/bin     # for package install:
+    PREFIX_EXE=\${PREFIX:-/usr/local}/lib     #  - set \$PREFIX to /usr
     PREFIX_DATA=\${PREFIX:-/usr/local}/share  #  - set \$PREFIX to /usr
     CONFIG=\${CONFIG:-/usr/local/etc}         #  - set \$CONFIG to /etc/xdg
     binmod=555
 else
     echo Installing as user \$USER
     PREFIX_BIN=\${PREFIX:-\$HOME/.local}/bin
+    PREFIX_EXE=\${PREFIX:-\$HOME/.local}/lib
     PREFIX_DATA=\${PREFIX:-\$HOME/.local}/share
     CONFIG=\${CONFIG:-\$HOME/.config}
     binmod=500
@@ -136,14 +138,14 @@ fi
 
 mkdir -p \$PREFIX_BIN
 mkdir -p \$PREFIX_DATA/doc/pwdmgr
-mkdir -p \$PREFIX_DATA/pwdmgr
+mkdir -p \$PREFIX_EXE/pwdmgr
 mkdir -p \$CONFIG/pwdmgr
 
 for src in \$dir/data/bin/*
 do
     tgt=\$PREFIX_BIN/\${src#\$dir/data/bin/}
-    test -e \$tgt && rm -f \$tgt
-    sed 's|^exe=.*\$|exe='"\$PREFIX_DATA/pwdmgr/exe"'|' < \$src > \$tgt
+    rm -f \$tgt
+    sed 's|^exe=.*\$|exe='"\$PREFIX_EXE/pwdmgr/exe"'|' < \$src > \$tgt
     chmod \$binmod \$tgt
 done
 
@@ -151,7 +153,16 @@ for dirsrc in \$dir/data/share/pwdmgr \$dir/data/share/doc/pwdmgr
 do
     for src in \$dirsrc/*; do
         tgt=\$PREFIX_DATA/\${src#\$dir/data/share/}
-        test -d \$tgt && rm -rf \$tgt
+        rm -rf \$tgt
+        cp -rf \$src \$tgt
+    done
+done
+
+for dirsrc in \$dir/data/lib/pwdmgr
+do
+    for src in \$dirsrc/*; do
+        tgt=\$PREFIX_EXE/\${src#\$dir/data/lib/}
+        rm -rf \$tgt
         cp -rf \$src \$tgt
     done
 done
