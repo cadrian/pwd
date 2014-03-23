@@ -90,9 +90,9 @@ fi
 if $DEBIAN; then
     echo building Debian packages
     for file in bin c conf README.md Makefile; do
-        cp -a bootstrap/$file release-debian/
+        cp -a bootstrap/$file release-debian/pwd/
     done
-    cd release-debian
+    cd release-debian/pwd
     debuild -us -uc
 fi
 

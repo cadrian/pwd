@@ -44,7 +44,7 @@ make $JOBS
 release_dir=$dir/target/release
 $MINGW && release_dir=${release_dir}-mingw
 $ON_KEY && release_dir=${release_dir}-onkey
-$DEBIAN && release_dir=${release_dir}-debian
+$DEBIAN && release_dir=${release_dir}-debian/pwd
 rm -rf $release_dir
 
 BIN=$release_dir/data/bin
