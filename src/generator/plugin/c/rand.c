@@ -6,19 +6,19 @@
    of real32_ting-point values */
 typedef union box {
      real32_t f;
-     int i;
+     int32_t i;
 } box_t;
 
 /* GET_BIT: returns a random bit. For efficiency,
    bits are generated 31 at a time using the
    C library function random () */
-static int get_bit(int32_t (*rand)(void*), void*C) {
+static int get_bit(int8_t (*rand)(void*), void*C) {
      int bit;
      static bits = 0;
      static x;
      if (bits == 0) {
           x = rand(C);
-          bits = 31;
+          bits = 7;
      }
      bit = x & 1;
      x = x >> 1;
@@ -29,7 +29,7 @@ static int get_bit(int32_t (*rand)(void*), void*C) {
 /* RANDF: returns a random floating-point
    number in the range (0, 1),
    including 0.0, subnormals, and 1.0 */
-real32_t randf(int32_t (*rand)(void*), void*C) {
+real32_t randf(int8_t (*rand)(void*), void*C) {
      int x;
      int mant, exp, high_exp, low_exp;
      box_t low, high, ans;

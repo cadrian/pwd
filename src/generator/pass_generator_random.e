@@ -29,7 +29,7 @@ feature {ANY}
          Result := file.path
       end
 
-   item (max: INTEGER_32): INTEGER is
+   item (max: INTEGER_32): INTEGER_32 is
       require
          max > 0
          is_connected
@@ -49,10 +49,10 @@ feature {}
       ]"
       end
 
-   read_rand: INTEGER_32 is
+   read_rand: INTEGER_8 is
       do
          file.read_byte
-         Result := file.last_byte
+         Result := file.last_byte.to_integer_8
       end
 
    file: BINARY_FILE_READ
