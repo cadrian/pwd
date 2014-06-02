@@ -24,6 +24,11 @@ feature {ANY}
          Result := file.is_connected
       end
 
+   path: STRING is
+      do
+         Result := file.path
+      end
+
    item (max: INTEGER_32): INTEGER is
       require
          max > 0

@@ -37,14 +37,14 @@ feature {}
    random_file: STRING is "pwd_test.e" -- who cares, it just needs to exist
    password: STRING is "password"
 
-   extend (bfr: BINARY_FILE_READ; pass: STRING): PROCEDURE[TUPLE[PASS_GENERATOR_MIX]] is
+   extend (rnd: PASS_GENERATOR_RANDOM; pass: STRING): PROCEDURE[TUPLE[PASS_GENERATOR_MIX]] is
       do
-         assert(bfr.path.is_equal(random_file))
-         assert(bfr.is_connected)
-         Result := agent test_extend(?, bfr, pass)
+         assert(rnd.path.is_equal(random_file))
+         assert(rnd.is_connected)
+         Result := agent test_extend(?, pass)
       end
 
-   test_extend (mix: PASS_GENERATOR_MIX; bfr: BINARY_FILE_READ; pass: STRING) is
+   test_extend (mix: PASS_GENERATOR_MIX; pass: STRING) is
       do
          assert(mix.quantity = 8)
          assert(mix.ingredient = letters)
