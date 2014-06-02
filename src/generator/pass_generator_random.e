@@ -29,14 +29,15 @@ feature {ANY}
          Result := file.path
       end
 
-   item (max: INTEGER_32): INTEGER_32 is
+   item (lower, upper: INTEGER_32): INTEGER_32 is
       require
-         max > 0
+         lower >= 0
+         upper > lower
          is_connected
       do
-         Result := (randf($read_rand, to_pointer) * max.to_real_32).force_to_integer_32
+         Result := (randf($read_rand, to_pointer) * (upper - lower).to_real_32 + {REAL_32 0.5}).force_to_integer_32 + lower
       ensure
-         Result.in_range(0, max)
+         Result.in_range(lower, upper)
       end
 
 feature {}

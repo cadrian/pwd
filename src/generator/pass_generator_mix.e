@@ -45,8 +45,8 @@ feature {}
       local
          int, index: INTEGER_32
       do
-         int := rnd.item(ingredient.count) + ingredient.lower
-         index := rnd.item(pass.count + 1) + pass.lower -- extra mix
+         int := rnd.item(ingredient.lower, ingredient.upper)
+         index := rnd.item(pass.lower, pass.upper + 1) -- extra mix
          pass.insert_character(ingredient.item(int), index)
       ensure
          pass.count = old pass.count + 1
