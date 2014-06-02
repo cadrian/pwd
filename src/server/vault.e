@@ -31,6 +31,7 @@ feature {SERVER}
    close is
       do
          if is_open then
+            data.do_all(agent (key: KEY) is do key.clear end (?))
             data.clear_count
             set_environment_variable(once "VAULT_MASTER", once "")
             is_open := False

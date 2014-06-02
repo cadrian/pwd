@@ -15,6 +15,9 @@
 --
 class KEY
 
+insert
+   STRING_HANDLER
+
 create {ANY}
    make, new
 
@@ -71,7 +74,25 @@ feature {ANY}
          end
       end
 
+   clear is
+      do
+         bzero(pass.storage, pass.capacity)
+         pass.clear_count
+      ensure
+         pass.storage.all_default(pass.capacity)
+         pass.count = 0
+      end
+
 feature {}
+   bzero (buf: NATIVE_ARRAY[CHARACTER]; count: INTEGER) is
+      external "plug_in"
+      alias "[
+         location: "."
+         module_name: "plugin"
+         feature_name: "bzero"
+      ]"
+      end
+
    make (a_line: STRING) is
       require
          a_line /= Void
