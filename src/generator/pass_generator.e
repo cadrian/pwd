@@ -32,12 +32,14 @@ feature {ANY}
          is_valid
       local
          bfr: BINARY_FILE_READ
+         rnd: PASS_GENERATOR_RANDOM
       do
          Result := ""
          create bfr.with_buffer_size(3 * length) -- 3 bytes read for each random character (two bytes to select a character, one byte to select its position)
          bfr.connect_to(random_file)
          if bfr.is_connected then
-            recipe.do_all(extend.item([bfr, Result]))
+            create rnd.connect_to(bfr)
+            recipe.do_all(extend.item([rnd, Result]))
             bfr.disconnect
          end
       ensure
@@ -49,11 +51,11 @@ feature {}
    length: INTEGER
 
    random_file: STRING
-   extend: FUNCTION[TUPLE[BINARY_FILE_READ, STRING], PROCEDURE[TUPLE[PASS_GENERATOR_MIX]]]
+   extend: FUNCTION[TUPLE[PASS_GENERATOR_RANDOM, STRING], PROCEDURE[TUPLE[PASS_GENERATOR_MIX]]]
 
-   default_extend (bfr: BINARY_FILE_READ; pass: STRING): PROCEDURE[TUPLE[PASS_GENERATOR_MIX]] is
+   default_extend (rnd: PASS_GENERATOR_RANDOM; pass: STRING): PROCEDURE[TUPLE[PASS_GENERATOR_MIX]] is
       do
-         Result := agent {PASS_GENERATOR_MIX}.extend(bfr, pass)
+         Result := agent {PASS_GENERATOR_MIX}.extend(rnd, pass)
       end
 
    parse (a_recipe: ABSTRACT_STRING) is
