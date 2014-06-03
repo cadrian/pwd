@@ -71,7 +71,8 @@ do
 done
 
 cp -a debian $release_dir/
-sed "s/#DATE#/$(date -R)/;s/#SNAPSHOT#/$(date -u +'~%Y%m%d%H%M%S')/" -i $release_dir/debian/changelog
+version=$($dir/version.sh)
+sed "s/#DATE#/$(date -R)/;s/#SNAPSHOT#/~${version#*~}/" -i $release_dir/debian/changelog
 
 cp exe/* $EXE/
 cp COPYING README.md $DOC/

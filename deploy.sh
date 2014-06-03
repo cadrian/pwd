@@ -71,7 +71,7 @@ if $DEBIAN; then
 fi
 
 echo deploy
-version=$(head -n 1 $dir/debian/changelog | awk -F'[()]' '{print $2}')
+version=$($dir/version.sh)
 target=$(gcc -v 2>&1 | awk '/^Target:/ {print $2}')
 pkg=pwdmgr_$version
 root=${pkg}_$target

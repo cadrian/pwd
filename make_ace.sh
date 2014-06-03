@@ -68,6 +68,8 @@ default
     rescue($rescue)
 
 cluster
+    generated: "target/bootstrap/eiffel"
+
     pwdmgr: "src/loadpath.se"
         default
             assertion($assert)

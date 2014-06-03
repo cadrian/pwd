@@ -18,6 +18,22 @@ bootstrap_dir=$dir/target/bootstrap
 test -d $bootstrap_dir && rm -rf $bootstrap_dir
 mkdir -p $bootstrap_dir/bin
 mkdir -p $bootstrap_dir/c
+mkdir -p $bootstrap_dir/eiffel
+
+version=$($dir/version.sh)
+cat > $bootstrap_dir/eiffel/version.e <<EOF
+-- Generated file, don't edit!
+-- $(date -R)
+expanded class VERSION
+
+feature {ANY}
+   version: FIXED_STRING is
+      once
+         Result := "$version".intern
+      end
+
+end
+EOF
 
 for src in bin/pwdmgr_*
 do
@@ -112,8 +128,8 @@ done
 chmod +x $MAKEFILE_BOOT
 
 cat > $bootstrap_dir/c/README <<EOF
-Those files were generated using LibertyEiffel
-(http://github.com/LibertyEiffel/Liberty)
+Those files were generated using Liberty Eiffel
+(http://www.liberty-eiffel.org)
 EOF
 
 cat > $bootstrap_dir/install_local.sh <<EOF

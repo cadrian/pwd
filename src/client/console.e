@@ -48,10 +48,12 @@ feature {} -- the CLIENT interface
                                 This is free software, and you are welcome to redistribute it
                                 under certain conditions; type [33mshow c[32m for details.[0m
 
+                                Version: #(1)
+
                                 Type [33mhelp[0m for details on available options.
                                 Just hit [33m<enter>[0m to exit.
 
-                                ]")
+                                ]" # version)
          until
             stop
          loop

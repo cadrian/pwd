@@ -86,6 +86,7 @@ before_install:
   - "curl -s http://apt.liberty-eiffel.org/dists/snapshot/main/binary-amd64/Packages.gz | zcat | awk '/^Package:/ {pkg=$2} /^Version:/ {ver=$2} /^Architecture:/ {arch=$2} /^$/ {printf(\"http://apt.liberty-eiffel.org/pool/main/libe/liberty-eiffel/%s_%s_%s.deb\\n\", pkg, ver, arch)}' | while read pkg; do wget -nd -nH -P $HOME/liberty -m $pkg; done"
   - "sudo dpkg -i $HOME/liberty/*.deb"
   - ".travis.conf/splice_key.sh"
+  - "rm -f .version"
 install:
   - "./deploy.sh"
 script:

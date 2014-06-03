@@ -22,6 +22,13 @@ insert
 feature {}
    shared: SHARED
 
+   version: FIXED_STRING is
+      local
+         v: VERSION
+      do
+         Result := v.version
+      end
+
    command_name: FIXED_STRING is
       once
          Result := configuration.command_name.intern
