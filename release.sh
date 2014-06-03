@@ -52,9 +52,9 @@ EXE=$release_dir/data/lib/pwdmgr/exe
 DOC=$release_dir/data/share/doc/pwdmgr
 CONF=$release_dir/config/pwdmgr
 
-for dir in $BIN $EXE $DOC $CONF
+for d in $BIN $EXE $DOC $CONF
 do
-    mkdir -p $dir
+    mkdir -p $d
 done
 
 umask 222
