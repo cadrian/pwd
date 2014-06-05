@@ -168,17 +168,17 @@ feature {}
          when 0 then
             detach := True
          when 1 then
-            if configuration.argument(1).is_equal(once "-no_detach") then
+            if configuration.argument(1).is_equal("-no_detach") then
                check not detach end
             else
                detach := True
                configuration.parse_extra_conf(configuration.argument(1))
             end
          when 2 then
-            if configuration.argument(1).is_equal(once "-no_detach") then
+            if configuration.argument(1).is_equal("-no_detach") then
                check not detach end
                configuration.parse_extra_conf(configuration.argument(2))
-            elseif configuration.argument(2).is_equal(once "-no_detach") then
+            elseif configuration.argument(2).is_equal("-no_detach") then
                check not detach end
                configuration.parse_extra_conf(configuration.argument(1))
             else
@@ -186,12 +186,12 @@ feature {}
                die_with_code(1)
             end
          else
-            std_error.put_line(once "Usage: #(1) [<fallback conf>] [-no_detach]" # command_name)
+            std_error.put_line("Usage: #(1) [<fallback conf>] [-no_detach]" # command_name)
             die_with_code(1)
          end
 
          if configuration.main_config = Void then
-            std_error.put_line(once "Could not find any valid configuration file")
+            std_error.put_line("Could not find any valid configuration file")
             die_with_code(1)
          end
       end
