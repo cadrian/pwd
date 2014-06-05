@@ -19,7 +19,7 @@ insert
    STRING_HANDLER
 
 create {ANY}
-   make, new
+   decode, new
 
 feature {ANY}
    name: FIXED_STRING
@@ -40,6 +40,7 @@ feature {ANY}
          is_valid
          a_pass /= Void
       do
+         clear
          pass := a_pass
          add_count := add_count + 1
       ensure
@@ -93,7 +94,7 @@ feature {}
       ]"
       end
 
-   make (a_line: STRING) is
+   decode (a_line: STRING) is
       require
          a_line /= Void
       local
@@ -119,7 +120,8 @@ feature {}
             decoder.append_named_group(a_line, dat, once "pass")
             pass := dat.twin
 
-            dat.clear_count
+            bzero(dat.storage, dat.capacity)
+            bzero(a_line.storage, a_line.capacity)
          end
       end
 
@@ -154,5 +156,6 @@ feature {KEY}
 
 invariant
    is_valid implies name /= Void
+   pass /= Void
 
 end

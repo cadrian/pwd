@@ -246,7 +246,7 @@ feature {}
             a_data.end_of_input
          loop
             line := a_data.last_string
-            create key.make(line)
+            create key.decode(line)
             if key.is_valid then
                data.add(key, key.name)
             end
