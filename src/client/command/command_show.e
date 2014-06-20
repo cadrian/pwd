@@ -22,12 +22,12 @@ create {CONSOLE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "show".intern
+         Result := ("show").intern
       end
 
-   run (command: COLLECTION[STRING]) is
+   run (command: COLLECTION[STRING])
       do
          if command.is_empty or else command.first.first = 'w' then
             client.less(once "{
@@ -623,7 +623,7 @@ copy of the Program in return for a fee.
          end
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          if command.count = 1 then
             Result := filter_completions(completions, word)
@@ -632,19 +632,16 @@ copy of the Program in return for a fee.
          end
       end
 
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          -- nothing, there is a specific section at the end of the
          -- global help
       end
 
 feature {}
-   completions: ITERATOR[FIXED_STRING] is
+   completions: ITERATOR[FIXED_STRING]
       once
-         Result := {FAST_ARRAY[FIXED_STRING] <<
-            "copyright".intern,
-            "warranty".intern,
-         >> }.new_iterator
+         Result := {FAST_ARRAY[FIXED_STRING] << ("copyright").intern, ("warranty").intern >> }.new_iterator
       end
 
-end
+end -- class COMMAND_SHOW

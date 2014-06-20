@@ -22,16 +22,14 @@ create {CONSOLE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "add".intern
+         Result := ("add").intern
       end
 
-   run (command: COLLECTION[STRING]) is
+   run (command: COLLECTION[STRING])
       local
-         query: QUERY_SET
-         pass, recipe: STRING
-         shared: SHARED
+         query: QUERY_SET; pass, recipe: STRING; shared: SHARED
       do
          inspect
             command.count
@@ -71,7 +69,7 @@ feature {COMMANDER}
          end
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          if command.count = 2 then
             Result := filter_completions(complete_how, word)
@@ -80,7 +78,7 @@ feature {COMMANDER}
          end
       end
 
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[
                     [33madd <key> [how][0m    Add a new password. Needs at least a key.
@@ -104,15 +102,12 @@ feature {COMMANDER}
       end
 
 feature {}
-   complete_how: ITERATOR[FIXED_STRING] is
+   complete_how: ITERATOR[FIXED_STRING]
       once
-         Result := {FAST_ARRAY[FIXED_STRING] <<
-            "generate".intern,
-            "prompt".intern,
-         >> }.new_iterator
+         Result := {FAST_ARRAY[FIXED_STRING] << ("generate").intern, ("prompt").intern >> }.new_iterator
       end
 
-   when_reply (a_reply: MESSAGE) is
+   when_reply (a_reply: MESSAGE)
       local
          reply: REPLY_SET
       do
@@ -129,4 +124,4 @@ feature {}
          end
       end
 
-end
+end -- class COMMAND_ADD

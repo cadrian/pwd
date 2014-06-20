@@ -25,17 +25,15 @@ feature {ANY}
    name: FIXED_STRING
 
    pass: STRING
-         -- note: MUST NOT be a fixed string because the interned
-         -- strings are never released (hence visible in memory dumps)
 
-   is_deleted: BOOLEAN is
+   is_deleted: BOOLEAN
       do
          Result := del_count > add_count
       end
 
    is_valid: BOOLEAN
 
-   set_pass (a_pass: STRING) is
+   set_pass (a_pass: STRING)
       require
          is_valid
          a_pass /= Void
@@ -48,7 +46,7 @@ feature {ANY}
          not is_deleted
       end
 
-   delete is
+   delete
       require
          is_valid
       do
@@ -57,12 +55,12 @@ feature {ANY}
          is_deleted
       end
 
-   encoded: ABSTRACT_STRING is
+   encoded: ABSTRACT_STRING
       do
          Result := encoder # name # add_count.out # del_count.out # pass
       end
 
-   merge (other: like Current) is
+   merge (other: like Current)
       require
          other.name = name
       do
@@ -75,7 +73,7 @@ feature {ANY}
          end
       end
 
-   clear is
+   clear
       do
          bzero(pass.storage, pass.capacity)
          pass.clear_count
@@ -85,7 +83,7 @@ feature {ANY}
       end
 
 feature {}
-   bzero (buf: NATIVE_ARRAY[CHARACTER]; count: INTEGER) is
+   bzero (buf: NATIVE_ARRAY[CHARACTER]; count: INTEGER)
       external "plug_in"
       alias "[
          location: "."
@@ -94,7 +92,7 @@ feature {}
       ]"
       end
 
-   decode (a_line: STRING) is
+   decode (a_line: STRING)
       require
          a_line /= Void
       local
@@ -125,7 +123,7 @@ feature {}
          end
       end
 
-   new (a_name: ABSTRACT_STRING; a_pass: STRING) is
+   new (a_name: ABSTRACT_STRING; a_pass: STRING)
       require
          a_name /= Void
          a_pass /= Void
@@ -138,24 +136,25 @@ feature {}
          not is_deleted
       end
 
-   decoder: REGULAR_EXPRESSION is
+   decoder: REGULAR_EXPRESSION
       local
          builder: REGULAR_EXPRESSION_BUILDER
       once
          Result := builder.convert_python_pattern("^(?P<name>[^:]+):(?P<add>[0-9]+):(?P<del>[0-9]+):(?P<pass>.*)$")
       end
 
-   encoder: FIXED_STRING is
+   encoder: FIXED_STRING
       once
-         Result := "#(1):#(2):#(3):#(4)".intern
+         Result := ("#(1):#(2):#(3):#(4)").intern
       end
 
 feature {KEY}
    add_count: INTEGER
+
    del_count: INTEGER
 
 invariant
    is_valid implies name /= Void
    pass /= Void
 
-end
+end -- class KEY

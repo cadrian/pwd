@@ -17,28 +17,26 @@ deferred class MESSAGE
 
 insert
    VISITABLE
-      redefine
-         is_equal
+      redefine is_equal
       end
    JSON_HANDLER
-      redefine
-         is_equal
+      redefine is_equal
       end
 
 feature {ANY}
    json: JSON_OBJECT
 
-   type: STRING is
+   type: STRING
       do
          Result := string(once "type")
       end
 
-   command: STRING is
+   command: STRING
       do
          Result := string(once "command")
       end
 
-   is_equal (other: like Current): BOOLEAN is
+   is_equal (other: like Current): BOOLEAN
       do
          if same_dynamic_type(other) then
             Result := json.is_equal(other.json)
@@ -46,7 +44,7 @@ feature {ANY}
       end
 
 feature {}
-   from_json (a_json: JSON_OBJECT) is
+   from_json (a_json: JSON_OBJECT)
       require
          a_json /= Void
       do
@@ -55,7 +53,7 @@ feature {}
          json = a_json
       end
 
-   string (a_key: ABSTRACT_STRING): STRING is
+   string (a_key: ABSTRACT_STRING): STRING
       require
          a_key /= Void
       local
@@ -67,7 +65,7 @@ feature {}
          end
       end
 
-   json_string (a_string: ABSTRACT_STRING): JSON_STRING is
+   json_string (a_string: ABSTRACT_STRING): JSON_STRING
       require
          a_string /= Void
       local
@@ -81,12 +79,12 @@ feature {}
          end
       end
 
-   strings: HASHED_DICTIONARY[JSON_STRING, FIXED_STRING] is
+   strings: HASHED_DICTIONARY[JSON_STRING, FIXED_STRING]
       once
          create Result.make
       end
 
-   json_boolean (bool: BOOLEAN): JSON_VALUE is
+   json_boolean (bool: BOOLEAN): JSON_VALUE
       do
          if bool then
             Result := json_true
@@ -95,12 +93,12 @@ feature {}
          end
       end
 
-   json_true: JSON_TRUE is
+   json_true: JSON_TRUE
       once
          create Result.make
       end
 
-   json_false: JSON_FALSE is
+   json_false: JSON_FALSE
       once
          create Result.make
       end
@@ -108,4 +106,4 @@ feature {}
 invariant
    json /= Void
 
-end
+end -- class MESSAGE

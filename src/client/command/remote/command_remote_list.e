@@ -22,23 +22,23 @@ create {COMMAND_REMOTE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "list".intern
+         Result := ("list").intern
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          Result := no_completion
       end
 
-   run (command_line: COLLECTION[STRING]) is
+   run (command_line: COLLECTION[STRING])
       do
          io.put_line(client.list_remotes)
       end
 
 feature {ANY}
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[
                           [33mremote list[0m
@@ -47,4 +47,4 @@ feature {ANY}
                          ]"
       end
 
-end
+end -- class COMMAND_REMOTE_LIST

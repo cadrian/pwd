@@ -23,7 +23,7 @@ create {ANY}
    make
 
 feature {ANY}
-   read_message (input: INPUT_STREAM) is
+   read_message (input: INPUT_STREAM)
       require
          input.is_connected
       local
@@ -35,7 +35,7 @@ feature {ANY}
          if json = Void then
             -- no object (closed connection?)
          elseif error = Void then
-            if not obj ?:= json then
+            if not (obj ?:= json) then
                error := once "Malformed request"
             else
                obj ::= json
@@ -50,9 +50,10 @@ feature {ANY}
       end
 
    last_message: MESSAGE
+
    error: STRING
 
-   write_message (message: MESSAGE; output: OUTPUT_STREAM) is
+   write_message (message: MESSAGE; output: OUTPUT_STREAM)
       require
          message /= Void
          output.is_connected
@@ -65,23 +66,25 @@ feature {ANY}
       end
 
 feature {}
-   make is
+   make
       do
          create parser.make(agent json_parse_error(?))
          create encoder.make
       end
 
-   json_parse_error (msg: ABSTRACT_STRING) is
+   json_parse_error (msg: ABSTRACT_STRING)
       do
          error := msg.out
       end
 
    parser: JSON_PARSER
+
    encoder: JSON_ENCODER
+
    factory: MESSAGE_FACTORY
 
 invariant
    parser /= Void
    encoder /= Void
 
-end
+end -- class MESSAGE_STREAMER

@@ -22,17 +22,17 @@ create {CLIPBOARD_FACTORY}
    make
 
 feature {ANY}
-   copy (a_string: ABSTRACT_STRING) is
+   copy (a_string: ABSTRACT_STRING)
       local
          procs: FAST_ARRAY[PROCESS]
       do
          create procs.with_capacity(xclipboards.count)
-         xclipboards.do_all(agent xclip_select(a_string, ?, procs))
-         procs.do_all(agent {PROCESS}.wait)
+         xclipboards.for_each(agent xclip_select(a_string, ?, procs))
+         procs.for_each(agent {PROCESS}.wait)
       end
 
 feature {}
-   xclip_select (string: ABSTRACT_STRING; selection: STRING; procs: FAST_ARRAY[PROCESS]) is
+   xclip_select (string: ABSTRACT_STRING; selection: STRING; procs: FAST_ARRAY[PROCESS])
       require
          procs /= Void
       local
@@ -48,16 +48,16 @@ feature {}
          procs.count = old procs.count + 1
       end
 
-   xclipboards: FAST_ARRAY[STRING] is
+   xclipboards: FAST_ARRAY[STRING]
       once
-         Result := {FAST_ARRAY[STRING] << "primary", "clipboard" >>}
+         Result := {FAST_ARRAY[STRING] << "primary", "clipboard" >> }
       end
 
 feature {}
-   make is
+   make
       do
       end
 
    processor: PROCESSOR
 
-end
+end -- class XCLIP

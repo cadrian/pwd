@@ -18,12 +18,11 @@ deferred class COMMAND_WITH_REMOTE
 
 inherit
    COMMAND
-      rename
-         make as make_command
+      rename make as make_command
       end
 
 feature {COMMANDER}
-   run (command: COLLECTION[STRING]) is
+   run (command: COLLECTION[STRING])
       local
          remote: REMOTE
       do
@@ -34,7 +33,7 @@ feature {COMMANDER}
          end
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          if command.count = 1 then
             Result := filter_completions(remote_map.new_iterator_on_keys, word)
@@ -42,13 +41,13 @@ feature {COMMANDER}
       end
 
 feature {}
-   run_remote (remote: REMOTE) is
+   run_remote (remote: REMOTE)
       require
          remote /= Void
       deferred
       end
 
-   make (a_client: like client; map: DICTIONARY[COMMAND, FIXED_STRING]; a_remote_map: like remote_map) is
+   make (a_client: like client; map: DICTIONARY[COMMAND, FIXED_STRING]; a_remote_map: like remote_map)
       require
          a_client /= Void
          map /= Void
@@ -65,7 +64,7 @@ feature {}
 
    remote_map: MAP[REMOTE, FIXED_STRING]
 
-   selected_remote (command: COLLECTION[STRING]): REMOTE is
+   selected_remote (command: COLLECTION[STRING]): REMOTE
       require
          command /= Void
       do
@@ -93,4 +92,4 @@ feature {}
          end
       end
 
-end
+end -- class COMMAND_WITH_REMOTE

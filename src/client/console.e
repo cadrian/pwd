@@ -17,10 +17,9 @@ class CONSOLE
 
 inherit
    CLIENT
-      export {COMMAND} -- commands need access to a lot of client stuff
-         copy_to_clipboard, read_password, call_server, send_save, tmpdir, master_pass
-      redefine
-         make, cleanup
+      -- commands need access to a lot of client stuff
+      export {COMMAND} copy_to_clipboard, read_password, call_server, send_save, tmpdir, master_pass
+      redefine make, cleanup
       end
 
 insert
@@ -33,7 +32,7 @@ create {}
 feature {} -- the CLIENT interface
    stop: BOOLEAN
 
-   run is
+   run
       do
          fill_remote_map
          load_history
@@ -73,7 +72,7 @@ feature {} -- the CLIENT interface
          end
       end
 
-   cleanup is
+   cleanup
       do
          Precursor
          save_history
@@ -82,7 +81,7 @@ feature {} -- the CLIENT interface
 feature {} -- readline history management
    history_size: INTEGER
 
-   load_history is
+   load_history
       local
          histsize: FIXED_STRING
       do
@@ -92,10 +91,11 @@ feature {} -- readline history management
          else
             history_size := histsize.to_integer
          end
+
          rio.history.from_file(history_filename)
       end
 
-   save_history is
+   save_history
       do
          rio.history.write(history_filename)
          if history_size > 0 then
@@ -103,7 +103,7 @@ feature {} -- readline history management
          end
       end
 
-   history_filename: FIXED_STRING is
+   history_filename: FIXED_STRING
       local
          xdg: XDG
       once
@@ -111,25 +111,25 @@ feature {} -- readline history management
       end
 
 feature {} -- command management
-   command_line: RING_ARRAY[STRING] is
+   command_line: RING_ARRAY[STRING]
       once
          create Result.with_capacity(16, 0)
       end
 
-   rio: READLINE_INPUT_STREAM is
+   rio: READLINE_INPUT_STREAM
       once
          create Result.make
          Result.set_prompt("> ")
       end
 
-   read_command is
+   read_command
       do
          rio.read_line
          command_line.clear_count
          rio.last_string.split_in(command_line)
       end
 
-   run_command is
+   run_command
       require
          not command_line.is_empty
          channel.is_ready
@@ -149,25 +149,25 @@ feature {} -- command management
       end
 
 feature {} -- local vault commands
-   unknown_key (key: ABSTRACT_STRING) is
+   unknown_key (key: ABSTRACT_STRING)
       do
          io.put_line(once "[1mUnknown password:[0m #(1)" # key)
       end
 
-   run_get is
+   run_get
       do
          do_get(command_line.first, agent copy_to_clipboard(?), agent unknown_key(?))
       end
 
 feature {COMMAND}
-   do_stop is
+   do_stop
       do
          call_server(create {QUERY_STOP}.make, agent when_stop(?))
          stop := True
       end
 
 feature {}
-   when_stop (a_reply: MESSAGE) is
+   when_stop (a_reply: MESSAGE)
       local
          reply: REPLY_STOP
       do
@@ -182,16 +182,16 @@ feature {}
       end
 
 feature {COMMAND} -- command helpers
-   on_cancel: PROCEDURE[TUPLE] is
+   on_cancel: PROCEDURE[TUPLE]
          -- an agent called on cancel
       once
-         Result := agent is
-                   do
-                      std_output.put_line(once "[1mCancelled.[0m")
-                   end
+         Result := agent
+            do
+               std_output.put_line(once "[1mCancelled.[0m")
+            end
       end
 
-   less (string: ABSTRACT_STRING) is
+   less (string: ABSTRACT_STRING)
          -- invoke less with the `string' to be displayed
       local
          proc: PROCESS
@@ -205,7 +205,7 @@ feature {COMMAND} -- command helpers
          end
       end
 
-   list_remotes: STRING is
+   list_remotes: STRING
          -- a formatted list of all the known remotes
       local
          i: INTEGER
@@ -228,18 +228,16 @@ feature {COMMAND} -- command helpers
 feature {} -- helpers
    remote_map: LINKED_HASHED_DICTIONARY[REMOTE, FIXED_STRING]
 
-   fill_remote_map is
+   fill_remote_map
       local
-         config_dir: DIRECTORY
-         xdg: XDG
+         config_dir: DIRECTORY; xdg: XDG
       do
          remote_map.clear_count
-
          create config_dir.scan(xdg.config_home)
-         config_dir.new_iterator.do_all(agent load_remote(?))
+         config_dir.new_iterator.for_each(agent load_remote(?))
       end
 
-   load_remote (name: FIXED_STRING) is
+   load_remote (name: FIXED_STRING)
       require
          name /= Void
       local
@@ -251,12 +249,11 @@ feature {} -- helpers
          end
       end
 
-   add_remote (name: FIXED_STRING) is
+   add_remote (name: FIXED_STRING)
       require
          name /= Void
       local
-         remote: REMOTE
-         remote_factory: REMOTE_FACTORY
+         remote: REMOTE; remote_factory: REMOTE_FACTORY
       do
          if not name.is_empty then
             remote := remote_factory.load_remote(name, Current)
@@ -269,12 +266,12 @@ feature {} -- helpers
          end
       end
 
-   config_history_size: FIXED_STRING is
+   config_history_size: FIXED_STRING
       once
-         Result := "history.size".intern
+         Result := ("history.size").intern
       end
 
-   dont_complete (word: FIXED_STRING): AVL_SET[FIXED_STRING] is
+   dont_complete (word: FIXED_STRING): AVL_SET[FIXED_STRING]
       require
          not command_line.is_empty
       do
@@ -282,25 +279,23 @@ feature {} -- helpers
          create Result.make
       end
 
-   make is
+   make
       local
-         commands_map: LINKED_HASHED_DICTIONARY[COMMAND, FIXED_STRING]
-         command: COMMAND
+         commands_map: LINKED_HASHED_DICTIONARY[COMMAND, FIXED_STRING]; command: COMMAND
       do
          create remote_map.make
-
          create commands_map.make
-         create {COMMAND_ADD   } command.make(Current, commands_map)
-         create {COMMAND_HELP  } command.make(Current, commands_map)
-         create {COMMAND_LIST  } command.make(Current, commands_map)
-         create {COMMAND_LOAD  } command.make(Current, commands_map, remote_map)
+         create {COMMAND_ADD} command.make(Current, commands_map)
+         create {COMMAND_HELP} command.make(Current, commands_map)
+         create {COMMAND_LIST} command.make(Current, commands_map)
+         create {COMMAND_LOAD} command.make(Current, commands_map, remote_map)
          create {COMMAND_MASTER} command.make(Current, commands_map)
-         create {COMMAND_MERGE } command.make(Current, commands_map, remote_map)
-         create {COMMAND_REM   } command.make(Current, commands_map)
+         create {COMMAND_MERGE} command.make(Current, commands_map, remote_map)
+         create {COMMAND_REM} command.make(Current, commands_map)
          create {COMMAND_REMOTE} command.make(Current, commands_map, remote_map)
-         create {COMMAND_SAVE  } command.make(Current, commands_map, remote_map)
-         create {COMMAND_SHOW  } command.make(Current, commands_map)
-         create {COMMAND_STOP  } command.make(Current, commands_map)
+         create {COMMAND_SAVE} command.make(Current, commands_map, remote_map)
+         create {COMMAND_SHOW} command.make(Current, commands_map)
+         create {COMMAND_STOP} command.make(Current, commands_map)
 
          commands := commands_map
 
@@ -308,12 +303,11 @@ feature {} -- helpers
          Precursor
       end
 
-   complete (word: FIXED_STRING; start_index, end_index: INTEGER): TRAVERSABLE[FIXED_STRING] is
+   complete (word: FIXED_STRING; start_index, end_index: INTEGER): TRAVERSABLE[FIXED_STRING]
       require
          word /= Void
       local
-         command: COMMAND
-         buffer: FIXED_STRING
+         command: COMMAND; buffer: FIXED_STRING
       do
          if start_index = 0 then
             Result := filter_completions(commands.new_iterator_on_keys, word)
@@ -338,4 +332,4 @@ feature {} -- helpers
 invariant
    remote_map /= Void
 
-end
+end -- class CONSOLE

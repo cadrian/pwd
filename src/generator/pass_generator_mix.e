@@ -22,12 +22,12 @@ create {PASS_GENERATOR_PARSER}
    make
 
 feature {PASS_GENERATOR}
-   extend (rnd: PASS_GENERATOR_RANDOM; pass: STRING) is
+   extend (rnd: PASS_GENERATOR_RANDOM; pass: STRING)
       require
          rnd.is_connected
          pass /= Void
       do
-         (1 |..| quantity).do_all(agent extend_pass(rnd, pass))
+         (1 |..| quantity).for_each(agent extend_pass(rnd, pass))
       ensure
          pass.count = old pass.count + quantity
          pass.substring(old pass.lower, old pass.upper).is_equal(old pass.twin)
@@ -35,10 +35,11 @@ feature {PASS_GENERATOR}
 
 feature {ANY}
    quantity: INTEGER_8
+
    ingredient: FIXED_STRING
 
 feature {}
-   extend_pass (rnd: PASS_GENERATOR_RANDOM; pass: STRING) is
+   extend_pass (rnd: PASS_GENERATOR_RANDOM; pass: STRING)
       require
          rnd.is_connected
          pass /= Void
@@ -53,7 +54,7 @@ feature {}
       end
 
 feature {}
-   make (a_quantity: INTEGER; a_ingredient: like ingredient) is
+   make (a_quantity: INTEGER; a_ingredient: like ingredient)
       require
          a_quantity > 0
          a_quantity.fit_integer_8
@@ -71,4 +72,4 @@ invariant
    quantity > 0
    ingredient.count.in_range(1, 16383)
 
-end
+end -- class PASS_GENERATOR_MIX

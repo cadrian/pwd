@@ -27,19 +27,18 @@ create {PWD_TEST}
 feature {ANY}
    is_valid: BOOLEAN
 
-   generated: STRING is
+   generated: STRING
       require
          is_valid
       local
-         bfr: BINARY_FILE_READ
-         rnd: PASS_GENERATOR_RANDOM
+         bfr: BINARY_FILE_READ; rnd: PASS_GENERATOR_RANDOM
       do
          Result := ""
          create bfr.with_buffer_size(3 * length) -- 3 bytes read for each random character (two bytes to select a character, one byte to select its position)
          bfr.connect_to(random_file)
          if bfr.is_connected then
             create rnd.connect_to(bfr)
-            recipe.do_all(extend.item([rnd, Result]))
+            recipe.for_each(extend.item([rnd, Result]))
             bfr.disconnect
          end
       ensure
@@ -48,17 +47,19 @@ feature {ANY}
 
 feature {}
    recipe: FAST_ARRAY[PASS_GENERATOR_MIX]
+
    length: INTEGER
 
    random_file: STRING
+
    extend: FUNCTION[TUPLE[PASS_GENERATOR_RANDOM, STRING], PROCEDURE[TUPLE[PASS_GENERATOR_MIX]]]
 
-   default_extend (rnd: PASS_GENERATOR_RANDOM; pass: STRING): PROCEDURE[TUPLE[PASS_GENERATOR_MIX]] is
+   default_extend (rnd: PASS_GENERATOR_RANDOM; pass: STRING): PROCEDURE[TUPLE[PASS_GENERATOR_MIX]]
       do
          Result := agent {PASS_GENERATOR_MIX}.extend(rnd, pass)
       end
 
-   parse (a_recipe: ABSTRACT_STRING) is
+   parse (a_recipe: ABSTRACT_STRING)
       require
          a_recipe /= Void
       local
@@ -74,7 +75,7 @@ feature {}
          end
       end
 
-   test_parse (a_recipe: ABSTRACT_STRING; a_random_file: like random_file; a_extend: like extend) is
+   test_parse (a_recipe: ABSTRACT_STRING; a_random_file: like random_file; a_extend: like extend)
       require
          a_recipe /= Void
          a_random_file /= Void
@@ -93,4 +94,4 @@ invariant
    random_file /= Void
    extend /= Void
 
-end
+end -- class PASS_GENERATOR

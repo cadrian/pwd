@@ -22,12 +22,12 @@ create {COMMAND_REMOTE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "unset".intern
+         Result := ("unset").intern
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          inspect
             command.count
@@ -42,7 +42,7 @@ feature {COMMANDER}
       end
 
 feature {}
-   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE) is
+   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE)
       do
          if remote = Void then
             error_and_help(message_unknown_remote # remote_name, command)
@@ -54,7 +54,7 @@ feature {}
       end
 
 feature {ANY}
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[
                     [33mremote unset [remote] [property][0m
@@ -64,4 +64,4 @@ feature {ANY}
                          ]"
       end
 
-end
+end -- class COMMAND_REMOTE_UNSET

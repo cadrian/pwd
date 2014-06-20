@@ -22,7 +22,7 @@ create {}
    test
 
 feature {}
-   test is
+   test
       local
          q_obj, q_json: QUERY_CLOSE
       do
@@ -32,4 +32,4 @@ feature {}
          assert(q_obj.is_equal(q_json))
       end
 
-end
+end -- class TEST_QUERY_CLOSE_01

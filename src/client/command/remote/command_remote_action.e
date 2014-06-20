@@ -18,15 +18,13 @@ deferred class COMMAND_REMOTE_ACTION
 
 inherit
    COMMAND
-      rename
-         make as make_command
+      rename make as make_command
       end
 
 feature {COMMANDER}
-   run (command_line: COLLECTION[STRING]) is
+   run (command_line: COLLECTION[STRING])
       local
-         remote_name: FIXED_STRING
-         remote: REMOTE
+         remote_name: FIXED_STRING; remote: REMOTE
       do
          if command_line.count < 1 then
             error_and_help(message_invalid_arguments, command_line)
@@ -39,7 +37,7 @@ feature {COMMANDER}
       end
 
 feature {}
-   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE) is
+   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE)
       require
          command /= Void
          remote_name /= Void
@@ -47,10 +45,11 @@ feature {}
       deferred
       end
 
-   message_unknown_remote: STRING is "Unknown remote: #(1)"
-   message_property_failed: STRING is "Failed (unknown property?)"
+   message_unknown_remote: STRING "Unknown remote: #(1)"
 
-   make (a_client: like client; map: DICTIONARY[COMMAND, FIXED_STRING]; a_remote_map: like remote_map) is
+   message_property_failed: STRING "Failed (unknown property?)"
+
+   make (a_client: like client; map: DICTIONARY[COMMAND, FIXED_STRING]; a_remote_map: like remote_map)
       require
          a_client /= Void
          map /= Void
@@ -67,4 +66,4 @@ feature {}
 
    remote_map: DICTIONARY[REMOTE, FIXED_STRING]
 
-end
+end -- class COMMAND_REMOTE_ACTION

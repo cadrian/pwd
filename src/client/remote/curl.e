@@ -22,23 +22,23 @@ create {ANY}
    make
 
 feature {ANY}
-   write_to (stream: OUTPUT_STREAM) is
+   write_to (stream: OUTPUT_STREAM)
       do
          stream.put_string(once "[remote_factory]%Nmethod = curl%N%N[curl]%N")
-         put_property(stream, config_key_remote_user,        user)
-         put_property(stream, config_key_remote_pass,        passkey)
-         put_property(stream, config_key_remote_url,         url)
+         put_property(stream, config_key_remote_user, user)
+         put_property(stream, config_key_remote_pass, passkey)
+         put_property(stream, config_key_remote_url, url)
          put_property(stream, config_key_remote_request_get, get_request)
          put_property(stream, config_key_remote_request_put, put_request)
          stream.put_string(once "%N[proxy]%N")
          put_property(stream, proxy.config_protocol, proxy.protocol)
-         put_property(stream, proxy.config_host,     proxy.host)
-         put_property(stream, proxy.config_port,     proxy.port)
-         put_property(stream, proxy.config_user,     proxy.user)
-         put_property(stream, proxy.config_pass,     proxy.passkey)
+         put_property(stream, proxy.config_host, proxy.host)
+         put_property(stream, proxy.config_port, proxy.port)
+         put_property(stream, proxy.config_user, proxy.user)
+         put_property(stream, proxy.config_pass, proxy.passkey)
       end
 
-   save (local_file: ABSTRACT_STRING) is
+   save (local_file: ABSTRACT_STRING)
       local
          proc: PROCESS; arg: like arguments
       do
@@ -49,11 +49,12 @@ feature {ANY}
             if proc.is_connected then
                proc.wait
             end
+
             proxy.reset
          end
       end
 
-   load (local_file: ABSTRACT_STRING) is
+   load (local_file: ABSTRACT_STRING)
       local
          proc: PROCESS; arg: like arguments
       do
@@ -64,12 +65,13 @@ feature {ANY}
             if proc.is_connected then
                proc.wait
             end
+
             proxy.reset
          end
       end
 
 feature {COMMAND}
-   set_property (key, value: ABSTRACT_STRING): BOOLEAN is
+   set_property (key, value: ABSTRACT_STRING): BOOLEAN
       do
          inspect
             key.out
@@ -89,11 +91,13 @@ feature {COMMAND}
             put_request := value.intern
             Result := True
          else
-            check not Result end
+            check
+               not Result
+            end
          end
       end
 
-   unset_property (key: ABSTRACT_STRING): BOOLEAN is
+   unset_property (key: ABSTRACT_STRING): BOOLEAN
       do
          inspect
             key.out
@@ -113,13 +117,15 @@ feature {COMMAND}
             put_request := Void
             Result := True
          else
-            check not Result end
+            check
+               not Result
+            end
          end
       end
 
-   has_proxy: BOOLEAN is True
+   has_proxy: BOOLEAN True
 
-   set_proxy_property (key, value: ABSTRACT_STRING): BOOLEAN is
+   set_proxy_property (key, value: ABSTRACT_STRING): BOOLEAN
       do
          if key.same_as(once "unset") then
             Result := proxy.unset_property(value)
@@ -129,13 +135,13 @@ feature {COMMAND}
       end
 
 feature {PROXY}
-   get_password (key: ABSTRACT_STRING): STRING is
+   get_password (key: ABSTRACT_STRING): STRING
       do
          Result := client.get_password(key)
       end
 
 feature {}
-   arguments (option, file, request: ABSTRACT_STRING): ABSTRACT_STRING is
+   arguments (option, file, request: ABSTRACT_STRING): ABSTRACT_STRING
       require
          option.is_equal(once "-T") or else option.is_equal(once "-o")
          file /= Void
@@ -152,13 +158,14 @@ feature {}
                   Result := once "#(1) -u #(2):#(3)" # Result # user # pass
                end
             end
+
             if request /= Void then
                Result := once "#(1) --request #(2)" # Result # request
             end
          end
       end
 
-   is_anonymous: BOOLEAN is
+   is_anonymous: BOOLEAN
       do
          Result := not has_conf(config_key_remote_user) or else not has_conf(config_key_remote_pass)
       end
@@ -166,33 +173,33 @@ feature {}
 feature {}
    url, get_request, put_request, user, passkey: FIXED_STRING
 
-   config_key_remote_user: FIXED_STRING is
+   config_key_remote_user: FIXED_STRING
       once
-         Result := "user".intern
+         Result := ("user").intern
       end
 
-   config_key_remote_pass: FIXED_STRING is
+   config_key_remote_pass: FIXED_STRING
       once
-         Result := "pass".intern
+         Result := ("pass").intern
       end
 
-   config_key_remote_url: FIXED_STRING is
+   config_key_remote_url: FIXED_STRING
       once
-         Result := "url".intern
+         Result := ("url").intern
       end
 
-   config_key_remote_request_get: FIXED_STRING is
+   config_key_remote_request_get: FIXED_STRING
       once
-         Result := "request.get".intern
+         Result := ("request.get").intern
       end
 
-   config_key_remote_request_put: FIXED_STRING is
+   config_key_remote_request_put: FIXED_STRING
       once
-         Result := "request.put".intern
+         Result := ("request.put").intern
       end
 
 feature {}
-   make (a_name: ABSTRACT_STRING; a_client: like client) is
+   make (a_name: ABSTRACT_STRING; a_client: like client)
       require
          a_name /= Void
          a_client /= Void
@@ -214,10 +221,10 @@ feature {}
       end
 
    client: CLIENT
+
    proxy: PROXY
 
 invariant
-   client /= Void
-   --proxy /= Void
+   client /= Void --proxy /= Void
 
-end
+end -- class CURL

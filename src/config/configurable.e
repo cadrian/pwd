@@ -16,7 +16,7 @@
 expanded class CONFIGURABLE
 
 feature {}
-   conf_no_eval (key: ABSTRACT_STRING): FIXED_STRING is
+   conf_no_eval (key: ABSTRACT_STRING): FIXED_STRING
       require
          key /= Void
       do
@@ -24,7 +24,7 @@ feature {}
          Result := specific_config.get_no_eval(specific_section, key)
       end
 
-   conf (key: ABSTRACT_STRING): FIXED_STRING is
+   conf (key: ABSTRACT_STRING): FIXED_STRING
       require
          key /= Void
       do
@@ -32,7 +32,7 @@ feature {}
          Result := specific_config.get(specific_section, key)
       end
 
-   has_conf (key: ABSTRACT_STRING): BOOLEAN is
+   has_conf (key: ABSTRACT_STRING): BOOLEAN
       require
          key /= Void
       do
@@ -41,15 +41,16 @@ feature {}
       end
 
 feature {}
-   configuration: CONFIGURATION is
+   configuration: CONFIGURATION
       once
          create Result
       end
 
    specific_section: FIXED_STRING
+
    specific_config: CONFIG_FILE
 
-   check_specific is
+   check_specific
       do
          if specific_section = Void then
             specific_section := generating_type.as_lower.intern
@@ -62,4 +63,4 @@ feature {}
          specific_config /= Void
       end
 
-end
+end -- class CONFIGURABLE

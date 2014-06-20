@@ -22,31 +22,28 @@ insert
 feature {}
    shared: SHARED
 
-   version: FIXED_STRING is
+   version: FIXED_STRING
       local
          v: VERSION
       do
          Result := v.version
       end
 
-   command_name: FIXED_STRING is
+   command_name: FIXED_STRING
       once
          Result := configuration.command_name.intern
       end
 
-   log_file: FIXED_STRING is
+   log_file: FIXED_STRING
       once
          Result := shared.log_file(generating_type.as_lower)
       end
 
-   make is
+   make
       local
-         logconf: LOG_CONFIGURATION
-         config: STRING_INPUT_STREAM
-         config_string: ABSTRACT_STRING
+         logconf: LOG_CONFIGURATION; config: STRING_INPUT_STREAM; config_string: ABSTRACT_STRING
       do
          preload
-
          config_string := "[
                            log configuration
 
@@ -67,22 +64,18 @@ feature {}
 
                            end
 
-                           ]"
-                           # generating_type
-                           # log_file
-                           # command_name
-                           # shared.log_level
+                           ]" # generating_type # log_file # command_name # shared.log_level
 
          create config.from_string(config_string.out)
 
          logconf.load(config, Void, Void, agent start_main)
       end
 
-   preload is
+   preload
       deferred
       end
 
-   start_main is
+   start_main
       do
          log.info.put_line("[
                             **************** STARTUP ****************
@@ -92,20 +85,14 @@ feature {}
                             Runtime directory:       #(4)
                             Log file:                #(5)
 
-                            ]"
-                           # configuration.main_config.filename
-                           # shared.server_pidfile
-                           # shared.vault_file
-                           # shared.runtime_dir
-                           # log_file)
-
+                            ]" # configuration.main_config.filename # shared.server_pidfile # shared.vault_file # shared.runtime_dir # log_file)
          main
 
          log.info.put_line("**************** SHUTDOWN ****************")
       end
 
-   main is
+   main
       deferred
       end
 
-end
+end -- class GLOBALS

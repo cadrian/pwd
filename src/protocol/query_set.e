@@ -22,7 +22,7 @@ create {ANY}
    make_random, make_given, from_json
 
 feature {ANY}
-   accept (visitor: VISITOR) is
+   accept (visitor: VISITOR)
       local
          v: QUERY_VISITOR
       do
@@ -31,46 +31,42 @@ feature {ANY}
       end
 
 feature {ANY}
-   key: STRING is
+   key: STRING
       do
          Result := string(once "key")
       end
 
-   recipe: STRING is
+   recipe: STRING
       do
          Result := string(once "recipe")
       end
 
-   pass: STRING is
+   pass: STRING
       do
          Result := string(once "pass")
       end
 
 feature {}
-   make_random (a_key, a_recipe: ABSTRACT_STRING) is
+   make_random (a_key, a_recipe: ABSTRACT_STRING)
       require
          a_key /= Void
          a_recipe /= Void
       do
-         create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
-                           json_string(once "query"), json_string(once "type");
-                           json_string(once "set"), json_string(once "command");
-                           create {JSON_STRING}.from_string(a_key), json_string(once "key");
-                           create {JSON_STRING}.from_string(a_recipe), json_string(once "recipe");
-                           >>})
+         create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] << json_string(once "query"), json_string(once "type");
+                                                                         json_string(once "set"), json_string(once "command");
+                                                                         create {JSON_STRING}.from_string(a_key), json_string(once "key");
+                                                                         create {JSON_STRING}.from_string(a_recipe), json_string(once "recipe") >> })
       end
 
-   make_given (a_key, a_pass: STRING) is
+   make_given (a_key, a_pass: STRING)
       require
          a_key /= Void
          a_pass /= Void
       do
-         create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
-                           json_string(once "query"), json_string(once "type");
-                           json_string(once "set"), json_string(once "command");
-                           create {JSON_STRING}.from_string(a_key), json_string(once "key");
-                           create {JSON_STRING}.from_string(a_pass), json_string(once "pass");
-                           >>})
+         create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] << json_string(once "query"), json_string(once "type");
+                                                                         json_string(once "set"), json_string(once "command");
+                                                                         create {JSON_STRING}.from_string(a_key), json_string(once "key");
+                                                                         create {JSON_STRING}.from_string(a_pass), json_string(once "pass") >> })
       end
 
-end
+end -- class QUERY_SET

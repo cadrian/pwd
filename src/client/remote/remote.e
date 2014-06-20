@@ -21,26 +21,26 @@ insert
 feature {ANY}
    name: FIXED_STRING
 
-   write_to (stream: OUTPUT_STREAM) is
+   write_to (stream: OUTPUT_STREAM)
       require
          stream.is_connected
       deferred
       end
 
-   save (local_file: ABSTRACT_STRING) is
+   save (local_file: ABSTRACT_STRING)
       require
          local_file /= Void
       deferred
       end
 
-   load (local_file: ABSTRACT_STRING) is
+   load (local_file: ABSTRACT_STRING)
       require
          local_file /= Void
       deferred
       end
 
 feature {COMMAND}
-   set_property (key, value: ABSTRACT_STRING): BOOLEAN is
+   set_property (key, value: ABSTRACT_STRING): BOOLEAN
          -- True if the property was set; False if unknown or could
          -- not be set
       require
@@ -49,7 +49,7 @@ feature {COMMAND}
       deferred
       end
 
-   unset_property (key: ABSTRACT_STRING): BOOLEAN is
+   unset_property (key: ABSTRACT_STRING): BOOLEAN
          -- True if the property was unset; False if unknown or could
          -- not be unset
       require
@@ -57,13 +57,13 @@ feature {COMMAND}
       deferred
       end
 
-   has_proxy: BOOLEAN is
-      -- True if the remote can have a proxy (not necessarily if it
-      -- actually has one)
+   has_proxy: BOOLEAN
+         -- True if the remote can have a proxy (not necessarily if it
+         -- actually has one)
       deferred
       end
 
-   set_proxy_property (key, value: ABSTRACT_STRING): BOOLEAN is
+   set_proxy_property (key, value: ABSTRACT_STRING): BOOLEAN
          -- True if the property was set; False if unknown or could
          -- not be set
       require
@@ -73,7 +73,7 @@ feature {COMMAND}
       deferred
       end
 
-   save_file is
+   save_file
       local
          tfw: TEXT_FILE_WRITE
       do
@@ -84,7 +84,7 @@ feature {COMMAND}
          end
       end
 
-   delete_file is
+   delete_file
       local
          ft: FILE_TOOLS; path: FIXED_STRING
       do
@@ -96,14 +96,15 @@ feature {COMMAND}
 
 feature {}
    processor: PROCESSOR
+
    xdg: XDG
 
-   filename: FIXED_STRING is
+   filename: FIXED_STRING
       do
          Result := (once "#(1)/#(2).rc" # xdg.config_home # name).intern
       end
 
-   put_property (stream: OUTPUT_STREAM; property, value: ABSTRACT_STRING) is
+   put_property (stream: OUTPUT_STREAM; property, value: ABSTRACT_STRING)
       require
          stream.is_connected
       do
@@ -115,4 +116,4 @@ feature {}
 invariant
    name /= Void
 
-end
+end -- class REMOTE

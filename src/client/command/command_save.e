@@ -22,12 +22,12 @@ create {CONSOLE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "save".intern
+         Result := ("save").intern
       end
 
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[
                           [33msave [remote][0m      Save the password vault upto the server.
@@ -37,7 +37,7 @@ feature {COMMANDER}
       end
 
 feature {}
-   run_remote (remote: REMOTE) is
+   run_remote (remote: REMOTE)
       local
          shared: SHARED
       do
@@ -48,4 +48,4 @@ feature {}
          end
       end
 
-end
+end -- class COMMAND_SAVE

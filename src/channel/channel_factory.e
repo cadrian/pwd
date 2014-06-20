@@ -19,7 +19,7 @@ insert
    LOGGING
 
 feature {CLIENT}
-   new_client_channel (tmpdir: ABSTRACT_STRING): CLIENT_CHANNEL is
+   new_client_channel (tmpdir: ABSTRACT_STRING): CLIENT_CHANNEL
       require
          tmpdir /= Void
       do
@@ -36,7 +36,7 @@ feature {CLIENT}
       end
 
 feature {SERVER}
-   new_server_channel: SERVER_CHANNEL is
+   new_server_channel: SERVER_CHANNEL
       do
          inspect
             shared.channel_method.out
@@ -53,4 +53,4 @@ feature {SERVER}
 feature {}
    shared: SHARED
 
-end
+end -- class CHANNEL_FACTORY

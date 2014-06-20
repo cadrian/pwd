@@ -55,7 +55,7 @@ generate_getters() {
     while [ $# -gt 0 ]; do
         echo "$1" | awk -F: '{print $1, $2}' | while read field type; do
             echo
-            echo "   $field: $type is"
+            echo "   $field: $type"
             echo "      do"
             case $type in
                 STRING)
@@ -110,7 +110,7 @@ generate() {
     echo "   make, from_json"
     echo
     echo "feature {ANY}"
-    echo "   accept (visitor: VISITOR) is"
+    echo "   accept (visitor: VISITOR)"
     echo "      local"
     echo "         v: $visitorname"
     echo "      do"
@@ -123,7 +123,7 @@ generate() {
     generate_getters "$@"
     echo
     echo "feature {}"
-    echo "   make"$(generate_const_arg $type "$@")" is"
+    echo "   make"$(generate_const_arg $type "$@")
     echo "      require"
     if [ $type = reply ]; then
         echo "         a_error /= Void"
@@ -158,7 +158,7 @@ generate_visitor() {
         classname=$(echo ${type}_${name} | tr '[a-z]' '[A-Z]')
         echo
         echo "feature {$classname}"
-        echo "   visit_$name ($type: $classname) is"
+        echo "   visit_$name ($type: $classname)"
         echo "      require"
         echo "         $type /= Void"
         echo "      deferred"
@@ -179,7 +179,7 @@ generate_factory() {
     echo "   LOGGING"
     echo
     echo "feature {ANY}"
-    echo "   from_json (json: JSON_OBJECT): MESSAGE is"
+    echo "   from_json (json: JSON_OBJECT): MESSAGE"
     echo "      local"
     echo "         type, command: JSON_STRING"
     echo "      do"
@@ -208,12 +208,12 @@ generate_factory() {
     echo "      end"
     echo
     echo "feature {}"
-    echo "   json_type: JSON_STRING is"
+    echo "   json_type: JSON_STRING"
     echo "      once"
     echo '         create Result.from_string("type")'
     echo "      end"
     echo
-    echo "   json_command: JSON_STRING is"
+    echo "   json_command: JSON_STRING"
     echo "      once"
     echo '         create Result.from_string("command")'
     echo "      end"

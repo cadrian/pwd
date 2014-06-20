@@ -20,72 +20,72 @@ insert
    LOGGING
 
 feature {ANY}
-   server_pidfile: FIXED_STRING is
+   server_pidfile: FIXED_STRING
       once
          Result := ("#(1)/server_pid" # xdg.runtime_dir).intern
       end
 
-   vault_file: FIXED_STRING is
+   vault_file: FIXED_STRING
       once
          Result := ("#(1)/vault" # xdg.data_home).intern
       end
 
-   log_file (tag: ABSTRACT_STRING): FIXED_STRING is
+   log_file (tag: ABSTRACT_STRING): FIXED_STRING
       require
          tag /= Void
       do
          Result := (once "#(1)/#(2).log" # xdg.cache_home # tag).intern
       end
 
-   runtime_dir: FIXED_STRING is
+   runtime_dir: FIXED_STRING
       once
          Result := xdg.runtime_dir
       end
 
-   log_level: FIXED_STRING is
+   log_level: FIXED_STRING
       once
          Result := conf(config_log_level)
          if Result = Void then
-            Result := "info".intern
+            Result := ("info").intern
          end
       end
 
-   default_recipe: FIXED_STRING is
+   default_recipe: FIXED_STRING
       once
          Result := conf(config_default_recipe)
          if Result = Void then
-            Result := "an+s+14ansanansaan".intern -- default is 16 chars long, with at least one alphanumeric and one symbol
+            Result := ("an+s+14ansanansaan").intern -- default is 16 chars long, with at least one alphanumeric and one symbol
          end
       end
 
-   channel_method: FIXED_STRING is
+   channel_method: FIXED_STRING
       once
          Result := conf(config_channel_method)
          if Result = Void then
-            Result := "fifo".intern -- default is named fifo
+            Result := ("fifo").intern -- default is named fifo
          end
       end
 
-   master_command: FIXED_STRING is
+   master_command: FIXED_STRING
       once
          Result := conf(config_master_command)
          if Result = Void then
-            Result := "zenity".intern
+            Result := ("zenity").intern
          end
       end
 
-   master_arguments: FIXED_STRING is
+   master_arguments: FIXED_STRING
       once
          Result := conf(config_master_arguments)
          if Result = Void then
-            Result := "--entry --hide-text --title=Password --text=%"#(1)%"".intern
+            Result := ("--entry --hide-text --title=Password --text=%"#(1)%"").intern
          end
       end
 
 feature {}
    xdg: XDG
 
-   mandatory_key (key: FIXED_STRING): FIXED_STRING is
+   mandatory_key (key: FIXED_STRING): FIXED_STRING
       require
          key /= Void
       do
@@ -99,29 +99,29 @@ feature {}
          Result /= Void
       end
 
-   config_log_level: FIXED_STRING is
+   config_log_level: FIXED_STRING
       once
-         Result := "log.level".intern
+         Result := ("log.level").intern
       end
 
-   config_default_recipe: FIXED_STRING is
+   config_default_recipe: FIXED_STRING
       once
-         Result := "default_recipe".intern
+         Result := ("default_recipe").intern
       end
 
-   config_channel_method: FIXED_STRING is
+   config_channel_method: FIXED_STRING
       once
-         Result := "channel.method".intern
+         Result := ("channel.method").intern
       end
 
-   config_master_command: FIXED_STRING is
+   config_master_command: FIXED_STRING
       once
-         Result := "master.command".intern
+         Result := ("master.command").intern
       end
 
-   config_master_arguments: FIXED_STRING is
+   config_master_arguments: FIXED_STRING
       once
-         Result := "master.arguments".intern
+         Result := ("master.arguments").intern
       end
 
-end
+end -- class SHARED

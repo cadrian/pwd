@@ -22,16 +22,16 @@ create {ANY}
    make
 
 feature {ANY}
-   write_to (stream: OUTPUT_STREAM) is
+   write_to (stream: OUTPUT_STREAM)
       do
          stream.put_string(once "[remote_factory]%Nmethod = scp%N%N[scp]%N")
-         put_property(stream, config_key_remote_file,    file)
-         put_property(stream, config_key_remote_host,    host)
-         put_property(stream, config_key_remote_user,    user)
+         put_property(stream, config_key_remote_file, file)
+         put_property(stream, config_key_remote_host, host)
+         put_property(stream, config_key_remote_user, user)
          put_property(stream, config_key_remote_options, options)
       end
 
-   save (local_file: ABSTRACT_STRING) is
+   save (local_file: ABSTRACT_STRING)
       local
          proc: PROCESS; arg: like arguments
       do
@@ -45,10 +45,9 @@ feature {ANY}
          end
       end
 
-   load (local_file: ABSTRACT_STRING) is
+   load (local_file: ABSTRACT_STRING)
       local
-         proc: PROCESS; arg: like arguments
-         sys: SYSTEM
+         proc: PROCESS; arg: like arguments; sys: SYSTEM
       do
          arg := arguments
          if arg /= Void then
@@ -62,7 +61,7 @@ feature {ANY}
       end
 
 feature {COMMAND}
-   set_property (key, value: ABSTRACT_STRING): BOOLEAN is
+   set_property (key, value: ABSTRACT_STRING): BOOLEAN
       do
          inspect
             key.out
@@ -79,11 +78,13 @@ feature {COMMAND}
             options := value.intern
             Result := True
          else
-            check not Result end
+            check
+               not Result
+            end
          end
       end
 
-   unset_property (key: ABSTRACT_STRING): BOOLEAN is
+   unset_property (key: ABSTRACT_STRING): BOOLEAN
       do
          inspect
             key.out
@@ -100,19 +101,23 @@ feature {COMMAND}
             options := Void
             Result := True
          else
-            check not Result end
+            check
+               not Result
+            end
          end
       end
 
-   has_proxy: BOOLEAN is False
+   has_proxy: BOOLEAN False
 
-   set_proxy_property (key, value: ABSTRACT_STRING): BOOLEAN is
+   set_proxy_property (key, value: ABSTRACT_STRING): BOOLEAN
       do
-         check False end
+         check
+            False
+         end
       end
 
 feature {}
-   make (a_name: ABSTRACT_STRING) is
+   make (a_name: ABSTRACT_STRING)
       require
          a_name /= Void
       do
@@ -128,7 +133,7 @@ feature {}
          specific_config = configuration.specific(name)
       end
 
-   arguments: ABSTRACT_STRING is
+   arguments: ABSTRACT_STRING
       do
          if file = Void then
             std_output.put_line(once "[1mMissing remote vault path![0m")
@@ -147,7 +152,7 @@ feature {}
          end
       end
 
-   remote_options: ABSTRACT_STRING is
+   remote_options: ABSTRACT_STRING
       do
          Result := options
          if Result = Void then
@@ -160,24 +165,24 @@ feature {}
 feature {}
    file, host, user, options: FIXED_STRING
 
-   config_key_remote_user: FIXED_STRING is
+   config_key_remote_user: FIXED_STRING
       once
-         Result := "user".intern
+         Result := ("user").intern
       end
 
-   config_key_remote_host: FIXED_STRING is
+   config_key_remote_host: FIXED_STRING
       once
-         Result := "host".intern
+         Result := ("host").intern
       end
 
-   config_key_remote_file: FIXED_STRING is
+   config_key_remote_file: FIXED_STRING
       once
-         Result := "file".intern
+         Result := ("file").intern
       end
 
-   config_key_remote_options: FIXED_STRING is
+   config_key_remote_options: FIXED_STRING
       once
-         Result := "options".intern
+         Result := ("options").intern
       end
 
-end
+end -- class SCP

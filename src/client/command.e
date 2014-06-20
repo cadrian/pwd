@@ -20,18 +20,18 @@ insert
    LOGGING
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       deferred
       end
 
-   run (command: COLLECTION[STRING]) is
+   run (command: COLLECTION[STRING])
       require
          client /= Void
          command /= Void
       deferred
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       require
          client /= Void
          command /= Void
@@ -39,7 +39,7 @@ feature {COMMANDER}
       deferred
       end
 
-   help (command: COLLECTION[STRING]): ABSTRACT_STRING is
+   help (command: COLLECTION[STRING]): ABSTRACT_STRING
          -- If `command' is Void, provide extended help
          -- Otherwise provide help depending on the user input
       require
@@ -48,22 +48,22 @@ feature {COMMANDER}
       end
 
 feature {}
-   error_and_help (message: ABSTRACT_STRING; command_line: COLLECTION[STRING]) is
+   error_and_help (message: ABSTRACT_STRING; command_line: COLLECTION[STRING])
       require
          message /= Void
       do
          std_output.put_string(once "[1m**** #(1)[0m%N#(2)%N" # message # help(command_line))
       end
 
-   message_invalid_arguments: STRING is "Invalid arguments"
+   message_invalid_arguments: STRING "Invalid arguments"
 
 feature {}
-   data: RING_ARRAY[STRING] is
+   data: RING_ARRAY[STRING]
       once
          create Result.with_capacity(16, 0)
       end
 
-   make (a_client: like client; map: DICTIONARY[COMMAND, FIXED_STRING]) is
+   make (a_client: like client; map: DICTIONARY[COMMAND, FIXED_STRING])
       require
          a_client /= Void
          map /= Void
@@ -81,4 +81,4 @@ feature {}
 invariant
    client /= Void
 
-end
+end -- class COMMAND

@@ -17,8 +17,7 @@ class COMMAND_HELP
 
 inherit
    COMMAND
-      redefine
-         make
+      redefine make
       end
 
 insert
@@ -28,12 +27,12 @@ create {CONSOLE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "help".intern
+         Result := ("help").intern
       end
 
-   run (command: COLLECTION[STRING]) is
+   run (command: COLLECTION[STRING])
       local
          msg: STRING
       do
@@ -60,18 +59,18 @@ feature {COMMANDER}
          end
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          Result := filter_completions(commands.new_iterator_on_keys, word)
       end
 
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[33mhelp[0m               Show this screen"
       end
 
 feature {}
-   make (a_client: like client; a_map: DICTIONARY[COMMAND, FIXED_STRING]) is
+   make (a_client: like client; a_map: DICTIONARY[COMMAND, FIXED_STRING])
       do
          Precursor(a_client, a_map)
          commands := a_map
@@ -79,4 +78,4 @@ feature {}
          commands = a_map
       end
 
-end
+end -- class COMMAND_HELP

@@ -21,28 +21,30 @@ insert
    JSON_HANDLER
 
 feature {}
-   json (string: STRING): JSON_OBJECT is
+   json (string: STRING): JSON_OBJECT
       require
          string /= Void
       local
-         json_parser: JSON_PARSER
-         json_text: JSON_TEXT
+         json_parser: JSON_PARSER; json_text: JSON_TEXT
       do
          create json_parser.make(agent on_error(?))
          json_text := json_parser.parse_json_text(create {STRING_INPUT_STREAM}.from_string(string))
          if Result ?:= json_text then
             Result ::= json_text
          else
-            check last_error = Void end -- otherwise, json_text = Void and we cannot be here
+            check
+               last_error = Void
+            end
+            -- otherwise, json_text = Void and we cannot be here
             last_error := once "Not a JSON object!"
          end
       end
 
-   on_error (err: like last_error) is
+   on_error (err: like last_error)
       do
          last_error := err
       end
 
    last_error: ABSTRACT_STRING
 
-end
+end -- class PWD_MESSAGE_TEST

@@ -22,7 +22,7 @@ feature {ANY}
    filename: FIXED_STRING
 
 feature {ANY}
-   has (section, key: ABSTRACT_STRING): BOOLEAN is
+   has (section, key: ABSTRACT_STRING): BOOLEAN
       require
          section /= Void
          key /= Void
@@ -30,7 +30,7 @@ feature {ANY}
          Result := get_no_eval(section, key) /= Void
       end
 
-   get (section, key: ABSTRACT_STRING): FIXED_STRING is
+   get (section, key: ABSTRACT_STRING): FIXED_STRING
       require
          section /= Void
          key /= Void
@@ -38,7 +38,7 @@ feature {ANY}
          Result := eval(get_no_eval(section, key))
       end
 
-   get_no_eval (section, key: ABSTRACT_STRING): FIXED_STRING is
+   get_no_eval (section, key: ABSTRACT_STRING): FIXED_STRING
       require
          section /= Void
          key /= Void
@@ -52,7 +52,7 @@ feature {ANY}
       end
 
 feature {ANY}
-   set (section, key, value: ABSTRACT_STRING) is
+   set (section, key, value: ABSTRACT_STRING)
       require
          not section.is_empty
          not key.is_empty
@@ -65,6 +65,7 @@ feature {ANY}
             create section_conf.make
             conf.add(section_conf, section.intern)
          end
+
          section_conf.fast_put(value.intern, key.intern)
       ensure
          get_no_eval(section, key) = value.intern
@@ -73,7 +74,7 @@ feature {ANY}
 feature {}
    conf: HASHED_DICTIONARY[HASHED_DICTIONARY[FIXED_STRING, FIXED_STRING], FIXED_STRING]
 
-   make (a_filename: like filename; tfr: TEXT_FILE_READ) is
+   make (a_filename: like filename; tfr: TEXT_FILE_READ)
       require
          a_filename /= Void
          tfr /= Void implies tfr.is_connected
@@ -87,7 +88,7 @@ feature {}
          filename = a_filename
       end
 
-   do_parse_conf (tfr: TEXT_FILE_READ) is
+   do_parse_conf (tfr: TEXT_FILE_READ)
       require
          tfr.is_connected
       local
@@ -104,7 +105,7 @@ feature {}
          section := add_conf(tfr.last_string, section)
       end
 
-   add_conf (line: STRING; section: FIXED_STRING): FIXED_STRING is
+   add_conf (line: STRING; section: FIXED_STRING): FIXED_STRING
          -- returns the current section
       local
          key, value: FIXED_STRING
@@ -133,7 +134,6 @@ feature {}
                   std_error.put_line(once "Invalid configuration line (no section):%N#(1)" # line)
                   die_with_code(1)
                end
-
                if not config_decoder.match(line) then
                   std_error.put_line(once "Invalid configuration line (incorrect syntax):%N#(1)" # line)
                   die_with_code(1)
@@ -157,7 +157,7 @@ feature {}
          end
       end
 
-   decode_config (group_name, line: STRING): FIXED_STRING is
+   decode_config (group_name, line: STRING): FIXED_STRING
       require
          config_decoder.match(line)
       local
@@ -169,19 +169,17 @@ feature {}
          Result := s.intern
       end
 
-   config_decoder: REGULAR_EXPRESSION is
+   config_decoder: REGULAR_EXPRESSION
       local
          builder: REGULAR_EXPRESSION_BUILDER
       once
          Result := builder.convert_python_pattern("^(?P<key>[a-zA-Z0-9_.]+)\s*[:=]\s*(?P<value>.*)$")
       end
 
-   eval (string: ABSTRACT_STRING): FIXED_STRING is
+   eval (string: ABSTRACT_STRING): FIXED_STRING
          -- takes care of environment variables etc.
       local
-         buffer: STRING; i, j: INTEGER; args: COLLECTION[STRING]
-         arg: STRING; c: CHARACTER
-         processor: PROCESSOR
+         buffer: STRING; i, j: INTEGER; args: COLLECTION[STRING]; arg: STRING; c: CHARACTER; processor: PROCESSOR
       do
          if string /= Void then
             buffer := once ""
@@ -208,16 +206,20 @@ feature {}
                         if c = '"' or else c = '\' then
                            buffer.extend('\')
                         end
+
                         buffer.extend(c)
                         j := j + 1
                      end
+
                      buffer.extend('"')
                   else
                      buffer.append(arg)
                   end
                end
+
                i := i + 1
             end
+
             Result := buffer.intern
          end
       end
@@ -226,4 +228,4 @@ invariant
    conf /= Void
    filename /= Void
 
-end
+end -- class CONFIG_FILE

@@ -17,8 +17,7 @@ class COMMAND_REMOTE
 
 inherit
    COMMAND
-      rename
-         make as make_command
+      rename make as make_command
       end
 
 insert
@@ -29,15 +28,14 @@ create {CONSOLE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "remote".intern
+         Result := ("remote").intern
       end
 
-   run (command_line: COLLECTION[STRING]) is
+   run (command_line: COLLECTION[STRING])
       local
-         subcmd: FIXED_STRING
-         command: COMMAND
+         subcmd: FIXED_STRING; command: COMMAND
       do
          if command_line.count < 1 then
             error_and_help(message_invalid_arguments, command_line)
@@ -53,10 +51,9 @@ feature {COMMANDER}
          end
       end
 
-   complete (command_line: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command_line: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       local
-         subcmd: FIXED_STRING
-         command: COMMAND
+         subcmd: FIXED_STRING; command: COMMAND
       do
          if command_line.count = 1 then
             Result := filter_completions(commands.new_iterator_on_keys, word)
@@ -73,7 +70,7 @@ feature {COMMANDER}
          end
       end
 
-   help (command_line: COLLECTION[STRING]): ABSTRACT_STRING is
+   help (command_line: COLLECTION[STRING]): ABSTRACT_STRING
       local
          command: COMMAND; msg: STRING
       do
@@ -103,7 +100,7 @@ feature {COMMANDER}
       end
 
 feature {}
-   help_list_remotes: ABSTRACT_STRING is
+   help_list_remotes: ABSTRACT_STRING
       do
          if remote_map.is_empty then
             Result := once "There are no remotes defined."
@@ -114,19 +111,18 @@ feature {}
          end
       end
 
-   make (a_client: like client; map: DICTIONARY[COMMAND, FIXED_STRING]; a_remote_map: DICTIONARY[REMOTE, FIXED_STRING]) is
+   make (a_client: like client; map: DICTIONARY[COMMAND, FIXED_STRING]; a_remote_map: DICTIONARY[REMOTE, FIXED_STRING])
       local
-         commands_map: LINKED_HASHED_DICTIONARY[COMMAND, FIXED_STRING]
-         command: COMMAND
+         commands_map: LINKED_HASHED_DICTIONARY[COMMAND, FIXED_STRING]; command: COMMAND
       do
          create commands_map.make
          create {COMMAND_REMOTE_CREATE} command.make(a_client, commands_map, a_remote_map)
          create {COMMAND_REMOTE_DELETE} command.make(a_client, commands_map, a_remote_map)
-         create {COMMAND_REMOTE_LIST  } command.make(a_client, commands_map              )
-         create {COMMAND_REMOTE_PROXY } command.make(a_client, commands_map, a_remote_map)
-         create {COMMAND_REMOTE_SET   } command.make(a_client, commands_map, a_remote_map)
-         create {COMMAND_REMOTE_SHOW  } command.make(a_client, commands_map, a_remote_map)
-         create {COMMAND_REMOTE_UNSET } command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_LIST} command.make(a_client, commands_map)
+         create {COMMAND_REMOTE_PROXY} command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_SET} command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_SHOW} command.make(a_client, commands_map, a_remote_map)
+         create {COMMAND_REMOTE_UNSET} command.make(a_client, commands_map, a_remote_map)
 
          commands := commands_map
 
@@ -137,4 +133,4 @@ feature {}
 
    remote_map: MAP[REMOTE, FIXED_STRING]
 
-end
+end -- class COMMAND_REMOTE

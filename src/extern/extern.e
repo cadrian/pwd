@@ -25,7 +25,7 @@ insert
       end
 
 feature {}
-   default_create is
+   default_create
       do
          c_inline_h("#include <fcntl.h>%N")
          c_inline_h("#include <stdlib.h>%N")
@@ -36,7 +36,7 @@ feature {}
       end
 
 feature {ANY}
-   make (fifo: FIXED_STRING) is
+   make (fifo: FIXED_STRING)
          -- create a named fifo
       local
          path: POINTER; sts: INTEGER
@@ -57,7 +57,7 @@ feature {ANY}
          exists(fifo)
       end
 
-   tmp: FIXED_STRING is
+   tmp: FIXED_STRING
          -- create a temporary directory
       local
          t, p: POINTER; template: STRING
@@ -74,7 +74,7 @@ feature {ANY}
          end
       end
 
-   exists (name: FIXED_STRING): BOOLEAN is
+   exists (name: FIXED_STRING): BOOLEAN
          -- True if the file exists and is a fifo
       local
          p: POINTER; sts: INTEGER
@@ -93,7 +93,7 @@ feature {ANY}
          Result := sts /= 0
       end
 
-   sleep (milliseconds: INTEGER_64) is
+   sleep (milliseconds: INTEGER_64)
       do
          c_inline_c("[
                      fd_set r,w,e;
@@ -106,7 +106,7 @@ feature {ANY}
                      ]")
       end
 
-   wait_for (name: FIXED_STRING) is
+   wait_for (name: FIXED_STRING)
       do
          from
             sleep(25)
@@ -117,7 +117,7 @@ feature {ANY}
          end
       end
 
-   splice (input: INPUT_STREAM; output: OUTPUT_STREAM) is
+   splice (input: INPUT_STREAM; output: OUTPUT_STREAM)
       require
          input.is_connected
          output.is_connected
@@ -134,7 +134,7 @@ feature {ANY}
          output.flush
       end
 
-   process_running (pid: INTEGER): BOOLEAN is
+   process_running (pid: INTEGER): BOOLEAN
       require
          pid > 0
       local

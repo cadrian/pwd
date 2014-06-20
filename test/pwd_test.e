@@ -20,4 +20,4 @@ expanded class PWD_TEST
 insert
    EIFFELTEST_TOOLS
 
-end
+end -- class PWD_TEST

@@ -25,7 +25,7 @@ create {REMOTE}
 feature {REMOTE}
    is_set: BOOLEAN
 
-   set is
+   set
       require
          not is_set
       local
@@ -39,7 +39,7 @@ feature {REMOTE}
          end
       end
 
-   reset is
+   reset
       local
          sys: SYSTEM
       do
@@ -52,7 +52,7 @@ feature {REMOTE}
          not is_set
       end
 
-   set_property (key, value: ABSTRACT_STRING): BOOLEAN is
+   set_property (key, value: ABSTRACT_STRING): BOOLEAN
       do
          inspect
             key.out
@@ -72,11 +72,13 @@ feature {REMOTE}
             passkey := value.intern
             Result := True
          else
-            check not Result end
+            check
+               not Result
+            end
          end
       end
 
-   unset_property (key: ABSTRACT_STRING): BOOLEAN is
+   unset_property (key: ABSTRACT_STRING): BOOLEAN
       do
          inspect
             key.out
@@ -96,12 +98,14 @@ feature {REMOTE}
             passkey := Void
             Result := True
          else
-            check not Result end
+            check
+               not Result
+            end
          end
       end
 
 feature {}
-   proxy_url: ABSTRACT_STRING is
+   proxy_url: ABSTRACT_STRING
       require
          remote /= Void
       local
@@ -111,16 +115,18 @@ feature {}
             log.info.put_line(once "No defined proxy.")
          else
             log.trace.put_line(once "Installing proxy: host=#(1)" # host)
-
             if protocol /= Void then
                log.trace.put_line(once "                  protocol=#(1)" # protocol)
             end
+
             if port /= Void then
                log.trace.put_line(once "                  port=#(1)" # port)
             end
+
             if user /= Void then
                log.trace.put_line(once "                  user=#(1)" # user)
             end
+
             if pass /= Void then
                log.trace.put_line(once "                  pass=#(1)" # pass)
                pass := remote.get_password(pass)
@@ -139,13 +145,14 @@ feature {}
             if port /= Void then
                Result := "#(1):#(2)" # Result # port
             end
+
             if protocol /= Void then
                Result := "#(1)://#(2)" # protocol # Result
             end
          end
       end
 
-   escape (pass: STRING): STRING is
+   escape (pass: STRING): STRING
       local
          i: INTEGER; c: CHARACTER
       do
@@ -174,7 +181,7 @@ feature {}
       end
 
 feature {}
-   make (a_remote: like remote) is
+   make (a_remote: like remote)
       require
          a_remote /= Void
       do
@@ -196,33 +203,33 @@ feature {}
 feature {REMOTE}
    protocol, host, port, user, passkey: FIXED_STRING
 
-   config_protocol: FIXED_STRING is
+   config_protocol: FIXED_STRING
       once
-         Result := "protocol".intern
+         Result := ("protocol").intern
       end
 
-   config_host: FIXED_STRING is
+   config_host: FIXED_STRING
       once
-         Result := "host".intern
+         Result := ("host").intern
       end
 
-   config_port: FIXED_STRING is
+   config_port: FIXED_STRING
       once
-         Result := "port".intern
+         Result := ("port").intern
       end
 
-   config_user: FIXED_STRING is
+   config_user: FIXED_STRING
       once
-         Result := "user".intern
+         Result := ("user").intern
       end
 
-   config_pass: FIXED_STRING is
+   config_pass: FIXED_STRING
       once
-         Result := "pass".intern
+         Result := ("pass").intern
       end
 
 invariant
    remote /= Void
    specific_config /= Void
 
-end
+end -- class PROXY

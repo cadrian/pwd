@@ -22,12 +22,12 @@ create {CONSOLE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "list".intern
+         Result := ("list").intern
       end
 
-   run (command: COLLECTION[STRING]) is
+   run (command: COLLECTION[STRING])
       do
          if not command.is_empty then
             error_and_help(message_invalid_arguments, command)
@@ -36,18 +36,18 @@ feature {COMMANDER}
          end
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          Result := no_completion
       end
 
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[33mlist[0m               List the known passwords (show only the keys)."
       end
 
 feature {}
-   when_reply (a_reply: MESSAGE) is
+   when_reply (a_reply: MESSAGE)
       local
          reply: REPLY_LIST; string: STRING
       do
@@ -55,7 +55,11 @@ feature {}
             reply ::= a_reply
             if reply.error.is_empty then
                string := ""
-               reply.do_all_names(agent (s, n: STRING) is do s.append(n); s.extend('%N') end (string, ?))
+               reply.for_each_name(agent (s, n: STRING)
+                  do
+                     s.append(n)
+                     s.extend('%N')
+                  end(string, ?))
                client.less(string)
             else
                error_and_help(reply.error, Void)
@@ -65,4 +69,4 @@ feature {}
          end
       end
 
-end
+end -- class COMMAND_LIST

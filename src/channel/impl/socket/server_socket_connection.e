@@ -25,18 +25,18 @@ create {SERVER_SOCKET}
    make
 
 feature {LOOP_ITEM}
-   prepare (events: EVENTS_SET) is
+   prepare (events: EVENTS_SET)
       do
          log.trace.put_line(once "Connection established, awaiting command")
          events.expect(channel.event_can_read)
       end
 
-   is_ready (events: EVENTS_SET): BOOLEAN is
+   is_ready (events: EVENTS_SET): BOOLEAN
       do
          Result := done or else events.event_occurred(channel.event_can_read)
       end
 
-   continue is
+   continue
       local
          query, reply: MESSAGE
       do
@@ -67,13 +67,15 @@ feature {LOOP_ITEM}
 
    done: BOOLEAN
 
-   restart is
+   restart
       do
-         check False end
+         check
+            False
+         end
       end
 
 feature {}
-   make (a_server: like server; a_channel: like channel) is
+   make (a_server: like server; a_channel: like channel)
       require
          a_server /= Void
          a_channel /= Void
@@ -87,14 +89,15 @@ feature {}
       end
 
    server: SERVER_SOCKET
+
    channel: SOCKET_INPUT_OUTPUT_STREAM
 
-   streamer: MESSAGE_STREAMER is
+   streamer: MESSAGE_STREAMER
       once
          create Result.make
       end
 
-   on_channel_disconnect (a_channel: like channel) is
+   on_channel_disconnect (a_channel: like channel)
       do
          check
             a_channel = channel
@@ -106,4 +109,4 @@ invariant
    server /= Void
    channel /= Void
 
-end
+end -- class SERVER_SOCKET_CONNECTION

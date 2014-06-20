@@ -20,7 +20,7 @@ insert
    LOGGING
 
 feature {ANY}
-   load_remote (a_name: ABSTRACT_STRING; a_client: CLIENT): REMOTE is
+   load_remote (a_name: ABSTRACT_STRING; a_client: CLIENT): REMOTE
       require
          a_client /= Void
          not a_name.is_empty
@@ -34,7 +34,7 @@ feature {ANY}
          end
       end
 
-   new_remote (a_name, a_method: ABSTRACT_STRING; a_client: CLIENT): REMOTE is
+   new_remote (a_name, a_method: ABSTRACT_STRING; a_client: CLIENT): REMOTE
       require
          a_client /= Void
          not a_name.is_empty
@@ -51,9 +51,9 @@ feature {ANY}
          end
       end
 
-   config_key_remote_method: FIXED_STRING is
+   config_key_remote_method: FIXED_STRING
       once
-         Result := "method".intern
+         Result := ("method").intern
       end
 
-end
+end -- class REMOTE_FACTORY

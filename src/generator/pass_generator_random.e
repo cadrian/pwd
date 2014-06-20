@@ -19,17 +19,17 @@ create {ANY}
    connect_to
 
 feature {ANY}
-   is_connected: BOOLEAN is
+   is_connected: BOOLEAN
       do
          Result := file.is_connected
       end
 
-   path: STRING is
+   path: STRING
       do
          Result := file.path
       end
 
-   item (lower, upper: INTEGER_32): INTEGER_32 is
+   item (lower, upper: INTEGER_32): INTEGER_32
       require
          lower >= 0
          upper > lower
@@ -41,7 +41,7 @@ feature {ANY}
       end
 
 feature {}
-   randf (fun, obj: POINTER): REAL_32 is
+   randf (fun, obj: POINTER): REAL_32
       external "plug_in"
       alias "[
          location: "."
@@ -50,7 +50,7 @@ feature {}
       ]"
       end
 
-   read_rand: INTEGER_8 is
+   read_rand: INTEGER_8
       do
          file.read_byte
          Result := file.last_byte.to_integer_8
@@ -59,7 +59,7 @@ feature {}
    file: BINARY_FILE_READ
 
 feature {}
-   connect_to (a_file: like file) is
+   connect_to (a_file: like file)
       require
          a_file.is_connected
       do
@@ -68,4 +68,4 @@ feature {}
          file = a_file
       end
 
-end
+end -- class PASS_GENERATOR_RANDOM

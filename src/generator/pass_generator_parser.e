@@ -23,17 +23,21 @@ create {PASS_GENERATOR}
 
 feature {PASS_GENERATOR}
    recipe: FAST_ARRAY[PASS_GENERATOR_MIX]
+
    total_quantity: INTEGER
 
    parsed: BOOLEAN
 
 feature {}
    last_quantity: INTEGER
+
    last_ingredient: STRING
+
    index: INTEGER
+
    source: FIXED_STRING
 
-   parse (a_source: ABSTRACT_STRING) is
+   parse (a_source: ABSTRACT_STRING)
       require
          a_source /= Void
       do
@@ -44,21 +48,20 @@ feature {}
          parsed := parse_recipe
       end
 
-   parse_recipe: BOOLEAN is
+   parse_recipe: BOOLEAN
       require
          source.valid_index(index)
       do
          from
             Result := True
          until
-            not Result
-               or else not source.valid_index(index)
+            not Result or else not source.valid_index(index)
          loop
             Result := parse_mix
          end
       end
 
-   parse_mix: BOOLEAN is
+   parse_mix: BOOLEAN
       require
          source.valid_index(index)
       do
@@ -69,15 +72,14 @@ feature {}
          end
       end
 
-   parse_quantity: BOOLEAN is
+   parse_quantity: BOOLEAN
       require
          source.valid_index(index)
       do
          from
             last_quantity := 0
          until
-            not source.valid_index(index)
-               or else not source.item(index).is_digit
+            not source.valid_index(index) or else not source.item(index).is_digit
          loop
             last_quantity := last_quantity * 10 + source.item(index).value
             index := index + 1
@@ -85,10 +87,11 @@ feature {}
          if last_quantity = 0 then
             last_quantity := 1
          end
+
          Result := source.valid_index(index)
       end
 
-   parse_ingredient: BOOLEAN is
+   parse_ingredient: BOOLEAN
       require
          source.valid_index(index)
       do
@@ -97,9 +100,7 @@ feature {}
             last_ingredient := once ""
             last_ingredient.clear_count
          until
-            not Result
-               or else not source.valid_index(index)
-               or else source.item(index) = '+'
+            not Result or else not source.valid_index(index) or else source.item(index) = '+'
          loop
             inspect
                source.item(index)
@@ -123,4 +124,4 @@ invariant
    parsed implies not recipe.is_empty
    parsed implies total_quantity > 0
 
-end
+end -- class PASS_GENERATOR_PARSER

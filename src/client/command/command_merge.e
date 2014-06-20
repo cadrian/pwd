@@ -25,12 +25,12 @@ create {CONSOLE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "merge".intern
+         Result := ("merge").intern
       end
 
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[
                           [33mmerge [remote][0m     Load the server version and compare to the local one.
@@ -42,13 +42,11 @@ feature {COMMANDER}
       end
 
 feature {}
-   run_remote (remote: REMOTE) is
+   run_remote (remote: REMOTE)
       local
-         merge_pass0, merge_pass: STRING
-         shared: SHARED
+         merge_pass0, merge_pass: STRING; shared: SHARED
       do
          remote.load(merge_vault)
-
          merge_pass0 := client.read_password(once "Please enter the encryption phrase%Nto the remote vault%N(just leave empty if the same as the current vault's)", client.on_cancel)
          if merge_pass0 = Void then
             -- cancelled
@@ -70,12 +68,12 @@ feature {}
          delete(merge_vault)
       end
 
-   merge_vault: FIXED_STRING is
+   merge_vault: FIXED_STRING
       once
          Result := ("#(1)/merge_vault" # client.tmpdir).intern
       end
 
-   when_reply (a_reply: MESSAGE) is
+   when_reply (a_reply: MESSAGE)
       local
          reply: REPLY_MERGE
       do
@@ -92,4 +90,4 @@ feature {}
          end
       end
 
-end
+end -- class COMMAND_MERGE

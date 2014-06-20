@@ -16,19 +16,19 @@
 expanded class PASS_GENERATOR_PARSER_CONSTANTS
 
 feature {}
-   letters: FIXED_STRING is
+   letters: FIXED_STRING
       once
-         Result := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".intern
+         Result := ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz").intern
       end
 
-   figures: FIXED_STRING is
+   figures: FIXED_STRING
       once
-         Result := "0123456789".intern
+         Result := ("0123456789").intern
       end
 
-   symbols: FIXED_STRING is
+   symbols: FIXED_STRING
       once
-         Result := "(-_)~#{[|^@]}+=<>,?./!§".intern
+         Result := ("(-_)~#{[|^@]}+=<>,?./!§").intern
       end
 
-end
+end -- class PASS_GENERATOR_PARSER_CONSTANTS

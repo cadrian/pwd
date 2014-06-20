@@ -19,7 +19,7 @@ insert
    XCLIP_PLUGIN
 
 feature {ANY}
-   new_clipboard: CLIPBOARD is
+   new_clipboard: CLIPBOARD
       do
          if is_native then
             create {XCLIP_NATIVE} Result.make
@@ -30,4 +30,4 @@ feature {ANY}
          Result /= Void
       end
 
-end
+end -- class CLIPBOARD_FACTORY

@@ -17,9 +17,10 @@ expanded class SHARED_FIFO
 
 feature {}
    extern: EXTERN
+
    xdg: XDG
 
-   server_fifo: FIXED_STRING is
+   server_fifo: FIXED_STRING
       once
          Result := ("#(1)/server_fifo" # xdg.runtime_dir).intern
       end
@@ -27,4 +28,4 @@ feature {}
 invariant
    server_fifo /= Void
 
-end
+end -- class SHARED_FIFO

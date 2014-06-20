@@ -20,24 +20,23 @@ inherit
 
 insert
    XCLIP_PLUGIN
-      rename
-         copy as any_copy
+      rename copy as any_copy
       end
 
 create {CLIPBOARD_FACTORY}
    make
 
 feature {ANY}
-   copy (a_string: ABSTRACT_STRING) is
+   copy (a_string: ABSTRACT_STRING)
       do
          xclip(a_string)
       end
 
 feature {}
-   make is
+   make
       require
          is_native
       do
       end
 
-end
+end -- class XCLIP_NATIVE

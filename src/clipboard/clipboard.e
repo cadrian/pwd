@@ -17,15 +17,14 @@ deferred class CLIPBOARD
 
 insert
    ANY
-      rename
-         copy as any_copy
+      rename copy as any_copy
       end
 
 feature {ANY}
-   copy (a_string: ABSTRACT_STRING) is
+   copy (a_string: ABSTRACT_STRING)
       require
          not a_string.is_empty
       deferred
       end
 
-end
+end -- class CLIPBOARD

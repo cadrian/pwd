@@ -22,7 +22,7 @@ create {ANY}
    make, from_json
 
 feature {ANY}
-   accept (visitor: VISITOR) is
+   accept (visitor: VISITOR)
       local
          v: REPLY_VISITOR
       do
@@ -31,12 +31,12 @@ feature {ANY}
       end
 
 feature {ANY}
-   error: STRING is
+   error: STRING
       do
          Result := string(once "error")
       end
 
-   do_all_names (action: PROCEDURE[TUPLE[STRING]]) is
+   for_each_name (action: PROCEDURE[TUPLE[STRING]])
       require
          action /= Void
       local
@@ -54,7 +54,7 @@ feature {ANY}
          end
       end
 
-   count_names: INTEGER is
+   count_names: INTEGER
       local
          array: JSON_ARRAY
       do
@@ -63,7 +63,7 @@ feature {ANY}
       end
 
 feature {}
-   make (a_error: ABSTRACT_STRING; a_names: COLLECTION[FIXED_STRING]) is
+   make (a_error: ABSTRACT_STRING; a_names: COLLECTION[FIXED_STRING])
       require
          a_error /= Void
          a_names /= Void
@@ -71,13 +71,15 @@ feature {}
          json_names: FAST_ARRAY[JSON_STRING]
       do
          create json_names.with_capacity(a_names.count)
-         create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
-                           json_string(once "reply"), json_string(once "type");
-                           json_string(once "list"), json_string(once "command");
-                           json_string(a_error), json_string(once "error");
-                           create {JSON_ARRAY}.make(json_names), json_string(once "names");
-                           >>})
-         a_names.do_all(agent (a: FAST_ARRAY[JSON_STRING]; n: FIXED_STRING) is do a.add_last(create {JSON_STRING}.from_string(n)) end (json_names, ?))
+         create json.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] << json_string(once "reply"), json_string(once "type");
+                                                                         json_string(once "list"), json_string(once "command");
+                                                                         json_string(a_error), json_string(once "error");
+                                                                         create {JSON_ARRAY}.make(json_names), json_string(once "names") >> })
+
+         a_names.for_each(agent (a: FAST_ARRAY[JSON_STRING]; n: FIXED_STRING)
+            do
+               a.add_last(create {JSON_STRING}.from_string(n))
+            end(json_names, ?))
       end
 
-end
+end -- class REPLY_LIST

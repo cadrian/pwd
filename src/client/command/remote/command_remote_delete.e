@@ -22,12 +22,12 @@ create {COMMAND_REMOTE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "delete".intern
+         Result := ("delete").intern
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          if command.count = 2 then
             Result := filter_completions(remote_map.new_iterator_on_keys, word)
@@ -37,7 +37,7 @@ feature {COMMANDER}
       end
 
 feature {}
-   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE) is
+   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE)
       do
          if remote = Void then
             error_and_help(message_unknown_remote # remote_name, command)
@@ -48,7 +48,7 @@ feature {}
       end
 
 feature {ANY}
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[
                           [33mremote delete [remote][0m
@@ -58,4 +58,4 @@ feature {ANY}
                          ]"
       end
 
-end
+end -- class COMMAND_REMOTE_DELETE

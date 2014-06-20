@@ -19,7 +19,7 @@ insert
    LOGGING
 
 feature {ANY}
-   execute (command, arguments: ABSTRACT_STRING): PROCESS is
+   execute (command, arguments: ABSTRACT_STRING): PROCESS
       require
          command /= Void
       do
@@ -28,7 +28,7 @@ feature {ANY}
          Result /= Void
       end
 
-   execute_redirect (command, arguments: ABSTRACT_STRING): PROCESS is
+   execute_redirect (command, arguments: ABSTRACT_STRING): PROCESS
       require
          command /= Void
       do
@@ -37,7 +37,7 @@ feature {ANY}
          Result /= Void
       end
 
-   execute_to_dev_null (command, arguments: ABSTRACT_STRING): PROCESS is
+   execute_to_dev_null (command, arguments: ABSTRACT_STRING): PROCESS
       require
          command /= Void
       do
@@ -46,7 +46,7 @@ feature {ANY}
          Result /= Void
       end
 
-   execute_direct (command, arguments: ABSTRACT_STRING): PROCESS is
+   execute_direct (command, arguments: ABSTRACT_STRING): PROCESS
       require
          command /= Void
       do
@@ -55,7 +55,7 @@ feature {ANY}
          Result /= Void
       end
 
-   fork: PROCESS is
+   fork: PROCESS
       local
          factory: PROCESS_FACTORY
       do
@@ -66,7 +66,7 @@ feature {ANY}
          Result.duplicate
       end
 
-   split_arguments (arguments: ABSTRACT_STRING): COLLECTION[STRING] is
+   split_arguments (arguments: ABSTRACT_STRING): COLLECTION[STRING]
       require
          arguments /= Void
       do
@@ -75,7 +75,7 @@ feature {ANY}
          Result /= Void
       end
 
-   pid: INTEGER is
+   pid: INTEGER
       do
          c_inline_c("[
                      R = getpid();
@@ -83,22 +83,25 @@ feature {ANY}
       end
 
 feature {}
-   execute_ (command, arguments: ABSTRACT_STRING; direct_input, direct_output, direct_error: BOOLEAN): PROCESS is
+   execute_ (command, arguments: ABSTRACT_STRING; direct_input, direct_output, direct_error: BOOLEAN): PROCESS
       require
          command /= Void
       local
-         factory: PROCESS_FACTORY
-         args: FAST_ARRAY[STRING]
+         factory: PROCESS_FACTORY; args: FAST_ARRAY[STRING]
       do
          if arguments /= Void then
             args := parse_arguments(arguments.intern)
          end
-
          if log.is_trace then
             log.trace.put_string(command)
             if args /= Void then
-               args.do_all(agent (s: STRING) is do log.trace.put_character(' '); log.trace.put_string(s) end(?))
+               args.for_each(agent (s: STRING)
+                  do
+                     log.trace.put_character(' ')
+                     log.trace.put_string(s)
+                  end(?))
             end
+
             log.trace.put_new_line
          end
 
@@ -110,12 +113,12 @@ feature {}
          Result /= Void
       end
 
-   arguments_map: HASHED_DICTIONARY[FAST_ARRAY[STRING], FIXED_STRING] is
+   arguments_map: HASHED_DICTIONARY[FAST_ARRAY[STRING], FIXED_STRING]
       once
          create Result.make
       end
 
-   parse_arguments (arguments: FIXED_STRING): FAST_ARRAY[STRING] is
+   parse_arguments (arguments: FIXED_STRING): FAST_ARRAY[STRING]
       do
          Result := arguments_map.fast_reference_at(arguments)
          if Result = Void then
@@ -124,7 +127,7 @@ feature {}
          end
       end
 
-   a_arguments (arguments: FIXED_STRING): FAST_ARRAY[STRING] is
+   a_arguments (arguments: FIXED_STRING): FAST_ARRAY[STRING]
       local
          i, state: INTEGER; c: CHARACTER; word, var: STRING
       do
@@ -241,7 +244,7 @@ feature {}
                else
                   inspect
                      c
-                  when 'A'..'Z', 'a'..'z', '_' then
+                  when 'A' .. 'Z', 'a' .. 'z', '_' then
                      var.extend(c)
                   else
                      append_var(word, var)
@@ -271,6 +274,7 @@ feature {}
             end
             i := i + 1
          end
+
          if state < 0 then
             std_error.put_line("Syntax error while parsing arguments:%N#(1)" # arguments)
             die_with_code(1)
@@ -284,7 +288,7 @@ feature {}
          Result /= Void
       end
 
-   append_var (word, var: STRING) is
+   append_var (word, var: STRING)
       require
          word /= Void
          var /= Void
@@ -295,16 +299,26 @@ feature {}
          word.append(value)
       end
 
-   State_blank: INTEGER is 0
-   State_word: INTEGER is 1
-   State_escape: INTEGER is 2
-   State_simple_quote: INTEGER is 11
-   State_simple_quote_escape: INTEGER is 12
-   State_double_quote: INTEGER is 21
-   State_double_quote_escape: INTEGER is 22
-   State_simple_variable: INTEGER is 31
-   State_braced_variable: INTEGER is 32
-   State_simple_variable_quoted: INTEGER is 33
-   State_braced_variable_quoted: INTEGER is 34
+   State_blank: INTEGER 0
 
-end
+   State_word: INTEGER 1
+
+   State_escape: INTEGER 2
+
+   State_simple_quote: INTEGER 11
+
+   State_simple_quote_escape: INTEGER 12
+
+   State_double_quote: INTEGER 21
+
+   State_double_quote_escape: INTEGER 22
+
+   State_simple_variable: INTEGER 31
+
+   State_braced_variable: INTEGER 32
+
+   State_simple_variable_quoted: INTEGER 33
+
+   State_braced_variable_quoted: INTEGER 34
+
+end -- class PROCESSOR

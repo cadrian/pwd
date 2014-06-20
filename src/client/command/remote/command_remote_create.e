@@ -22,21 +22,20 @@ create {COMMAND_REMOTE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "create".intern
+         Result := ("create").intern
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          Result := no_completion
       end
 
 feature {}
-   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE) is
+   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE)
       local
-         remote_factory: REMOTE_FACTORY
-         new_remote: REMOTE
+         remote_factory: REMOTE_FACTORY; new_remote: REMOTE
       do
          if remote /= Void then
             error_and_help(once "Duplicate remote: #(1)" # remote_name, command)
@@ -54,7 +53,7 @@ feature {}
       end
 
 feature {ANY}
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[
                           [33mremote create [remote] method {curl|scp}[0m
@@ -63,4 +62,4 @@ feature {ANY}
                          ]"
       end
 
-end
+end -- class COMMAND_REMOTE_CREATE

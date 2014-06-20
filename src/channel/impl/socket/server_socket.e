@@ -17,8 +17,7 @@ class SERVER_SOCKET
 
 inherit
    SERVER_CHANNEL
-      export {SERVER_SOCKET_CONNECTION}
-         fire_receive
+      export {SERVER_SOCKET_CONNECTION} fire_receive
       end
 
 insert
@@ -28,7 +27,7 @@ create {CHANNEL_FACTORY}
    make
 
 feature {SERVER}
-   prepare (events: EVENTS_SET) is
+   prepare (events: EVENTS_SET)
       do
          if not trace then
             log.trace.put_line(once "Awaiting connection")
@@ -37,7 +36,7 @@ feature {SERVER}
          events.expect(server.event_connection)
       end
 
-   is_ready (events: EVENTS_SET): BOOLEAN is
+   is_ready (events: EVENTS_SET): BOOLEAN
       do
          Result := events.event_occurred(server.event_connection)
          if Result then
@@ -46,10 +45,9 @@ feature {SERVER}
          end
       end
 
-   continue is
+   continue
       local
-         stream: SOCKET_INPUT_OUTPUT_STREAM
-         job: SERVER_SOCKET_CONNECTION
+         stream: SOCKET_INPUT_OUTPUT_STREAM; job: SERVER_SOCKET_CONNECTION
       do
          log.trace.put_line(once "Connection received")
          stream := server.new_stream(True)
@@ -61,17 +59,16 @@ feature {SERVER}
          end
       end
 
-   done: BOOLEAN is
+   done: BOOLEAN
       do
          Result := server = Void or else not server.can_connect
       end
 
-   restart is
+   restart
       local
-         access: TCP_ACCESS
-         address: IPV4_ADDRESS
+         access: TCP_ACCESS; address: IPV4_ADDRESS
       do
-         create address.make(127,0,0,1)
+         create address.make(127, 0, 0, 1)
          create access.make(address, socket.port, False)
          server := access.server
          if server = Void then
@@ -82,26 +79,27 @@ feature {SERVER}
          end
       end
 
-   disconnect is
+   disconnect
       do
          server.shutdown
       end
 
-   cleanup is
-      do
-         -- nothing to do
+   cleanup
+      do -- nothing to do
       end
 
 feature {}
-   make is
+   make
       do
       end
 
    server: SOCKET_SERVER
+
    socket: SOCKET
+
    trace: BOOLEAN
 
 invariant
    done or else server /= Void
 
-end
+end -- class SERVER_SOCKET

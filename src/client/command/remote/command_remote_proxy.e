@@ -22,12 +22,12 @@ create {COMMAND_REMOTE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "proxy".intern
+         Result := ("proxy").intern
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          inspect
             command.count
@@ -49,33 +49,27 @@ feature {COMMANDER}
       end
 
 feature {}
-   proxy_properties_: FAST_ARRAY[FIXED_STRING] is
+   proxy_properties_: FAST_ARRAY[FIXED_STRING]
       do
-         Result := {FAST_ARRAY[FIXED_STRING] <<
-            "protocol".intern,
-            "host".intern,
-            "port".intern,
-            "user".intern,
-            "pass".intern,
-         >> }
+         Result := {FAST_ARRAY[FIXED_STRING] << ("protocol").intern, ("host").intern, ("port").intern, ("user").intern, ("pass").intern >> }
       end
 
-   proxy_properties: ITERATOR[FIXED_STRING] is
+   proxy_properties: ITERATOR[FIXED_STRING]
       once
          Result := proxy_properties_.new_iterator
       end
 
-   proxy_properties_or_unset: ITERATOR[FIXED_STRING] is
+   proxy_properties_or_unset: ITERATOR[FIXED_STRING]
       local
          p: FAST_ARRAY[FIXED_STRING]
       once
          p := proxy_properties_
-         p.add_last("unset".intern)
+         p.add_last(("unset").intern)
          Result := p.new_iterator
       end
 
 feature {}
-   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE) is
+   run_remote (command: COLLECTION[STRING]; remote_name: FIXED_STRING; remote: REMOTE)
       do
          if remote = Void then
             error_and_help(message_unknown_remote # remote_name, command)
@@ -89,7 +83,7 @@ feature {}
       end
 
 feature {ANY}
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[
                     [33mremote proxy [remote] [property] [value][0m
@@ -110,4 +104,4 @@ feature {ANY}
                          ]"
       end
 
-end
+end -- class COMMAND_REMOTE_PROXY

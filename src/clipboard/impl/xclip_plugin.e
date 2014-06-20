@@ -16,12 +16,12 @@
 expanded class XCLIP_PLUGIN
 
 feature {ANY}
-   is_native: BOOLEAN is
+   is_native: BOOLEAN
       do
          Result := plugin_is_native /= 0
       end
 
-   xclip (string: ABSTRACT_STRING) is
+   xclip (string: ABSTRACT_STRING)
       require
          string /= Void
       local
@@ -32,7 +32,7 @@ feature {ANY}
       end
 
 feature {}
-   plugin_is_native: INTEGER is
+   plugin_is_native: INTEGER
       external "plug_in"
       alias "{
          location: "."
@@ -41,7 +41,7 @@ feature {}
       }"
       end
 
-   plugin_copy (s: POINTER) is
+   plugin_copy (s: POINTER)
       external "plug_in"
       alias "{
          location: "."
@@ -50,4 +50,4 @@ feature {}
       }"
       end
 
-end
+end -- class XCLIP_PLUGIN

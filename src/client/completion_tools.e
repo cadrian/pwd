@@ -16,26 +16,26 @@
 expanded class COMPLETION_TOOLS
 
 feature {}
-   no_completion: TRAVERSABLE[FIXED_STRING] is
+   no_completion: TRAVERSABLE[FIXED_STRING]
       once
          create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
       end
 
-   filter_completions (completions: ITERATOR[FIXED_STRING]; word: FIXED_STRING): AVL_SET[FIXED_STRING] is
+   filter_completions (completions: ITERATOR[FIXED_STRING]; word: FIXED_STRING): AVL_SET[FIXED_STRING]
       require
          completions /= Void
          word /= Void
       do
          create Result.make
-         completions.do_all(agent (completions_set: AVL_SET[FIXED_STRING]; completion: FIXED_STRING) is
-                            require
-                               completions_set /= Void
-                               completion /= Void
-                            do
-                               if completion.has_prefix(word) then
-                                  completions_set.add(completion)
-                               end
-                            end (Result, ?))
+         completions.for_each(agent (completions_set: AVL_SET[FIXED_STRING]; completion: FIXED_STRING)
+            require
+               completions_set /= Void
+               completion /= Void
+            do
+               if completion.has_prefix(word) then
+                  completions_set.add(completion)
+               end
+            end(Result, ?))
       end
 
-end
+end -- class COMPLETION_TOOLS

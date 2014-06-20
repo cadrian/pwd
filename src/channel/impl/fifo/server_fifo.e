@@ -14,7 +14,6 @@
 -- along with pwdmgr.  If not, see <http://www.gnu.org/licenses/>.
 --
 class SERVER_FIFO
-
    --
    -- Expect a message from a fifo
    --
@@ -34,7 +33,7 @@ create {CHANNEL_FACTORY}
    make
 
 feature {SERVER}
-   prepare (events: EVENTS_SET) is
+   prepare (events: EVENTS_SET)
       local
          t: TIME_EVENTS
       do
@@ -47,7 +46,7 @@ feature {SERVER}
          end
       end
 
-   is_ready (events: EVENTS_SET): BOOLEAN is
+   is_ready (events: EVENTS_SET): BOOLEAN
       do
          if events.event_occurred(channel.event_can_read) then
             channel.read_line
@@ -58,7 +57,7 @@ feature {SERVER}
          end
       end
 
-   continue is
+   continue
       local
          query, reply: MESSAGE; tfw: TEXT_FILE_WRITE
       do
@@ -80,17 +79,18 @@ feature {SERVER}
                      streamer.write_message(reply, tfw)
                   end
                end
+
                tfw.disconnect
             end
          end
       end
 
-   done: BOOLEAN is
+   done: BOOLEAN
       do
          Result := not channel.is_connected
       end
 
-   restart is
+   restart
       do
          if not extern.exists(server_fifo) then
             extern.make(server_fifo)
@@ -99,36 +99,32 @@ feature {SERVER}
                die_with_code(1)
             end
          end
-
          channel.connect_to(server_fifo)
       end
 
-   disconnect is
+   disconnect
       do
          channel.disconnect
       end
 
-   cleanup is
+   cleanup
       do
          delete(server_fifo)
       end
 
 feature {}
-   make is
+   make
       do
          if extern.exists(server_fifo) then
             log.error.put_line(once "Fifo already exists, not starting server")
             die_with_code(1)
          end
-
          create channel.make
       end
 
    channel: TEXT_FILE_READ_WRITE
-         -- There must be at least one writer for the server_fifo to be blocking in select(2)
-         -- see http://stackoverflow.com/questions/580013/how-do-i-perform-a-non-blocking-fopen-on-a-named-pipe-mkfifo
 
-   streamer: MESSAGE_STREAMER is
+   streamer: MESSAGE_STREAMER
       once
          create Result.make
       end
@@ -137,4 +133,4 @@ invariant
    channel /= Void
    server_fifo /= Void
 
-end
+end -- class SERVER_FIFO

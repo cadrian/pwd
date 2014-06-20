@@ -23,10 +23,9 @@ create {}
    test
 
 feature {}
-   test is
+   test
       local
-         gen: PASS_GENERATOR
-         pass: STRING
+         gen: PASS_GENERATOR; pass: STRING
       do
          create gen.test_parse("13anans+42s", random_file, agent extend(?, ?))
          assert(gen.is_valid)
@@ -34,16 +33,17 @@ feature {}
          assert(pass.is_equal("password"))
       end
 
-   random_file: STRING is "pwd_test.e" -- who cares, it just needs to exist
+   random_file: STRING "pwd_test.e"
+         -- who cares, it just needs to exist
 
-   extend (rnd: PASS_GENERATOR_RANDOM; pass: STRING): PROCEDURE[TUPLE[PASS_GENERATOR_MIX]] is
+   extend (rnd: PASS_GENERATOR_RANDOM; pass: STRING): PROCEDURE[TUPLE[PASS_GENERATOR_MIX]]
       do
          assert(rnd.path.is_equal(random_file))
          assert(rnd.is_connected)
          Result := agent test_extend(?, pass)
       end
 
-   test_extend (mix: PASS_GENERATOR_MIX; pass: STRING) is
+   test_extend (mix: PASS_GENERATOR_MIX; pass: STRING)
       do
          inspect
             mix.quantity
@@ -58,4 +58,4 @@ feature {}
          end
       end
 
-end
+end -- class TEST_PASS_GENERATOR_02

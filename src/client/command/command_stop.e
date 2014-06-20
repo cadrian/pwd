@@ -25,12 +25,12 @@ create {CONSOLE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "stop".intern
+         Result := ("stop").intern
       end
 
-   run (command: COLLECTION[STRING]) is
+   run (command: COLLECTION[STRING])
       do
          if not command.is_empty then
             error_and_help(message_invalid_arguments, command)
@@ -40,14 +40,14 @@ feature {COMMANDER}
          end
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          create {FAST_ARRAY[FIXED_STRING]} Result.make(0)
       end
 
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[33mstop[0m               Stop the server and close the administration console."
       end
 
-end
+end -- class COMMAND_STOP

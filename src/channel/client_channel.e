@@ -16,18 +16,18 @@
 deferred class CLIENT_CHANNEL
 
 feature {CLIENT}
-   server_running: BOOLEAN is
+   server_running: BOOLEAN
          -- True if the server is running, False otherwise
       deferred
       end
 
-   server_start is
+   server_start
       require
          not server_running
       deferred
       end
 
-   call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]]) is
+   call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]])
       require
          server_is_ready
          is_ready
@@ -38,16 +38,16 @@ feature {CLIENT}
          is_ready
       end
 
-   is_ready: BOOLEAN is
+   is_ready: BOOLEAN
       deferred
       end
 
-   server_is_ready: BOOLEAN is
+   server_is_ready: BOOLEAN
       deferred
       end
 
-   cleanup is
+   cleanup
       deferred
       end
 
-end
+end -- class CLIENT_CHANNEL

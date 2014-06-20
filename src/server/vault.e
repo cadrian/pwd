@@ -28,10 +28,13 @@ feature {ANY}
    is_open: BOOLEAN
 
 feature {SERVER}
-   close is
+   close
       do
          if is_open then
-            data.do_all(agent (key: KEY) is do key.clear end (?))
+            data.for_each(agent (key: KEY)
+               do
+                  key.clear
+               end(?))
             data.clear_count
             set_environment_variable(once "VAULT_MASTER", once "")
             is_open := False
@@ -41,7 +44,7 @@ feature {SERVER}
          not is_open
       end
 
-   open (master: STRING) is
+   open (master: STRING)
       require
          master /= Void
          not is_open
@@ -64,12 +67,14 @@ feature {SERVER}
                   set_environment_variable(once "VAULT_MASTER", once "")
                end
             end
+
             vault_file.disconnect
          else
             log.trace.put_line(once "open vault as new")
             dirty := True
             is_open := True
          end
+
          if is_open then
             log.info.put_line(once "Vault open: #(1)" # file)
          else
@@ -77,7 +82,7 @@ feature {SERVER}
          end
       end
 
-   pass (key_name: STRING): STRING is
+   pass (key_name: STRING): STRING
       require
          is_open
          key_name /= Void
@@ -90,36 +95,38 @@ feature {SERVER}
          end
       end
 
-   count: INTEGER is
+   count: INTEGER
       do
          Result := data.count
       end
 
-   do_all_keys (action: PROCEDURE[TUPLE[FIXED_STRING]]) is
+   for_each_key (action: PROCEDURE[TUPLE[FIXED_STRING]])
       require
          is_open
          action /= Void
       do
-         data.do_all(agent (a: PROCEDURE[TUPLE[FIXED_STRING]]; k: KEY; n: FIXED_STRING) is do a.call([n]) end (action, ?, ?))
+         data.for_each(agent (a: PROCEDURE[TUPLE[FIXED_STRING]]; k: KEY; n: FIXED_STRING)
+            do
+               a.call([n])
+            end(action, ?, ?))
       end
 
-   merge (other: like Current): ABSTRACT_STRING is
+   merge (other: like Current): ABSTRACT_STRING
       require
          is_open
          other.is_open
       do
-         data.do_all_items(agent merge_other(other.data, ?))
-         other.data.do_all_items(agent add_key(?))
+         data.for_each_item(agent merge_other(other.data, ?))
+         other.data.for_each_item(agent add_key(?))
          dirty := True
          Result := once ""
       end
 
-   save: ABSTRACT_STRING is
+   save: ABSTRACT_STRING
       require
          is_open
       local
-         proc: PROCESS; tfw: TEXT_FILE_WRITE
-         ft: FILE_TOOLS; backup: STRING
+         proc: PROCESS; tfw: TEXT_FILE_WRITE; ft: FILE_TOOLS; backup: STRING
       do
          if dirty then
             backup := once ""
@@ -151,7 +158,7 @@ feature {SERVER}
          end
       end
 
-   set_random (a_name, a_recipe: STRING): ABSTRACT_STRING is
+   set_random (a_name, a_recipe: STRING): ABSTRACT_STRING
       require
          is_open
          a_name /= Void
@@ -167,7 +174,7 @@ feature {SERVER}
          end
       end
 
-   set (a_name, a_pass: STRING): ABSTRACT_STRING is
+   set (a_name, a_pass: STRING): ABSTRACT_STRING
       require
          is_open
          a_name /= Void
@@ -182,11 +189,12 @@ feature {SERVER}
          else
             key.set_pass(a_pass)
          end
+
          dirty := True
          Result := once ""
       end
 
-   unset (a_name: STRING): ABSTRACT_STRING is
+   unset (a_name: STRING): ABSTRACT_STRING
       require
          is_open
          a_name /= Void
@@ -198,11 +206,12 @@ feature {SERVER}
             key.delete
             dirty := True
          end
+
          Result := once ""
       end
 
 feature {}
-   merge_other (other: like data; key: KEY) is
+   merge_other (other: like data; key: KEY)
       local
          other_key: KEY
       do
@@ -212,27 +221,27 @@ feature {}
          end
       end
 
-   add_key (key: KEY) is
+   add_key (key: KEY)
       do
          data.add(key, key.name)
       end
 
 feature {}
-   print_all_keys (stream: OUTPUT_STREAM) is
+   print_all_keys (stream: OUTPUT_STREAM)
       require
          stream.is_connected
       do
-         data.do_all(agent print_key(?, ?, stream))
+         data.for_each(agent print_key(?, ?, stream))
       end
 
-   print_key (key: KEY; name: FIXED_STRING; stream: OUTPUT_STREAM) is
+   print_key (key: KEY; name: FIXED_STRING; stream: OUTPUT_STREAM)
       require
          stream.is_connected
       do
          stream.put_line(key.encoded)
       end
 
-   read_data (a_data: INPUT_STREAM) is
+   read_data (a_data: INPUT_STREAM)
       require
          a_data.is_connected
          data.is_empty
@@ -250,19 +259,20 @@ feature {}
             if key.is_valid then
                data.add(key, key.name)
             end
+
             a_data.read_line
          end
+
          log.trace.put_line(once "vault data read.")
       end
 
-   generate_pass (recipe: ABSTRACT_STRING): STRING is
+   generate_pass (recipe: ABSTRACT_STRING): STRING
       require
          recipe /= Void
       local
          g: PASS_GENERATOR
       do
          log.trace.put_line(once "generating random pass (may take time, depending on the system entropy)")
-
          create g.parse(recipe)
          if g.is_valid then
             Result := g.generated
@@ -272,7 +282,7 @@ feature {}
       end
 
 feature {}
-   make (a_file: ABSTRACT_STRING) is
+   make (a_file: ABSTRACT_STRING)
       require
          a_file /= Void
       do
@@ -283,25 +293,28 @@ feature {}
       end
 
    dirty: BOOLEAN
+
    extern: EXTERN
 
    processor: PROCESSOR
 
-   config_openssl_cipher: FIXED_STRING is
+   config_openssl_cipher: FIXED_STRING
       once
-         Result := "openssl.cipher".intern
+         Result := ("openssl.cipher").intern
       end
 
 feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]
+
    file: FIXED_STRING
 
 invariant
    file /= Void
    data /= Void
-
-   data.for_all(agent (key: KEY; name: FIXED_STRING): BOOLEAN is do Result := key /= Void and then name = key.name and then key.is_valid end)
-
+   data.for_all(agent (key: KEY; name: FIXED_STRING): BOOLEAN
+      do
+         Result := key /= Void and then name = key.name and then key.is_valid
+      end)
    not is_open implies data.is_empty
 
-end
+end -- class VAULT

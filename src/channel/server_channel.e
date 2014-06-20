@@ -17,13 +17,12 @@ deferred class SERVER_CHANNEL
 
 insert
    JOB
-      export {SERVER}
-         prepare, is_ready, continue, done, restart
+      export {SERVER} prepare, is_ready, continue, done, restart
       end
    LOGGING
 
 feature {SERVER}
-   on_receive (message: FUNCTION[TUPLE[MESSAGE], MESSAGE]) is
+   on_receive (message: FUNCTION[TUPLE[MESSAGE], MESSAGE])
       require
          message /= Void
       do
@@ -33,7 +32,7 @@ feature {SERVER}
          messages.add_last(message)
       end
 
-   on_new_job (job: PROCEDURE[TUPLE[JOB]]) is
+   on_new_job (job: PROCEDURE[TUPLE[JOB]])
       require
          job /= Void
       do
@@ -43,19 +42,20 @@ feature {SERVER}
          jobs.add_last(job)
       end
 
-   disconnect is
+   disconnect
       deferred
       end
 
-   cleanup is
+   cleanup
       deferred
       end
 
 feature {}
    messages: FAST_ARRAY[FUNCTION[TUPLE[MESSAGE], MESSAGE]]
+
    jobs: FAST_ARRAY[PROCEDURE[TUPLE[JOB]]]
 
-   fire_receive (query: MESSAGE): MESSAGE is
+   fire_receive (query: MESSAGE): MESSAGE
       require
          query /= Void
       local
@@ -70,7 +70,7 @@ feature {}
          end
       end
 
-   reply_to (action: FUNCTION[TUPLE[MESSAGE], MESSAGE]; query: MESSAGE; reply_ref: REFERENCE[MESSAGE]): BOOLEAN is
+   reply_to (action: FUNCTION[TUPLE[MESSAGE], MESSAGE]; query: MESSAGE; reply_ref: REFERENCE[MESSAGE]): BOOLEAN
       require
          reply_ref.item = Void
       local
@@ -85,13 +85,16 @@ feature {}
          Result implies reply_ref.item /= Void
       end
 
-   fire_new_job (job: JOB) is
+   fire_new_job (job: JOB)
       require
          job /= Void
       do
          if jobs /= Void then
-            jobs.do_all(agent (jb: PROCEDURE[TUPLE[JOB]]) is do jb.call([job]) end (?))
+            jobs.for_each(agent (jb: PROCEDURE[TUPLE[JOB]])
+               do
+                  jb.call([job])
+               end(?))
          end
       end
 
-end
+end -- class SERVER_CHANNEL

@@ -18,23 +18,23 @@ expanded class COMMANDER
 feature {}
    commands: MAP[COMMAND, FIXED_STRING]
 
-   add_help (a_msg: STRING) is
+   add_help (a_msg: STRING)
       require
          a_msg /= Void
       do
-         commands.do_all_items(agent (msg: STRING; cmd: COMMAND) is
-                               local
-                                  h: ABSTRACT_STRING
-                               do
-                                  h := cmd.help(Void)
-                                  if h /= Void then
-                                     msg.extend('%N')
-                                     msg.append(h)
-                                  end
-                               end (a_msg, ?))
+         commands.do_all_items(agent (msg: STRING; cmd: COMMAND)
+      local
+         h: ABSTRACT_STRING
+            do
+               h := cmd.help(Void)
+               if h /= Void then
+                  msg.extend('%N')
+                  msg.append(h)
+               end
+            end(a_msg, ?))
       end
 
 invariant
    commands /= Void
 
-end
+end -- class COMMANDER

@@ -20,7 +20,7 @@ insert
    LOGGING
 
 feature {ANY}
-   port: INTEGER is
+   port: INTEGER
       local
          conf_: FIXED_STRING
       do
@@ -33,4 +33,4 @@ feature {ANY}
          end
       end
 
-end
+end -- class SOCKET

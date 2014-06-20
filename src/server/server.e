@@ -17,10 +17,8 @@ class SERVER
 
 inherit
    JOB
-      undefine
-         default_create
+      undefine default_create
       end
-
    QUERY_VISITOR
 
 insert
@@ -31,25 +29,26 @@ create {}
    make
 
 feature {LOOP_ITEM}
-   prepare (events: EVENTS_SET) is
+   prepare (events: EVENTS_SET)
       local
          t: TIME_EVENTS
       do
-         events.expect(t.timeout(1000)) -- 1 second
+         events.expect(t.timeout(1000))
+         -- 1 second
          channel.prepare(events)
       end
 
-   is_ready (events: EVENTS_SET): BOOLEAN is
+   is_ready (events: EVENTS_SET): BOOLEAN
       do
          channel_ready := channel.is_ready(events)
          Result := True
       end
 
-   continue is
+   continue
       do
          if channel_ready then
             channel.continue
-            sandglass := 60*60*4 -- 4 hours before timeout
+            sandglass := 60 * 60 * 4 -- 4 hours before timeout
          elseif sandglass > 0 then
             sandglass := sandglass - 1
          elseif vault.is_open then
@@ -57,17 +56,17 @@ feature {LOOP_ITEM}
          end
       end
 
-   done: BOOLEAN is
+   done: BOOLEAN
       do
          Result := channel.done
       end
 
-   restart is
+   restart
       do
          channel.restart
       end
 
-   collect_garbage is
+   collect_garbage
       local
          mem: MEMORY
       do
@@ -76,21 +75,23 @@ feature {LOOP_ITEM}
 
 feature {}
    sandglass: INTEGER
+
    channel_ready: BOOLEAN
 
    processor: PROCESSOR
+
    exceptions: EXCEPTIONS
+
    channel: SERVER_CHANNEL
+
    vault: VAULT
+
    is_running: BOOLEAN
 
-   run_in_child is
+   run_in_child
          -- the main loop
       local
-         loop_stack: LOOP_STACK
-         tfw: TEXT_FILE_WRITE
-         pid: INTEGER
-         is_killed, initialized: BOOLEAN
+         loop_stack: LOOP_STACK; tfw: TEXT_FILE_WRITE; pid: INTEGER; is_killed, initialized: BOOLEAN
       do
          if not is_killed then
             if initialized then
@@ -115,15 +116,14 @@ feature {}
                initialized := True
                log.info.put_line(once "Starting main loop.")
             end
-
             is_running := True
             loop_stack.run
             is_running := False
          end
-
          if vault.is_open then
             vault.close
          end
+
          channel.cleanup
 
          log.info.put_line(once "Terminated.")
@@ -141,13 +141,13 @@ feature {}
          end
       end
 
-   run_in_parent (proc: PROCESS) is
+   run_in_parent (proc: PROCESS)
       do
          log.info.put_line("Process id is #(1)" # proc.id.out)
          die_with_code(0)
       end
 
-   run_message (message: MESSAGE): MESSAGE is
+   run_message (message: MESSAGE): MESSAGE
       require
          message /= Void
       do
@@ -161,7 +161,7 @@ feature {}
 
    reply: MESSAGE
 
-   preload is
+   preload
       do
          inspect
             configuration.argument_count
@@ -169,17 +169,23 @@ feature {}
             detach := True
          when 1 then
             if configuration.argument(1).is_equal("-no_detach") then
-               check not detach end
+               check
+                  not detach
+               end
             else
                detach := True
                configuration.parse_extra_conf(configuration.argument(1))
             end
          when 2 then
             if configuration.argument(1).is_equal("-no_detach") then
-               check not detach end
+               check
+                  not detach
+               end
                configuration.parse_extra_conf(configuration.argument(2))
             elseif configuration.argument(2).is_equal("-no_detach") then
-               check not detach end
+               check
+                  not detach
+               end
                configuration.parse_extra_conf(configuration.argument(1))
             else
                std_error.put_line("One argument must be %"-no_detach%" and the other, the extra configuration file")
@@ -189,20 +195,17 @@ feature {}
             std_error.put_line("Usage: #(1) [<fallback conf>] [-no_detach]" # command_name)
             die_with_code(1)
          end
-
          if configuration.main_config = Void then
             std_error.put_line("Could not find any valid configuration file")
             die_with_code(1)
          end
       end
 
-   main is
+   main
       local
-         proc: PROCESS
-         channel_factory: CHANNEL_FACTORY
+         proc: PROCESS; channel_factory: CHANNEL_FACTORY
       do
          channel := channel_factory.new_server_channel
-
          if detach then
             proc := processor.fork
             if proc.is_child then
@@ -219,7 +222,7 @@ feature {}
    detach: BOOLEAN
 
 feature {QUERY_CLOSE}
-   visit_close (query: QUERY_CLOSE) is
+   visit_close (query: QUERY_CLOSE)
       do
          vault.close
          collect_garbage
@@ -227,7 +230,7 @@ feature {QUERY_CLOSE}
       end
 
 feature {QUERY_GET}
-   visit_get (query: QUERY_GET) is
+   visit_get (query: QUERY_GET)
       local
          pass: STRING
       do
@@ -244,19 +247,22 @@ feature {QUERY_GET}
       end
 
 feature {QUERY_IS_OPEN}
-   visit_is_open (query: QUERY_IS_OPEN) is
+   visit_is_open (query: QUERY_IS_OPEN)
       do
          create {REPLY_IS_OPEN} reply.make(once "", vault.is_open)
       end
 
 feature {QUERY_LIST}
-   visit_list (query: QUERY_LIST) is
+   visit_list (query: QUERY_LIST)
       local
          names: FAST_ARRAY[FIXED_STRING]
       do
          if vault.is_open then
             create names.with_capacity(vault.count)
-            vault.do_all_keys(agent (key: FIXED_STRING; a: FAST_ARRAY[FIXED_STRING]) is do a.add_last(key) end (?, names))
+            vault.for_each_key(agent (key: FIXED_STRING; a: FAST_ARRAY[FIXED_STRING])
+               do
+                  a.add_last(key)
+               end(?, names))
             create {REPLY_LIST} reply.make(once "", names)
          else
             create {REPLY_LIST} reply.make(once "Vault not open", create {FAST_ARRAY[FIXED_STRING]}.make(0))
@@ -264,7 +270,7 @@ feature {QUERY_LIST}
       end
 
 feature {QUERY_MASTER}
-   visit_master (query: QUERY_MASTER) is
+   visit_master (query: QUERY_MASTER)
       do
          if vault.is_open then
             create {REPLY_MASTER} reply.make(once "Vault already open")
@@ -279,7 +285,7 @@ feature {QUERY_MASTER}
       end
 
 feature {QUERY_MERGE}
-   visit_merge (query: QUERY_MERGE) is
+   visit_merge (query: QUERY_MERGE)
       local
          other: VAULT; error: ABSTRACT_STRING
       do
@@ -299,13 +305,13 @@ feature {QUERY_MERGE}
       end
 
 feature {QUERY_PING}
-   visit_ping (query: QUERY_PING) is
+   visit_ping (query: QUERY_PING)
       do
          create {REPLY_PING} reply.make(once "", query.id)
       end
 
 feature {QUERY_SAVE}
-   visit_save (query: QUERY_SAVE) is
+   visit_save (query: QUERY_SAVE)
       local
          error: ABSTRACT_STRING
       do
@@ -318,7 +324,7 @@ feature {QUERY_SAVE}
       end
 
 feature {QUERY_SET}
-   visit_set (query: QUERY_SET) is
+   visit_set (query: QUERY_SET)
       local
          error: ABSTRACT_STRING; pass: STRING
       do
@@ -336,7 +342,7 @@ feature {QUERY_SET}
       end
 
 feature {QUERY_STOP}
-   visit_stop (query: QUERY_STOP) is
+   visit_stop (query: QUERY_STOP)
       do
          vault.close
          log.info.put_line(once "Terminating...")
@@ -346,7 +352,7 @@ feature {QUERY_STOP}
       end
 
 feature {QUERY_UNSET}
-   visit_unset (query: QUERY_UNSET) is
+   visit_unset (query: QUERY_UNSET)
       local
          error: ABSTRACT_STRING
       do
@@ -362,4 +368,4 @@ invariant
    is_running implies vault /= Void
    is_running implies channel /= Void
 
-end
+end -- class SERVER

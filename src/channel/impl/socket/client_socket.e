@@ -26,7 +26,7 @@ create {CHANNEL_FACTORY}
    make
 
 feature {CLIENT}
-   server_running: BOOLEAN is
+   server_running: BOOLEAN
       do
          if channel = Void or else not channel.is_connected then
             channel := access.stream
@@ -35,16 +35,15 @@ feature {CLIENT}
          log.info.put_line(once "Server is running: #(1)" # Result.out)
       end
 
-   server_start is
+   server_start
       local
-         proc: PROCESS; arg: ABSTRACT_STRING
-         processor: PROCESSOR
-         extern: EXTERN
+         proc: PROCESS; arg: ABSTRACT_STRING; processor: PROCESSOR; extern: EXTERN
       do
          log.trace.put_line(once "starting server...")
          if configuration.argument_count = 1 then
             arg := configuration.argument(1)
          end
+
          proc := processor.execute_to_dev_null(once "server", arg)
          if proc.is_connected then
             proc.wait
@@ -59,7 +58,7 @@ feature {CLIENT}
          end
       end
 
-   call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]]) is
+   call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]])
       do
          busy := True
          streamer.write_message(query, channel)
@@ -74,17 +73,17 @@ feature {CLIENT}
          end
       end
 
-   is_ready: BOOLEAN is
+   is_ready: BOOLEAN
       do
          Result := not busy
       end
 
-   server_is_ready: BOOLEAN is
+   server_is_ready: BOOLEAN
       do
          Result := server_running and then not busy
       end
 
-   cleanup is
+   cleanup
       do
          if channel /= Void then
             channel.disconnect
@@ -92,23 +91,24 @@ feature {CLIENT}
       end
 
 feature {}
-   make (tmpdir: ABSTRACT_STRING) is
+   make (tmpdir: ABSTRACT_STRING)
       require
          tmpdir /= Void
-      local
       do
-         create access.make(create {IPV4_ADDRESS}.make(127,0,0,1), socket.port, True)
+         create access.make(create {IPV4_ADDRESS}.make(127, 0, 0, 1), socket.port, True)
          channel := access.stream
          log.info.put_line(once "Starting client on port #(1)" # socket.port.out)
       end
 
    access: TCP_ACCESS
+
    channel: SOCKET_INPUT_OUTPUT_STREAM
+
    socket: SOCKET
 
    busy: BOOLEAN
 
-   streamer: MESSAGE_STREAMER is
+   streamer: MESSAGE_STREAMER
       once
          create Result.make
       end
@@ -116,4 +116,4 @@ feature {}
 invariant
    access /= Void
 
-end
+end -- class CLIENT_SOCKET

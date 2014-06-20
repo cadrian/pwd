@@ -22,12 +22,12 @@ create {CONSOLE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "load".intern
+         Result := ("load").intern
       end
 
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[
                     [33mload [remote][0m      [1mReplace[0m the local vault with the server's version.
@@ -39,11 +39,11 @@ feature {COMMANDER}
       end
 
 feature {}
-   run_remote (remote: REMOTE) is
+   run_remote (remote: REMOTE)
       local
          shared: SHARED
       do
          remote.load(shared.vault_file)
       end
 
-end
+end -- class COMMAND_LOAD

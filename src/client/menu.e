@@ -22,14 +22,14 @@ create {}
    make
 
 feature {}
-   run is
+   run
       do
          send_menu
       end
 
    list: FAST_ARRAY[STRING]
 
-   send_menu is
+   send_menu
       require
          channel.is_ready
       do
@@ -39,7 +39,7 @@ feature {}
          end
       end
 
-   when_list (a_reply: MESSAGE) is
+   when_list (a_reply: MESSAGE)
       local
          reply: REPLY_LIST
       do
@@ -47,7 +47,7 @@ feature {}
             reply ::= a_reply
             if reply.error.is_empty then
                create list.with_capacity(reply.count_names)
-               reply.do_all_names(agent list.add_last({STRING}))
+               reply.for_each_name(agent list.add_last({STRING}))
             else
                log.error.put_line(reply.error)
             end
@@ -56,7 +56,7 @@ feature {}
          end
       end
 
-   display_menu is
+   display_menu
       require
          list /= Void
       local
@@ -65,20 +65,23 @@ feature {}
          proc := processor.execute_redirect(conf(config_command), conf_no_eval(config_arguments))
          if proc.is_connected then
             proc_input := proc.input
-            list.do_all(agent display(?, proc_input))
+            list.for_each(agent display(?, proc_input))
             proc_input.disconnect
             proc.output.read_line
             if not proc.output.end_of_input then
                entry := proc.output.last_string.twin
             end
+
             proc.wait
             if proc.status = 0 and then entry /= Void and then not entry.is_empty then
-               do_get(entry, agent copy_to_clipboard(?), agent is do end)
+               do_get(entry, agent copy_to_clipboard(?), agent
+                  do
+                  end)
             end
          end
       end
 
-   display (line: STRING; output: OUTPUT_STREAM) is
+   display (line: STRING; output: OUTPUT_STREAM)
       require
          list /= Void
          output.is_connected
@@ -86,19 +89,21 @@ feature {}
          output.put_line(line)
       end
 
-   config_command: FIXED_STRING is
+   config_command: FIXED_STRING
       once
-         Result := "command".intern
+         Result := ("command").intern
       end
 
-   config_arguments: FIXED_STRING is
+   config_arguments: FIXED_STRING
       once
-         Result := "arguments".intern
+         Result := ("arguments").intern
       end
 
-   unknown_key (key: ABSTRACT_STRING) is
+   unknown_key (key: ABSTRACT_STRING)
       do
-         check False end
+         check
+            False
+         end
       end
 
-end
+end -- class MENU

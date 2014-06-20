@@ -23,57 +23,56 @@ insert
    BASIC_DIRECTORY
 
 feature {ANY}
-   read_data (filename: ABSTRACT_STRING): TEXT_FILE_READ is
+   read_data (filename: ABSTRACT_STRING): TEXT_FILE_READ
       do
          Result := read(filename, data_dirs)
       ensure
          Result /= Void implies Result.is_connected
       end
 
-   read_config (filename: ABSTRACT_STRING): TEXT_FILE_READ is
+   read_config (filename: ABSTRACT_STRING): TEXT_FILE_READ
       do
          Result := read(filename, config_dirs)
       ensure
          Result /= Void implies Result.is_connected
       end
 
-   cache_home: FIXED_STRING is
+   cache_home: FIXED_STRING
       once
-         Result := getenv("XDG_CACHE_HOME", Void, agent: ABSTRACT_STRING is do Result := "#(1)/.cache/pwdmgr" # home end)
+         Result := getenv("XDG_CACHE_HOME", Void, agent : ABSTRACT_STRING
+            do
+               Result := "#(1)/.cache/pwdmgr" # home
+            end)
          check_dir(Result)
       end
 
-   runtime_dir: FIXED_STRING is
+   runtime_dir: FIXED_STRING
       once
-         Result := getenv("XDG_RUNTIME_DIR",
-                          Void,
-                          agent: ABSTRACT_STRING is
-                          do
-                             Result := getenv("TMPDIR",
-                                              agent (tmp: ABSTRACT_STRING): ABSTRACT_STRING is
-                                              do
-                                                 Result := "#(1)/pwdmgr" # tmp
-                                              end(?),
-                                              agent: ABSTRACT_STRING is
-                                              do
-                                                 Result := "/tmp/pwdmgr-#(1)" # user
-                                              end)
-                          end)
+         Result := getenv("XDG_RUNTIME_DIR", Void, agent : ABSTRACT_STRING
+            do
+               Result := getenv("TMPDIR", agent (tmp: ABSTRACT_STRING): ABSTRACT_STRING
+                  do
+                     Result := "#(1)/pwdmgr" # tmp
+                  end(?), agent : ABSTRACT_STRING
+                  do
+                     Result := "/tmp/pwdmgr-#(1)" # user
+                  end)
+            end)
          check_dir(Result)
       end
 
-   data_home: FIXED_STRING is
+   data_home: FIXED_STRING
       once
          Result := ("#(1)/pwdmgr" # data_home_).intern
       end
 
-   config_home: FIXED_STRING is
+   config_home: FIXED_STRING
       once
          Result := ("#(1)/pwdmgr" # config_home_).intern
       end
 
 feature {}
-   read (filename: ABSTRACT_STRING; dirs: TRAVERSABLE[FIXED_STRING]): TEXT_FILE_READ is
+   read (filename: ABSTRACT_STRING; dirs: TRAVERSABLE[FIXED_STRING]): TEXT_FILE_READ
       local
          i: INTEGER; path: ABSTRACT_STRING
       do
@@ -86,56 +85,69 @@ feature {}
             if file_exists(path) then
                create Result.connect_to(path)
             end
+
             i := i + 1
          end
       ensure
          Result /= Void implies Result.is_connected
       end
 
-   data_home_: FIXED_STRING is
+   data_home_: FIXED_STRING
       once
-         Result := getenv("XDG_DATA_HOME", Void, agent: ABSTRACT_STRING is do Result := "#(1)/.local/share" # home end)
+         Result := getenv("XDG_DATA_HOME", Void, agent : ABSTRACT_STRING
+            do
+               Result := "#(1)/.local/share" # home
+            end)
       end
 
-   config_home_: FIXED_STRING is
+   config_home_: FIXED_STRING
       once
-         Result := getenv("XDG_CONFIG_HOME", Void, agent: ABSTRACT_STRING is do Result := "#(1)/.config" # home end)
+         Result := getenv("XDG_CONFIG_HOME", Void, agent : ABSTRACT_STRING
+            do
+               Result := "#(1)/.config" # home
+            end)
       end
 
-   home: FIXED_STRING is
+   home: FIXED_STRING
       once
          Result := getenv("HOME", Void, Void)
       end
 
-   user: FIXED_STRING is
+   user: FIXED_STRING
       once
          Result := getenv("USER", Void, Void)
       end
 
 feature {}
-   data_dirs: TRAVERSABLE[FIXED_STRING] is
+   data_dirs: TRAVERSABLE[FIXED_STRING]
       local
          value: FIXED_STRING; dirs: FAST_ARRAY[FIXED_STRING]
       once
          create dirs.with_capacity(4)
          dirs.add_last(data_home_)
-         value := getenv("XDG_DATA_DIRS", Void, agent: ABSTRACT_STRING is do Result := "/usr/local/share/:/usr/share/" end)
+         value := getenv("XDG_DATA_DIRS", Void, agent : ABSTRACT_STRING
+            do
+               Result := "/usr/local/share/:/usr/share/"
+            end)
          split_dirs(value, dirs)
          Result := dirs
       end
 
-   config_dirs: TRAVERSABLE[FIXED_STRING] is
+   config_dirs: TRAVERSABLE[FIXED_STRING]
       local
          value: FIXED_STRING; dirs: FAST_ARRAY[FIXED_STRING]
       once
          create dirs.with_capacity(4)
          dirs.add_last(config_home_)
-         value := getenv("XDG_CONFIG_DIRS", Void, agent: ABSTRACT_STRING is do Result := "/usr/local/etc:/etc/xdg" end) -- the first one is not standard but useful for local installs
+         value := getenv("XDG_CONFIG_DIRS", Void, agent : ABSTRACT_STRING
+            do
+               Result := "/usr/local/etc:/etc/xdg"
+            end) -- the first one is not standard but useful for local installs
          split_dirs(value, dirs)
          Result := dirs
       end
 
-   check_dir (dir: FIXED_STRING) is
+   check_dir (dir: FIXED_STRING)
       require
          dir /= Void
       do
@@ -150,7 +162,7 @@ feature {}
 feature {}
    system: SYSTEM
 
-   split_dirs (value: FIXED_STRING; dirs: FAST_ARRAY[FIXED_STRING]) is
+   split_dirs (value: FIXED_STRING; dirs: FAST_ARRAY[FIXED_STRING])
       require
          value /= Void
          dirs /= Void
@@ -173,7 +185,8 @@ feature {}
          end
       end
 
-   getenv (var: ABSTRACT_STRING; ext: FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]; def: FUNCTION[TUPLE, ABSTRACT_STRING]): FIXED_STRING is
+   getenv (var: ABSTRACT_STRING; ext: FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]
+      def: FUNCTION[TUPLE, ABSTRACT_STRING]): FIXED_STRING
       require
          var /= Void
       local
@@ -198,4 +211,4 @@ feature {}
          Result /= Void
       end
 
-end
+end -- class XDG

@@ -22,12 +22,12 @@ create {CONSOLE}
    make
 
 feature {COMMANDER}
-   name: FIXED_STRING is
+   name: FIXED_STRING
       once
-         Result := "rem".intern
+         Result := ("rem").intern
       end
 
-   run (command: COLLECTION[STRING]) is
+   run (command: COLLECTION[STRING])
       do
          if command.count /= 1 then
             error_and_help(message_invalid_arguments, command)
@@ -39,18 +39,18 @@ feature {COMMANDER}
          end
       end
 
-   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING] is
+   complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
          Result := no_completion
       end
 
-   help (command: COLLECTION[STRING]): STRING is
+   help (command: COLLECTION[STRING]): STRING
       do
          Result := once "[33mrem <key>[0m          Removes the password corresponding to the given key."
       end
 
 feature {}
-   when_reply (a_reply: MESSAGE) is
+   when_reply (a_reply: MESSAGE)
       local
          reply: REPLY_UNSET
       do
@@ -67,4 +67,4 @@ feature {}
          end
       end
 
-end
+end -- class COMMAND_REM

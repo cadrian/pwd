@@ -17,8 +17,7 @@ class CONFIGURATION
 
 insert
    ARGUMENTS
-      redefine
-         default_create
+      redefine default_create
       end
 
 create {CONFIGURABLE}
@@ -27,7 +26,7 @@ create {CONFIGURABLE}
 feature {ANY}
    main_config: CONFIG_FILE
 
-   specific (name: ABSTRACT_STRING): CONFIG_FILE is
+   specific (name: ABSTRACT_STRING): CONFIG_FILE
       do
          Result := config_map.fast_reference_at(name.intern)
          if Result = Void then
@@ -39,7 +38,7 @@ feature {ANY}
       end
 
 feature {ANY}
-   parse_extra_conf (a_conf_file: ABSTRACT_STRING) is
+   parse_extra_conf (a_conf_file: ABSTRACT_STRING)
       require
          a_conf_file /= Void
       do
@@ -51,12 +50,12 @@ feature {ANY}
 feature {}
    xdg: XDG
 
-   default_create is
+   default_create
       do
          main_config := load_config(once "config.rc", False)
       end
 
-   load_config (a_filename: ABSTRACT_STRING; allow_unknown: BOOLEAN): CONFIG_FILE is
+   load_config (a_filename: ABSTRACT_STRING; allow_unknown: BOOLEAN): CONFIG_FILE
       require
          a_filename /= Void
       local
@@ -73,7 +72,7 @@ feature {}
          allow_unknown implies Result /= Void
       end
 
-   config_map: HASHED_DICTIONARY[CONFIG_FILE, FIXED_STRING] is
+   config_map: HASHED_DICTIONARY[CONFIG_FILE, FIXED_STRING]
       once
          create Result.make
       end
@@ -81,4 +80,4 @@ feature {}
 invariant
    main_config /= Void
 
-end
+end -- class CONFIGURATION
