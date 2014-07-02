@@ -206,6 +206,7 @@ Useful for installation on USB keys or any removable media.
 The Debian package is named *pwd*.
 
 `deb http://apt.cadrian.net unstable main`
+
 `deb-src http://apt.cadrian.net unstable main`
 
 Currently available for the architectures: *amd64* and *armhf*.
