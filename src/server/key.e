@@ -84,11 +84,12 @@ feature {ANY}
 
 feature {}
    bzero (buf: NATIVE_ARRAY[CHARACTER]; count: INTEGER)
+      -- Put `count` '%U' characters in `buf`, in a constant time.
       external "plug_in"
       alias "[
          location: "."
          module_name: "plugin"
-         feature_name: "bzero"
+         feature_name: "force_bzero"
       ]"
       end
 
