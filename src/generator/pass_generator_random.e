@@ -50,10 +50,10 @@ feature {}
       ]"
       end
 
-   read_rand: INTEGER_8
+   read_rand: NATURAL_8
       do
          file.read_byte
-         Result := file.last_byte.to_integer_8
+         Result := file.last_byte.to_natural_8
       end
 
    file: BINARY_FILE_READ

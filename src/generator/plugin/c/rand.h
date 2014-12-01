@@ -1,1 +1,1 @@
-real32_t randf(int8_t (*rand)(void*), void*C);
+real32_t randf(uint8_t (*rand_fn)(void*),void*data);
