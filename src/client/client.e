@@ -7,7 +7,7 @@
 --
 -- pwdmgr is distributed in the hope that it will be useful,
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.   See the
 -- GNU General Public License for more details.
 --
 -- You should have received a copy of the GNU General Public License
@@ -155,8 +155,7 @@ feature {}
       do
          log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
          server_start
-         master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
-         send_master
+         read_password_and_send_master
       end
 
    server_open
@@ -173,12 +172,17 @@ feature {}
             if reply.is_open then
                log.info.put_line(once "Server vault is already open")
             else
-               master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
-               send_master
+               read_password_and_send_master
             end
          else
             log.error.put_line(once "Unexpected reply")
          end
+      end
+
+   read_password_and_send_master
+      do
+         master_pass.copy(read_password(once "Please enter your encryption phrase%Nto open the password vault.", Void))
+         send_master
       end
 
    call_server (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]])

@@ -12,7 +12,7 @@
 dir=$(dirname $(readlink -f $0))
 cd $dir
 
-EXE="server menu console"
+EXE="server menu console webclient"
 
 bootstrap_dir=$dir/target/bootstrap
 test -d $bootstrap_dir && rm -rf $bootstrap_dir

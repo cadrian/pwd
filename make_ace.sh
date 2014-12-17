@@ -42,6 +42,15 @@ case $name in
         #no_strip=yes
         #clean=no
         ;;
+    webclient)
+        #trace=yes
+        #rescue=no
+        #debug_pwd=yes
+        #debug_liberty='"json/parser"); debug("socket"'
+        #assert=require
+        #no_strip=yes
+        #clean=no
+        ;;
     server)
         #trace=yes
         #rescue=no
