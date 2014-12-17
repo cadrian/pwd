@@ -1,6 +1,7 @@
 pwd (0.0.10#SNAPSHOT#) unstable; urgency=low
 
   * Using Travis CI to generate Debian packages
+  * New client: web CGI
 
  -- Cyril Adrian <cyril.adrian@gmail.com>  #DATE#
 
