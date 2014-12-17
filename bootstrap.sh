@@ -70,10 +70,16 @@ do
     mkdir -p $bootstrap_dir/c/$exe
     ace=$exe.ace
     ./make_ace.sh $ace dontclean
-    if [ ${VERBOSE:-no} = yes ]; then
+    if [ ${CLASS_CHECK:-no} = yes ]; then
+        se class_check $ace || exit 1
+    elif [ ${VERBOSE:-no} = yes ]; then
         se c2c -verbose $ace
     else
         se c2c $ace
+    fi
+
+    if [ ${CLASS_CHECK:-no} = yes ]; then
+        exit 0
     fi
 
     {
