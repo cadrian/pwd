@@ -43,15 +43,18 @@ feature {} -- CLIENT interface
 
    read_password_and_send_master
       do
-         create {CGI_RESPONSE_LOCAL_REDIRECT} response.set_redirect("/open", Void)
+         if response = Void then
+            create {CGI_RESPONSE_LOCAL_REDIRECT} response.set_redirect("/open", Void)
+         end
       end
 
    unknown_key (key: ABSTRACT_STRING)
       do
-         create {CGI_RESPONSE_DOCUMENT} response.set_status(204)
+         create doc.set_status(204)
       end
 
    response: CGI_RESPONSE
+   doc: CGI_RESPONSE_DOCUMENT
 
 feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
    form_token_name: FIXED_STRING
@@ -65,52 +68,55 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
       end
 
    get: CGI_RESPONSE
-      local
-         doc: CGI_RESPONSE_DOCUMENT
       do
-         inspect
-            cgi.path_info.segments.first.out
-         when "open" then
-            if cgi.path_info.segments.count = 1 then
-               next_auth_token --| **** TODO: potential DOS :-(
-               create doc.set_content_type("text/html")
-               doc.body.put_string("[
-                                       <html>
-                                          <head>
-                                             <title>CAD's password vault</title>
-                                          </head>
-                                          <body>
-                                             <h2>Vault password</h2>
-                                             <form method="post" action="/auth">
-                                                <input type="hidden" name="#(2)" value="#(1)" />
-                                                <input type="password" name="#(3)" />
-                                                <input type="submit" value="OK">
-                                             </form>
-                                          </body>
-                                       </html>
-                                    ]"
-                                       # auth_token
-                                       # form_token_name
-                                       # form_password_name)
-            end
-         when "auth" then
-            create doc.set_status(405)
-         when "pass" then
+         if cgi.path_info.segments.is_empty then
+            read_password_and_send_master
+         else
             inspect
-               cgi.path_info.segments.count
-            when 1 then
-               call_server(create {QUERY_LIST}.make, agent when_pass_list(?))
-            when 2 then
-               do_get(cgi.path_info.segments.last, agent when_pass_get(?), agent unknown_key(?))
+               cgi.path_info.segments.first.out
+            when "open" then
+               if cgi.path_info.segments.count = 1 then
+                  next_auth_token --| **** TODO: potential DOS :-(
+                  create doc.set_content_type("text/html")
+                  doc.body.put_string("[
+                                          <html>
+                                             <head>
+                                                <title>CAD's password vault</title>
+                                             </head>
+                                             <body>
+                                                <h2>Vault password</h2>
+                                                <form method="post" action="/auth">
+                                                   <input type="hidden" name="#(2)" value="#(1)" />
+                                                   <input type="password" name="#(3)" />
+                                                   <input type="submit" value="OK">
+                                                </form>
+                                             </body>
+                                          </html>
+                                       ]"
+                                          # auth_token
+                                          # form_token_name
+                                          # form_password_name)
+               end
+            when "auth" then
+               create doc.set_status(405)
+            when "pass" then
+               inspect
+                  cgi.path_info.segments.count
+               when 1 then
+                  call_server(create {QUERY_LIST}.make, agent when_pass_list(?))
+               when 2 then
+                  do_get(cgi.path_info.segments.last, agent when_pass_get(?), agent unknown_key(?))
+               else
+               end
             else
             end
-         else
-         end
-         if response = Void then
-            if doc = Void then
-               create doc.set_status(404)
+            if response = Void then
+               if doc = Void then
+                  create doc.set_status(404)
+               end
+               no_cache
+               response := doc
             end
-            response := doc
          end
          Result := response
       end
@@ -119,27 +125,31 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
       local
          form: CGI_FORM; token: FIXED_STRING
       do
-         inspect
-            cgi.path_info.segments.first.out
-         when "vault" then
-            if cgi.path_info.segments.count = 1 then
-               get_auth_token
-               if auth_token /= Void then
-                  create form.parse(std_input)
-                  if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) and then form.form.fast_has(form_password_name) then
-                     master_pass.make_from_string(form.form.fast_at(form_password_name))
-                     send_master
-                  else
-                     response_403
+         if cgi.path_info.segments.is_empty then
+            response_403
+         else
+            inspect
+               cgi.path_info.segments.first.out
+            when "vault" then
+               if cgi.path_info.segments.count = 1 then
+                  get_auth_token
+                  if auth_token /= Void then
+                     create form.parse(std_input)
+                     if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) and then form.form.fast_has(form_password_name) then
+                        master_pass.make_from_string(form.form.fast_at(form_password_name))
+                        send_master
+                     end
                   end
-               else
-                  response_403
                end
             else
-               response_403
             end
-         else
-            response_403
+            if response = Void then
+               if doc = Void then
+                  response_403
+               end
+               no_cache
+               response := doc
+            end
          end
          Result := response
       end
@@ -227,7 +237,6 @@ feature {}
    when_pass_list (a_reply: MESSAGE)
       local
          reply: REPLY_LIST
-         doc: CGI_RESPONSE_DOCUMENT
       do
          if reply ?:= a_reply then
             reply ::= a_reply
@@ -251,8 +260,6 @@ feature {}
       end
 
    when_pass_get (a_pass: STRING)
-      local
-         doc: CGI_RESPONSE_DOCUMENT
       do
          create doc.set_content_type("text/html")
          doc.body.put_line("[
@@ -304,12 +311,23 @@ feature {}
 
    response_403
       do
-         create {CGI_RESPONSE_DOCUMENT} response.set_status(403)
+         create doc.set_status(403)
+      ensure
+         doc.status = 403
       end
 
    response_503 (message: ABSTRACT_STRING)
       do
-         create {CGI_RESPONSE_DOCUMENT} response.set_status_and_error(503, message)
+         create doc.set_status_and_error(503, message)
+      ensure
+         doc.status = 503
+      end
+
+   no_cache
+      require
+         doc /= Void
+      do
+         doc.set_field("Cache-Control", "private,no-store,no-cache")
       end
 
 feature {}
@@ -320,5 +338,8 @@ feature {}
       end
 
    cgi: CGI
+
+invariant
+   (response /= Void and then (CGI_RESPONSE_DOCUMENT ?:= response)) implies response = doc
 
 end -- class WEBCLIENT
