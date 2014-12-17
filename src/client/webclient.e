@@ -18,7 +18,8 @@ class WEBCLIENT
 inherit
    CLIENT
       rename
-         make as make_client
+         make as make_client,
+         delete as ft_delete
       redefine
          read_password_and_send_master,
          server_bootstrap,
@@ -42,7 +43,7 @@ feature {} -- CLIENT interface
 
    read_password_and_send_master
       do
-         create {CGI_RESPONSE_LOCAL_REDIRECT} response.set_redirect("/open")
+         create {CGI_RESPONSE_LOCAL_REDIRECT} response.set_redirect("/open", Void)
       end
 
    unknown_key (key: ABSTRACT_STRING)
@@ -52,7 +53,17 @@ feature {} -- CLIENT interface
 
    response: CGI_RESPONSE
 
-feature {CGI_REMOTE_METHOD} -- CGI_HANDLER method
+feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
+   form_token_name: FIXED_STRING
+      once
+         Result := "token".intern
+      end
+
+   form_password_name: FIXED_STRING
+      once
+         Result := "password".intern
+      end
+
    get: CGI_RESPONSE
       local
          doc: CGI_RESPONSE_DOCUMENT
@@ -71,14 +82,16 @@ feature {CGI_REMOTE_METHOD} -- CGI_HANDLER method
                                           <body>
                                              <h2>Vault password</h2>
                                              <form method="post" action="/auth">
-                                                <input type="hidden" name="token" value="#(1)" />
-                                                <input type="password" name="password" />
+                                                <input type="hidden" name="#(2)" value="#(1)" />
+                                                <input type="password" name="#(3)" />
                                                 <input type="submit" value="OK">
                                              </form>
                                           </body>
                                        </html>
                                     ]"
-                                       # auth_token)
+                                       # auth_token
+                                       # form_token_name
+                                       # form_password_name)
             end
          when "auth" then
             create doc.set_status(405)
@@ -88,7 +101,7 @@ feature {CGI_REMOTE_METHOD} -- CGI_HANDLER method
             when 1 then
                call_server(create {QUERY_LIST}.make, agent when_pass_list(?))
             when 2 then
-               get_back(cgi.path_info.segments.last, agent when_pass_get(?), agent unknown_key(?))
+               do_get(cgi.path_info.segments.last, agent when_pass_get(?), agent unknown_key(?))
             else
             end
          else
@@ -113,8 +126,8 @@ feature {CGI_REMOTE_METHOD} -- CGI_HANDLER method
                get_auth_token
                if auth_token /= Void then
                   create form.parse(std_input)
-                  if form.form.has("token") and then form.form.at("token").is_equal(auth_token) and then form.form.has("password") then
-                     master_pass.make_from_string(form.form.at("password"))
+                  if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) and then form.form.fast_has(form_password_name) then
+                     master_pass.make_from_string(form.form.fast_at(form_password_name))
                      send_master
                   else
                      response_403
@@ -164,8 +177,9 @@ feature {}
                       auth_token := token
                       --| **** TODO: potential DOS? call_server(create {QUERY_UNSET}.make(token_name), agent (reply: MESSAGE) do end(?))
                    end(?),
-                agent (token: STRING)
+                agent (a_token_name: ABSTRACT_STRING)
                    do
+                      check a_token_name = token_name end
                       auth_token := Void
                    end(?))
       end
@@ -201,7 +215,7 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               create {CGI_RESPONSE_LOCAL_REDIRECT} response.set_redirect("/pass")
+               create {CGI_RESPONSE_LOCAL_REDIRECT} response.set_redirect("/pass", Void)
             else
                response_403
             end
@@ -223,7 +237,7 @@ feature {}
                reply.for_each_name(agent (name: STRING)
                                    do
                                       doc.body.put_line("<li><a href=%"#(1)/#(2)%">#(2)</a></li>"
-                                         # (if cgi.script_name = Void then "" else "/" + cgi.script_name.name end)
+                                         # (if cgi.script_name.is_set then "/" + cgi.script_name.name else "" end)
                                          # name
                                       )
                                    end(?))
@@ -262,17 +276,17 @@ feature {}
                             ]" # protect_html(a_pass))
       end
 
-   protect_html (data: ABSTRACT_STRING): STRING
+   protect_html (a_data: ABSTRACT_STRING): STRING
       local
          i: INTEGER; c: CHARACTER
       do
          from
             Result := ""
-            i := data.lower
+            i := a_data.lower
          until
-            i > data.upper
+            i > a_data.upper
          loop
-            c := data.item(i)
+            c := a_data.item(i)
             inspect
                c
             when '<' then
