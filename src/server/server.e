@@ -261,7 +261,9 @@ feature {QUERY_LIST}
             create names.with_capacity(vault.count)
             vault.for_each_key(agent (key: FIXED_STRING; a: FAST_ARRAY[FIXED_STRING])
                do
-                  a.add_last(key)
+                  if not key.is_empty and then key.first /= '_' then
+                     a.add_last(key)
+                  end
                end(?, names))
             create {REPLY_LIST} reply.make(once "", names)
          else
