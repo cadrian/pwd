@@ -93,6 +93,7 @@ before_install:
 install:
 - "./deploy.sh"
 script:
+- "./check.sh"
 - se test -verbose test
 after_failure:
 - cat test/eiffeltest/log.ref
