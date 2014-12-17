@@ -340,6 +340,6 @@ feature {}
    cgi: CGI
 
 invariant
-   (response /= Void and then (CGI_RESPONSE_DOCUMENT ?:= response)) implies response = doc
+   (response /= Void and then ({CGI_RESPONSE_DOCUMENT} ?:= response)) implies response = doc
 
 end -- class WEBCLIENT
