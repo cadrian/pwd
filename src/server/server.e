@@ -366,6 +366,12 @@ feature {QUERY_UNSET}
          end
       end
 
+feature {QUERY_VERSION}
+   visit_version (query: QUERY_VERSION)
+      do
+         create {REPLY_VERSION} reply.make(once "", version)
+      end
+
 invariant
    is_running implies vault /= Void
    is_running implies channel /= Void

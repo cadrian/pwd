@@ -10,3 +10,4 @@ save        .                             .
 set         !                             key:STRING|pass:STRING
 stop        .                             .
 unset       key:STRING                    key:STRING
+version     .                             version:STRING

@@ -115,7 +115,7 @@ feature {}
          elseif not channel.server_running then
             server_restart
          else
-            server_open
+            check_server_version
          end
       end
 
@@ -156,6 +156,55 @@ feature {}
          log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
          server_start
          read_password_and_send_master
+      end
+
+   check_server_version
+      do
+         call_server(create {QUERY_VERSION}.make, agent when_version(?))
+         server_open
+      end
+
+   when_version (a_reply: MESSAGE)
+      local
+         reply: REPLY_VERSION
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.version.is_equal(version) then
+               log.info.put_line(once "Server version matches, now opening")
+               server_open
+            else
+               call_server(create {QUERY_STOP}.make, agent when_stop_then_restart(?))
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+         end
+      end
+
+   when_stop_then_restart (a_reply: MESSAGE)
+      local
+         reply: REPLY_STOP; extern: EXTERN
+         delay: INTEGER_64
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            from
+               delay := 100
+               extern.sleep(delay)
+            until
+               not channel.server_running or else delay > 10000
+            loop
+               delay := delay * 2
+               extern.sleep(delay)
+            end
+            if channel.server_running then
+               log.error.put_line(once "Could not kill server, trying to work with the current one")
+            else
+               server_restart
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+         end
       end
 
    server_open
@@ -313,7 +362,9 @@ feature {} -- master phrase
       do
          if reply ?:= a_reply then
             reply ::= a_reply
-            if not reply.error.is_empty then
+            if reply.error.is_empty then
+               server_open
+            else
                log.error.put_line(reply.error)
             end
          else
