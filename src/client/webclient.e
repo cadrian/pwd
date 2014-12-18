@@ -75,12 +75,15 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
       end
 
    post
+      local
+         path: STRING
       do
          if cgi.path_info.segments.is_empty then
             response_403
          else
+            path := cgi.path_info.segments.first.out
             inspect
-               cgi.path_info.segments.first.out
+               path
             when "vault" then
                if cgi.path_info.segments.count = 1 then
                   get_auth_token(agent (auth_token: STRING)
@@ -123,12 +126,15 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
 
 feature {}
    get_or_head
+      local
+         path: STRING
       do
          if cgi.path_info.segments.is_empty then
             read_password_and_send_master
          else
+            path := cgi.path_info.segments.first.out
             inspect
-               cgi.path_info.segments.first.out
+               path
             when "open" then
                if cgi.path_info.segments.count = 1 then
                   next_auth_token(agent (auth_token: STRING) --| **** TODO: potential DOS :-(
