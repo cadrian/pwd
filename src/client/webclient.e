@@ -346,4 +346,7 @@ feature {}
    cgi: CGI
    is_head: BOOLEAN
 
+invariant
+   cgi /= Void
+
 end -- class WEBCLIENT
