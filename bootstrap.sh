@@ -71,26 +71,34 @@ do
     ace=$exe.ace
     ./make_ace.sh $ace dontclean
     if [ ${CLASS_CHECK:-no} = yes ]; then
-        se class_check $ace || exit 1
-    elif [ ${VERBOSE:-no} = yes ]; then
-        se c2c -verbose $ace
+        echo Checking $exe
+        if [ ${VERBOSE:-no} = yes ]; then
+            se class_check -verbose $ace || exit 1
+        else
+            se class_check $ace || exit 1
+        fi
     else
-        se c2c $ace
+        echo Compiling $exe
+        if [ ${VERBOSE:-no} = yes ]; then
+            se c2c -verbose $ace
+        else
+            se c2c $ace
+        fi
+
+        {
+            echo
+            echo "exe/$exe: exe "$(ls -1 $exe*.c | sed 's!^!c/'$exe'/!;s!\.c$!.o!')
+            tail -1 $exe.make | sed 's!gcc!$(CC)!g;s!'$exe'.exe!$@!;s!'$exe'!c/'$exe'/'$exe'!g' | awk '{printf("\t%s\n", $0)}'
+        } >> $MAKEFILE_BOOT
+
+        rm $ace $exe.id $exe.make
+        mv *.[ch] $bootstrap_dir/c/$exe/
     fi
-
-    if [ ${CLASS_CHECK:-no} = yes ]; then
-        exit 0
-    fi
-
-    {
-        echo
-        echo "exe/$exe: exe "$(ls -1 $exe*.c | sed 's!^!c/'$exe'/!;s!\.c$!.o!')
-        tail -1 $exe.make | sed 's!gcc!$(CC)!g;s!'$exe'.exe!$@!;s!'$exe'!c/'$exe'/'$exe'!g' | awk '{printf("\t%s\n", $0)}'
-    } >> $MAKEFILE_BOOT
-
-    rm $ace $exe.id $exe.make
-    mv *.[ch] $bootstrap_dir/c/$exe/
 done
+
+if [ ${CLASS_CHECK:-no} = yes ]; then
+    exit 0
+fi
 
 {
     echo
