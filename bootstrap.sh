@@ -72,19 +72,16 @@ do
     ./make_ace.sh $ace dontclean
     if [ ${CLASS_CHECK:-no} = yes ]; then
         echo Checking $exe
-        if [ ${VERBOSE:-no} = yes ]; then
-            se class_check -verbose $ace || exit 1
-        else
-            se class_check $ace || exit 1
-        fi
+        se class_check $ace || exit 1
     else
-        echo Compiling $exe
-        if [ ${VERBOSE:-no} = yes ]; then
-            se c2c -verbose $ace
+        if [ ${DEBUG_C2C:-no} = yes ]; then
+            . <(se -environment | sed 's/^/export /g')
+            echo Debugging compilation for $exe using $SE_TOOL_C2C
+            gdb $SE_TOOL_C2C --args $SE_TOOL_C2C $ace
         else
+            echo Compiling $exe
             se c2c $ace
         fi
-
         {
             echo
             echo "exe/$exe: exe "$(ls -1 $exe*.c | sed 's!^!c/'$exe'/!;s!\.c$!.o!')
