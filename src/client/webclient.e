@@ -75,9 +75,6 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
       end
 
    post
-      local
-         form: CGI_FORM; token: FIXED_STRING
-         doc: CGI_RESPONSE_DOCUMENT
       do
          if cgi.path_info.segments.is_empty then
             response_403
@@ -89,6 +86,8 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
                   get_auth_token(agent (auth_token: STRING)
                                  require
                                     auth_token /= Void
+                                 local
+                                    form: CGI_FORM
                                  do
                                     create form.parse(std_input)
                                     if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) and then form.form.fast_has(form_password_name) then
