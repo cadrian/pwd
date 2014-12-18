@@ -205,7 +205,7 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               action(reply.pass)
+               action.call([reply.pass])
             else
                response_503(reply.error)
             end
@@ -330,7 +330,7 @@ feature {}
          create doc.set_content_type("text/html")
          doc.set_field("Cache-Control", "private,no-store,no-cache")
          if not is_head then
-            fill_body(doc)
+            fill_body.call([doc])
          end
          cgi.reply(doc)
       end
