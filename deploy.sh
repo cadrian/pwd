@@ -51,26 +51,26 @@ else
 fi
 
 if $BOOTSTRAP; then
-    echo bootstrap
+    echo Bootstrap
     ./bootstrap.sh
 fi
 
 if $RELEASE; then
-    echo release binary
+    echo Release binary
     ./release.sh
 fi
 
 if $ONKEY; then
-    echo release on key
+    echo Release on key
     ./release.sh -onkey
 fi
 
 if $DEBIAN; then
-    echo release Debian
+    echo Release Debian
     ./release.sh -debian
 fi
 
-echo deploy
+echo Deploy
 version=$($dir/version.sh)
 target=$(gcc -v 2>&1 | awk '/^Target:/ {print $2}')
 pkg=pwdmgr_$version
@@ -83,12 +83,12 @@ $ONKEY     && tar cfz $root-onkey.tgz --transform "s|^release-onkey|$pkg|" relea
 $BOOTSTRAP && tar cfz $boot.tgz --transform "s|^bootstrap|$pkg|" bootstrap/*
 
 if $INSTALL; then
-    echo install
+    echo Install
     $dir/target/release/install.sh
 fi
 
 if $DEBIAN; then
-    echo building Debian packages
+    echo Building Debian packages
     for file in bin c conf README.md Makefile; do
         cp -a bootstrap/$file release-debian/pwd/
     done
@@ -96,4 +96,4 @@ if $DEBIAN; then
     debuild -us -uc
 fi
 
-echo done
+echo Done.
