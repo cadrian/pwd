@@ -62,6 +62,11 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
          Result := "password".intern
       end
 
+   config_template_path: FIXED_STRING
+      once
+         Result := ("template.path").intern
+      end
+
    get
       do
          is_head := False
@@ -137,33 +142,28 @@ feature {}
                path
             when "open" then
                if cgi.path_info.segments.count = 1 then
-                  next_auth_token(agent (auth_token: STRING) --| **** TODO: potential DOS :-(
+                  --|**** TODO: potential DOS :-(
+                  next_auth_token(agent (auth_token: STRING)
                                   require
                                      auth_token /= Void
                                   do
-                                     html_response(agent (doc: CGI_RESPONSE_DOCUMENT)
-                                                   require
-                                                      doc /= Void
-                                                   do
-                                                      doc.body.put_string("[
-                                                                              <html>
-                                                                                 <head>
-                                                                                    <title>CAD's password vault</title>
-                                                                                 </head>
-                                                                                 <body>
-                                                                                    <h2>Vault password</h2>
-                                                                                    <form method="post" action="/auth">
-                                                                                       <input type="hidden" name="#(2)" value="#(1)" />
-                                                                                       <input type="password" name="#(3)" />
-                                                                                       <input type="submit" value="OK">
-                                                                                    </form>
-                                                                                 </body>
-                                                                              </html>
-                                                                           ]"
-                                                                              # auth_token
-                                                                              # form_token_name
-                                                                              # form_password_name)
-                                                   end(?))
+                                     html_response("open_form.html",
+                                                   agent (key: STRING): ABSTRACT_STRING
+                                                      require
+                                                         key /= Void
+                                                      do
+                                                         inspect
+                                                            key
+                                                         when "form_token_name" then
+                                                            Result := form_token_name
+                                                         when "form_password_name" then
+                                                            Result := form_password_name
+                                                         when "auth_token" then
+                                                            Result := auth_token
+                                                         else
+                                                            response_503("bad template key")
+                                                         end
+                                                      end(?))
                                   end(?))
                end
             when "auth" then
@@ -243,19 +243,25 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               html_response(agent (doc: CGI_RESPONSE_DOCUMENT; rl: REPLY_LIST)
+               html_response("pass_list.html",
+                             agent (key: STRING; rl: REPLY_LIST): STRING
                              require
-                                doc /= Void
+                                key /= Void
                              do
-                                doc.body.put_line("<html><head><title>CAD's password vault list</title></head><body><ul>")
-                                rl.for_each_name(agent (name: STRING)
+                                inspect
+                                   key
+                                when "pass_list" then
+                                   Result := ""
+                                   rl.for_each_name(agent (name, res: STRING)
                                                     do
-                                                       doc.body.put_line("<li><a href=%"#(1)/#(2)%">#(2)</a></li>"
+                                                       res.append("<li><a href=%"#(1)/#(2)%">#(2)</a></li>%N"
                                                           # (if cgi.script_name.is_set then "/" + cgi.script_name.name else "" end)
                                                           # name
                                                        )
-                                                    end(?))
-                                doc.body.put_line("</ul></body></html>")
+                                                    end(?, Result))
+                                else
+                                   response_503("bad template key")
+                                end
                              end(?, reply))
             else
                response_503(reply.error)
@@ -267,29 +273,18 @@ feature {}
 
    when_pass_get (a_pass: STRING)
       do
-         html_response(agent (doc: CGI_RESPONSE_DOCUMENT)
+         html_response("pass.html",
+                       agent (key: STRING): STRING
                        require
-                          doc /= Void
+                          key /= Void
                        do
-                          doc.body.put_line("[
-                                                <html>
-                                                   <head>
-                                                      <title>CAD's password vault pass</title>
-                                                      <script language="JavaScript">
-                                                         function copy() {
-                                                            holdtext.innerText = copytext.innerText;
-                                                            Copied = holdtext.createTextRange();
-                                                            Copied.execCommand("Copy");
-                                                         }
-                                                      </script>
-                                                   </head>
-                                                   <body>
-                                                      <span id="copytext" style="display:none;">#(1)</span>
-                                                      <textarea id="holdtext" style="display:none;"></textarea>
-                                                      <button onClick="copy();">Copy</button>
-                                                   </body>
-                                                </html>
-                                             ]" # protect_html(a_pass))
+                          inspect
+                             key
+                          when "pass" then
+                             Result := a_pass
+                          else
+                             response_503("bad template key")
+                          end
                        end(?))
       end
 
@@ -329,16 +324,34 @@ feature {}
          cgi.reply(create {CGI_RESPONSE_DOCUMENT}.set_status_and_error(503, message))
       end
 
-   html_response (fill_body: PROCEDURE[TUPLE[CGI_RESPONSE_DOCUMENT]])
+   html_response (template_name: ABSTRACT_STRING; template_resolver: FUNCTION[TUPLE[STRING], ABSTRACT_STRING])
       local
          doc: CGI_RESPONSE_DOCUMENT
+         path: ABSTRACT_STRING
+         tis: TEMPLATE_INPUT_STREAM
       do
-         create doc.set_content_type("text/html")
-         doc.set_field("Cache-Control", "private,no-store,no-cache")
-         if not is_head then
-            fill_body(doc)
+         path := "#(1)/#(2)" # conf(config_template_path) # template_name
+         create tis.connect_to(create {TEXT_FILE_READ}.connect_to(path), template_resolver)
+         if tis.is_connected then
+            create doc.set_content_type("text/html")
+            doc.set_field("Cache-Control", "private,no-store,no-cache")
+            if not is_head then
+               from
+                  tis.read_character
+               until
+                  tis.end_of_input
+               loop
+                  doc.body.put_character(tis.last_character)
+                  tis.read_character
+               end
+            end
+            tis.disconnect
+            if cgi.need_reply then
+               cgi.reply(doc)
+            end
+         else
+            response_503("bad template name")
          end
-         cgi.reply(doc)
       end
 
 feature {}

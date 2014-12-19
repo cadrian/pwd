@@ -38,11 +38,11 @@ EOF
 for src in bin/pwdmgr_*
 do
     tgt=$bootstrap_dir/bin/$(basename $src)
-    sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/lib/pwdmgr/exe|;s| \$prop$||g' < $src > $tgt
+    sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/lib/pwd/exe|;s| \$prop$||g' < $src > $tgt
     chmod a+x $tgt
 done
 
-for d in conf COPYING README.md
+for d in conf templates COPYING README.md
 do
     cp -a $d $bootstrap_dir/
 done
@@ -116,28 +116,34 @@ fi
     printf '\tinstall -d $(PREFIX)\n'
     printf '\tinstall -d $(PREFIX)/bin\n'
     printf '\tinstall -d $(PREFIX)/lib\n'
-    printf '\tinstall -d $(PREFIX)/lib/pwdmgr\n'
-    printf '\tinstall -d $(PREFIX)/lib/pwdmgr/exe\n'
+    printf '\tinstall -d $(PREFIX)/lib/pwd\n'
+    printf '\tinstall -d $(PREFIX)/lib/pwd/exe\n'
     printf '\tinstall -d $(PREFIX)/share\n'
     printf '\tinstall -d $(PREFIX)/share/doc\n'
-    printf '\tinstall -d $(PREFIX)/share/doc/pwdmgr\n'
+    printf '\tinstall -d $(PREFIX)/share/doc/pwd\n'
+    printf '\tinstall -d $(PREFIX)/share/pwd\n'
+    printf '\tinstall -d $(PREFIX)/share/pwd/templates\n'
     printf '\tinstall -d $(CONFIG)\n'
-    printf '\tinstall -d $(CONFIG)/pwdmgr\n'
+    printf '\tinstall -d $(CONFIG)/pwd\n'
     for exe in $EXE
     do
-        printf '\tinstall -m555 exe/%s $(PREFIX)/lib/pwdmgr/exe/\n' $exe
+        printf '\tinstall -m555 exe/%s $(PREFIX)/lib/pwd/exe/\n' $exe
     done
     for bin in bin/pwdmgr_*
     do
         printf '\tinstall -m555 %s $(PREFIX)/bin/\n' $bin
     done
-    printf '\tinstall -b -m444 conf/pwdmgr-remote.properties $(CONFIG)/pwdmgr/config.rc\n'
-    printf '\tinstall -b -m444 conf/*.rc $(CONFIG)/pwdmgr/\n'
-    printf '\tinstall -m444 conf/pwdmgr-local.properties $(PREFIX)/share/doc/pwdmgr/sample-local-config.rc\n'
-    printf '\tinstall -m444 conf/pwdmgr-remote-curl.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-curl-config.rc\n'
-    printf '\tinstall -m444 conf/pwdmgr-remote-scp.properties $(PREFIX)/share/doc/pwdmgr/sample-remote-scp-config.rc\n'
-    printf '\tinstall -m444 README.md $(PREFIX)/share/doc/pwdmgr/\n'
-#    printf '\ttest -e COPYING && install -m444 COPYING $(PREFIX)/share/doc/pwdmgr/\n'
+    printf '\tinstall -b -m444 conf/pwdmgr-remote.properties $(CONFIG)/pwd/config.rc\n'
+    printf '\tinstall -b -m444 conf/*.rc $(CONFIG)/pwd/\n'
+    printf '\tinstall -m444 conf/pwdmgr-local.properties $(PREFIX)/share/doc/pwd/sample-local-config.rc\n'
+    printf '\tinstall -m444 conf/pwdmgr-remote-curl.properties $(PREFIX)/share/doc/pwd/sample-remote-curl-config.rc\n'
+    printf '\tinstall -m444 conf/pwdmgr-remote-scp.properties $(PREFIX)/share/doc/pwd/sample-remote-scp-config.rc\n'
+    printf '\tinstall -m444 README.md $(PREFIX)/share/doc/pwd/\n'
+    for template in templates/*.html
+    do
+        printf '\tinstall -m444 %s $(PREFIX)/share/pwd/templates/\n' $template
+    done
+#    printf '\ttest -e COPYING && install -m444 COPYING $(PREFIX)/share/doc/pwd/\n'
 } >> $MAKEFILE_BOOT
 
 chmod +x $MAKEFILE_BOOT
@@ -148,7 +154,10 @@ chmod +x $MAKEFILE_BOOT
 
 cat > $bootstrap_dir/c/README <<EOF
 Those files were generated using Liberty Eiffel
-(http://www.liberty-eiffel.org)
+http://www.liberty-eiffel.org
+
+Original source:
+http://github.com/cadrian/pwd
 EOF
 
 cat > $bootstrap_dir/install_local.sh <<EOF

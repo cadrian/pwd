@@ -83,6 +83,10 @@ cp conf/pwdmgr-remote-scp.properties $DOC/sample-remote-scp-config.rc
 cp conf/pwdmgr-remote.properties $CONF/config.rc
 cp conf/*.rc $CONF/
 
+if $DEBIAN; then
+    sed -i 's!^template.path =.*$!template.path = /usr/share/pwd/templates!' $CONF/config.rc
+fi
+
 if $ON_KEY; then
     cat <<EOF
 #!/bin/sh

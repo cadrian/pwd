@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <title>CAD's password vault</title>
+  </head>
+  <body>
+    <h2>Vault password</h2>
+    <form method="post" action="/auth">
+      <input type="hidden" name="#(form_token_name)" value="#(auth_token)" />
+      <input type="password" name="#(form_password_name)" />
+      <input type="submit" value="OK">
+    </form>
+  </body>
+</html>
