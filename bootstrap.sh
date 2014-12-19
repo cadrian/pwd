@@ -142,9 +142,9 @@ fi
 
 chmod +x $MAKEFILE_BOOT
 
-echo '~~8<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-cat $MAKEFILE_BOOT
-echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~>8~~'
+# echo '~~8<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+# cat $MAKEFILE_BOOT
+# echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~>8~~'
 
 cat > $bootstrap_dir/c/README <<EOF
 Those files were generated using Liberty Eiffel
