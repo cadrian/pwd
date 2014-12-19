@@ -6,3 +6,4 @@ log
 data/vault*
 travis_key.yml
 .version
+exe
