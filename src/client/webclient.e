@@ -243,12 +243,12 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               html_response(agent (doc: CGI_RESPONSE_DOCUMENT)
+               html_response(agent (doc: CGI_RESPONSE_DOCUMENT; rl: REPLY_LIST)
                              require
                                 doc /= Void
                              do
                                 doc.body.put_line("<html><head><title>CAD's password vault list</title></head><body><ul>")
-                                reply.for_each_name(agent (name: STRING)
+                                rl.for_each_name(agent (name: STRING)
                                                     do
                                                        doc.body.put_line("<li><a href=%"#(1)/#(2)%">#(2)</a></li>"
                                                           # (if cgi.script_name.is_set then "/" + cgi.script_name.name else "" end)
@@ -256,7 +256,7 @@ feature {}
                                                        )
                                                     end(?))
                                 doc.body.put_line("</ul></body></html>")
-                             end(?))
+                             end(?, reply))
             else
                response_503(reply.error)
             end
