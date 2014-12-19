@@ -11,6 +11,6 @@ Package: pwd
 Section: admin
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, openssl
-Recommends: yad | zenity, xterm, xclip
+Recommends: yad | zenity, xterm, xclip, nginx | apache2
 Description: Cad's password manager
  A simple password manager.

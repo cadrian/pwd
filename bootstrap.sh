@@ -72,16 +72,20 @@ do
     ./make_ace.sh $ace dontclean
     if [ ${CLASS_CHECK:-no} = yes ]; then
         echo Checking $exe
-        se class_check $ace || exit 1
+        se class_check $ace || exit $?
     else
+        se clean $ace
+
         if [ ${DEBUG_C2C:-no} = yes ]; then
             . <(se -environment | sed 's/^/export /g')
             echo Debugging compilation for $exe using $SE_TOOL_C2C
             gdb $SE_TOOL_C2C --args $SE_TOOL_C2C $ace
         else
             echo Compiling $exe
-            se c2c $ace
+            se c2c $ace || exit $?
         fi
+        test -e $exe.make || exit 1
+
         {
             echo
             echo "exe/$exe: exe "$(ls -1 $exe*.c | sed 's!^!c/'$exe'/!;s!\.c$!.o!')
@@ -137,6 +141,10 @@ fi
 } >> $MAKEFILE_BOOT
 
 chmod +x $MAKEFILE_BOOT
+
+echo '~~8<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+cat $MAKEFILE_BOOT
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~>8~~'
 
 cat > $bootstrap_dir/c/README <<EOF
 Those files were generated using Liberty Eiffel
