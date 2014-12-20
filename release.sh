@@ -48,11 +48,12 @@ $DEBIAN && release_dir=${release_dir}-debian/pwd
 rm -rf $release_dir
 
 BIN=$release_dir/data/bin
-EXE=$release_dir/data/lib/pwdmgr/exe
-DOC=$release_dir/data/share/doc/pwdmgr
-CONF=$release_dir/config/pwdmgr
+EXE=$release_dir/data/lib/pwd/exe
+DOC=$release_dir/data/share/doc/pwd
+CONF=$release_dir/config/pwd/conf
+TMPL=$release_dir/config/pwd/templates
 
-for d in $BIN $EXE $DOC $CONF
+for d in $BIN $EXE $DOC $CONF $TMPL
 do
     mkdir -p $d
 done
@@ -63,9 +64,9 @@ for src in bin/pwdmgr_*
 do
     tgt=$BIN/$(basename $src)
     if $ON_KEY; then
-        sed 's|^dist=.*$|home=$(dirname $(dirname $(dirname $(readlink -f $0)))); echo home=$home\nXDG_DATA_HOME=$home/local/share; export XDG_DATA_HOME\nXDG_CONFIG_HOME=$home/config; export XDG_CONFIG_HOME\nXDG_CACHE_HOME=$home/cache; export XDG_CACHE_HOME\nexe=$XDG_DATA_HOME/pwdmgr/exe|;s| \$prop$| \$1|g' < $src > $tgt
+        sed 's|^dist=.*$|home=$(dirname $(dirname $(dirname $(readlink -f $0)))); echo home=$home\nXDG_DATA_HOME=$home/local/share; export XDG_DATA_HOME\nXDG_CONFIG_HOME=$home/config; export XDG_CONFIG_HOME\nXDG_CACHE_HOME=$home/cache; export XDG_CACHE_HOME\nexe=$XDG_DATA_HOME/pwd/exe|;s| \$prop$| \$1|g' < $src > $tgt
     else
-        sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/lib/pwdmgr/exe|;s| \$prop$| \$1|g' < $src > $tgt
+        sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/lib/pwd/exe|;s| \$prop$| \$1|g' < $src > $tgt
     fi
     chmod a+x $tgt
 done
@@ -82,6 +83,7 @@ cp conf/pwdmgr-remote-curl.properties $DOC/sample-remote-curl-config.rc
 cp conf/pwdmgr-remote-scp.properties $DOC/sample-remote-scp-config.rc
 cp conf/pwdmgr-remote.properties $CONF/config.rc
 cp conf/*.rc $CONF/
+cp templates/*.html $TMPL/
 
 if $DEBIAN; then
     sed -i 's!^template.path =.*$!template.path = /usr/share/pwd/templates!' $CONF/config.rc
@@ -99,12 +101,12 @@ if test -z "\$1"; then
 fi
 
 mkdir -p "\$1"/local
-mkdir -p "\$1"/config/pwdmgr
-mkdir -p "\$1"/cache/pwdmgr
+mkdir -p "\$1"/config/pwd
+mkdir -p "\$1"/cache/pwd
 
 cp -a \$dir/data/*   "\$1"/local/
 
-for src in \$dir/config/pwdmgr/*.rc; do
+for src in \$dir/config/pwd/*.rc; do
     tgt="\$1"/\${src#\$dir/}
     if test -e \$tgt; then
         echo "There is already a config file named \$tgt -- not overriding."
@@ -115,7 +117,7 @@ for src in \$dir/config/pwdmgr/*.rc; do
     fi
 done
 
-chmod +w "\$1"/config/pwdmgr/*.rc
+chmod +w "\$1"/config/pwd/*.rc
 EOF
 
 else
@@ -142,19 +144,20 @@ else
 fi
 
 mkdir -p \$PREFIX_BIN
-mkdir -p \$PREFIX_DATA/doc/pwdmgr
-mkdir -p \$PREFIX_EXE/pwdmgr
-mkdir -p \$CONFIG/pwdmgr
+mkdir -p \$PREFIX_DATA/pwd/templates
+mkdir -p \$PREFIX_DATA/doc/pwd
+mkdir -p \$PREFIX_EXE/pwd
+mkdir -p \$CONFIG/pwd
 
 for src in \$dir/data/bin/*
 do
     tgt=\$PREFIX_BIN/\${src#\$dir/data/bin/}
     rm -f \$tgt
-    sed 's|^exe=.*\$|exe='"\$PREFIX_EXE/pwdmgr/exe"'|' < \$src > \$tgt
+    sed 's|^exe=.*\$|exe='"\$PREFIX_EXE/pwd/exe"'|' < \$src > \$tgt
     chmod \$binmod \$tgt
 done
 
-for dirsrc in \$dir/data/share/pwdmgr \$dir/data/share/doc/pwdmgr
+for dirsrc in \$dir/data/share/pwd \$dir/data/share/doc/pwd
 do
     for src in \$dirsrc/*; do
         tgt=\$PREFIX_DATA/\${src#\$dir/data/share/}
@@ -163,7 +166,7 @@ do
     done
 done
 
-for dirsrc in \$dir/data/lib/pwdmgr
+for dirsrc in \$dir/data/lib/pwd
 do
     for src in \$dirsrc/*; do
         tgt=\$PREFIX_EXE/\${src#\$dir/data/lib/}
@@ -172,9 +175,21 @@ do
     done
 done
 
-for src in \$dir/config/pwdmgr/*
+for src in \$dir/config/pwd/conf/*
 do
-    tgt=\$CONFIG/\${src#\$dir/config/}
+    tgt=\$CONFIG/pwd/\${src#\$dir/config/pwd/conf}
+    if test -e \$tgt; then
+        echo "There is already a config file named \$tgt -- not overriding."
+        echo " The new config file is installed as \$tgt.pkg (please check)"
+        cp -f \$src \$tgt.pkg
+    else
+        cp \$src \$tgt
+    fi
+done
+
+for src in \$dir/config/pwd/templates/*
+do
+    tgt=\$PREFIX_DATA/pwd/templates/\${src#\$dir/config/pwd/templates}
     if test -e \$tgt; then
         echo "There is already a config file named \$tgt -- not overriding."
         echo " The new config file is installed as \$tgt.pkg (please check)"
@@ -185,7 +200,7 @@ do
 done
 
 if test \$(id -u) -ne 0; then
-    chmod u+w \$CONFIG/pwdmgr/*.rc
+    chmod u+w \$CONFIG/pwd/conf/*.rc
 fi
 EOF
 fi >$release_dir/install.sh
