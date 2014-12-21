@@ -27,7 +27,7 @@ create {ANY}
 feature {ANY}
    is_open: BOOLEAN
 
-feature {SERVER}
+feature {ANY}
    close
       do
          if is_open then

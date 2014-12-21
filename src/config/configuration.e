@@ -67,6 +67,9 @@ feature {}
             tfr.disconnect
          elseif allow_unknown then
             create Result.make(a_filename.intern, Void)
+         else
+            std_error.put_line(once "Missing config file: #(1)" # a_filename)
+            die_with_code(1)
          end
       ensure
          allow_unknown implies Result /= Void

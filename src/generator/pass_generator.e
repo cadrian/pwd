@@ -17,6 +17,7 @@ class PASS_GENERATOR
 
 insert
    LOGGING
+   CONFIGURABLE
 
 create {VAULT}
    parse
@@ -46,11 +47,21 @@ feature {ANY}
       end
 
 feature {}
+   conf_random_file: FIXED_STRING
+      once
+         Result := "random_file".intern
+      end
+
+   default_random_file: FIXED_STRING
+      once
+         Result := "/dev/random".intern
+      end
+
    recipe: FAST_ARRAY[PASS_GENERATOR_MIX]
 
    length: INTEGER
 
-   random_file: STRING
+   random_file: FIXED_STRING
 
    extend: FUNCTION[TUPLE[PASS_GENERATOR_RANDOM, STRING], PROCEDURE[TUPLE[PASS_GENERATOR_MIX]]]
 
@@ -70,19 +81,22 @@ feature {}
             is_valid := True
             recipe := parser.recipe
             length := parser.total_quantity
-            random_file := once "/dev/random"
+            random_file := conf(conf_random_file)
+            if random_file = Void then
+               random_file := default_random_file
+            end
             extend := agent default_extend(?, ?)
          end
       end
 
-   test_parse (a_recipe: ABSTRACT_STRING; a_random_file: like random_file; a_extend: like extend)
+   test_parse (a_recipe, a_random_file: ABSTRACT_STRING; a_extend: like extend)
       require
          a_recipe /= Void
          a_random_file /= Void
          a_extend /= Void
       do
          parse(a_recipe)
-         random_file := a_random_file
+         random_file := a_random_file.intern
          extend := a_extend
       ensure
          random_file = a_random_file

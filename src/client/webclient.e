@@ -27,12 +27,16 @@ inherit
       end
    CGI_HANDLER
 
-create {}
+create {EIFFELTEST_TOOLS}
    make
 
 feature {} -- CLIENT interface
    run
+      local
+         xdg: XDG
       do
+         create vault.make("#(1)/webclient-#(2).vault" # xdg.cache_home # cgi.remote_info.user)
+         vault.open(cgi.remote_info.user.out)
          cgi.run
       end
 
@@ -43,12 +47,12 @@ feature {} -- CLIENT interface
 
    read_password_and_send_master
       do
-         cgi.reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/open", Void))
+         cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/open", Void))
       end
 
    unknown_key (key: ABSTRACT_STRING)
       do
-         cgi.reply(create {CGI_RESPONSE_DOCUMENT}.set_status(404))
+         cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(404))
       end
 
 feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
@@ -116,32 +120,36 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
 
    delete
       do
-         cgi.reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
+         cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
       end
 
    put
       do
-         cgi.reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
+         cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
       end
 
    invoke_method (a_method: FIXED_STRING)
       do
-         cgi.reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
+         cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
       end
 
 feature {}
    get_or_head
       local
+         path_info: CGI_PATH_INFO
          path: STRING
       do
-         if cgi.path_info.segments.is_empty then
+         path_info := cgi.path_info
+         if path_info = Void or else path_info.segments.is_empty then
             read_password_and_send_master
          else
-            path := cgi.path_info.segments.first.out
+            path := path_info.segments.first.out
             inspect
                path
+            when "" then
+               read_password_and_send_master
             when "open" then
-               if cgi.path_info.segments.count = 1 then
+               if path_info.segments.count = 1 then
                   --|**** TODO: potential DOS :-(
                   next_auth_token(agent (auth_token: STRING)
                                   require
@@ -167,14 +175,14 @@ feature {}
                                   end(?))
                end
             when "auth" then
-               cgi.reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
+               cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
             when "pass" then
                inspect
-                  cgi.path_info.segments.count
+                  path_info.segments.count
                when 1 then
                   call_server(create {QUERY_LIST}.make, agent when_pass_list(?))
                when 2 then
-                  do_get(cgi.path_info.segments.last, agent when_pass_get(?), agent unknown_key(?))
+                  do_get(path_info.segments.last, agent when_pass_get(?), agent unknown_key(?))
                else
                   response_403
                end
@@ -187,36 +195,26 @@ feature {}
    token_name: STRING "_http_token"
 
    get_auth_token (action: PROCEDURE[TUPLE[STRING]])
+      local
+         token: STRING
       do
-         do_get(token_name, action,
-                agent (a_token_name: ABSTRACT_STRING)
-                   do
-                      check a_token_name = token_name end
-                      response_403
-                   end(?))
+         token := vault.pass(token_name)
+         if token /= Void then
+            action(token)
+         else
+            response_403
+         end
       end
 
    next_auth_token (action: PROCEDURE[TUPLE[STRING]])
       local
-         query: QUERY_SET
+         token: ABSTRACT_STRING
       do
-         create query.make_random(token_name, "12an")
-         call_server(query, agent when_next_token(action, ?))
-      end
-
-   when_next_token (action: PROCEDURE[TUPLE[STRING]]; a_reply: MESSAGE)
-      local
-         reply: REPLY_SET
-      do
-         if reply ?:= a_reply then
-            reply ::= a_reply
-            if reply.error.is_empty then
-               action(reply.pass)
-            else
-               response_503(reply.error)
-            end
+         token := vault.set_random(token_name, "12an")
+         if token /= Void then
+            action(token.out)
          else
-            response_503("Unexpected server reply")
+            response_503("Coult not create next token")
          end
       end
 
@@ -227,7 +225,7 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               cgi.reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/pass", Void))
+               cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/pass", Void))
             else
                response_403
             end
@@ -316,12 +314,12 @@ feature {}
 
    response_403
       do
-         cgi.reply(create {CGI_RESPONSE_DOCUMENT}.set_status(403))
+         cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(403))
       end
 
    response_503 (message: ABSTRACT_STRING)
       do
-         cgi.reply(create {CGI_RESPONSE_DOCUMENT}.set_status_and_error(503, message))
+         cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status_and_error(503, message))
       end
 
    html_response (template_name: ABSTRACT_STRING; template_resolver: FUNCTION[TUPLE[STRING], ABSTRACT_STRING])
@@ -329,6 +327,7 @@ feature {}
          doc: CGI_RESPONSE_DOCUMENT
          path: ABSTRACT_STRING
          tis: TEMPLATE_INPUT_STREAM
+         extern: EXTERN
       do
          path := "#(1)/#(2)" # conf(config_template_path) # template_name
          create tis.connect_to(create {TEXT_FILE_READ}.connect_to(path), template_resolver)
@@ -336,21 +335,20 @@ feature {}
             create doc.set_content_type("text/html")
             doc.set_field("Cache-Control", "private,no-store,no-cache")
             if not is_head then
-               from
-                  tis.read_character
-               until
-                  tis.end_of_input
-               loop
-                  doc.body.put_character(tis.last_character)
-                  tis.read_character
-               end
+               extern.splice(tis, doc.body)
             end
             tis.disconnect
-            if cgi.need_reply then
-               cgi.reply(doc)
-            end
+            cgi_reply(doc)
          else
             response_503("bad template name")
+         end
+      end
+
+   cgi_reply (r: CGI_RESPONSE)
+      do
+         if cgi.need_reply then
+            cgi.reply(r)
+            vault.close
          end
       end
 
@@ -363,6 +361,8 @@ feature {}
 
    cgi: CGI
    is_head: BOOLEAN
+
+   vault: VAULT
 
 invariant
    cgi /= Void

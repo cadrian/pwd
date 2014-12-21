@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+IN=$(dirname $(dirname $(readlink -f $0)))/run/server.in
+OUT=$(dirname $(dirname $(readlink -f $0)))/run/server.out
+FIFO=$(dirname $(dirname $(readlink -f $0)))/run/server_fifo
+
+echo $$ > $(dirname $(dirname $(readlink -f $0)))/run/server_pid
+
+date -R >$IN
+
+if [[ ! -r $OUT ]]; then
+    echo "No $OUT" >&2
+    exit 1
+fi
+
+#mkfifo $FIFO
+
+while [[ ! -p $FIFO ]]; do
+    echo "Waiting for $FIFO" >> $IN
+    sleep 0.1
+done
+
+while true; do
+    date -R >>$IN
+    read command <$FIFO
+    echo "$command" >> $IN
+    head -n 1 $OUT >> $FIFO
+    sed -i '1d' $OUT
+    #if [ $(stat -c %s $OUT) -eq 0 ]; then
+    #    rm -f $FIFO
+    #    exit 0
+    #fi
+done

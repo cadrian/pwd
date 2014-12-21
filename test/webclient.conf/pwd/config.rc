@@ -1,0 +1,21 @@
+[shared]
+log.level        = info
+default_recipe   = an+s+14ansanansaan
+channel.method   = fifo
+master.command   = false
+master.arguments =
+
+[pass_generator]
+random_file = /dev/zero
+
+[console]
+history.size     = 100
+
+[menu]
+command    = false
+arguments  =
+
+[vault]
+
+[webclient]
+template.path = webclient.conf/templates

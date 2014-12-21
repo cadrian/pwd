@@ -26,7 +26,9 @@ feature {}
    test
       local
          gen: PASS_GENERATOR; pass: STRING
+         system: SYSTEM
       do
+         system.set_environment_variable("XDG_CONFIG_DIRS", "webclient.conf")
          create gen.test_parse("13anans+42s", random_file, agent extend(?, ?))
          assert(gen.is_valid)
          pass := gen.generated
