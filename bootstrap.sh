@@ -3,7 +3,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                                                        #
 # Build a C-generated source package to help package maintainers to      #
-# install pwdmgr without having to install LibertyEiffel first           #
+# install pwd without having to install LibertyEiffel first              #
 #                                                                        #
 # See also: release.sh, deploy.sh                                        #
 #                                                                        #
@@ -35,7 +35,7 @@ feature {ANY}
 end
 EOF
 
-for src in bin/pwdmgr_*
+for src in bin/pwd_*
 do
     tgt=$bootstrap_dir/bin/$(basename $src)
     sed 's|^dist=.*$|exe=$(dirname $(dirname $(readlink -f $0)))/lib/pwd/exe|;s| \$prop$||g' < $src > $tgt
@@ -129,15 +129,15 @@ fi
     do
         printf '\tinstall -m555 exe/%s $(PREFIX)/lib/pwd/exe/\n' $exe
     done
-    for bin in bin/pwdmgr_*
+    for bin in bin/pwd_*
     do
         printf '\tinstall -m555 %s $(PREFIX)/bin/\n' $bin
     done
-    printf '\tinstall -b -m444 conf/pwdmgr-remote.properties $(CONFIG)/pwd/config.rc\n'
+    printf '\tinstall -b -m444 conf/pwd-remote.properties $(CONFIG)/pwd/config.rc\n'
     printf '\tinstall -b -m444 conf/*.rc $(CONFIG)/pwd/\n'
-    printf '\tinstall -m444 conf/pwdmgr-local.properties $(PREFIX)/share/doc/pwd/sample-local-config.rc\n'
-    printf '\tinstall -m444 conf/pwdmgr-remote-curl.properties $(PREFIX)/share/doc/pwd/sample-remote-curl-config.rc\n'
-    printf '\tinstall -m444 conf/pwdmgr-remote-scp.properties $(PREFIX)/share/doc/pwd/sample-remote-scp-config.rc\n'
+    printf '\tinstall -m444 conf/pwd-local.properties $(PREFIX)/share/doc/pwd/sample-local-config.rc\n'
+    printf '\tinstall -m444 conf/pwd-remote-curl.properties $(PREFIX)/share/doc/pwd/sample-remote-curl-config.rc\n'
+    printf '\tinstall -m444 conf/pwd-remote-scp.properties $(PREFIX)/share/doc/pwd/sample-remote-scp-config.rc\n'
     printf '\tinstall -m444 README.md $(PREFIX)/share/doc/pwd/\n'
     for template in templates/*.html
     do

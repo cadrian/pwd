@@ -2,7 +2,7 @@
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                                                        #
-# Prepare both bootstrap and binary packages of pwdmgr                   #
+# Prepare both bootstrap and binary packages of pwd                      #
 # (with the correct version number)                                      #
 #                                                                        #
 # See also: bootstrap.sh, release.sh                                     #
@@ -73,7 +73,7 @@ fi
 echo Deploy
 version=$($dir/version.sh)
 target=$(gcc -v 2>&1 | awk '/^Target:/ {print $2}')
-pkg=pwdmgr_$version
+pkg=pwd_$version
 root=${pkg}_$target
 boot=${pkg}-bootstrap
 

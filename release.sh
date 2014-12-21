@@ -2,7 +2,7 @@
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 #                                                                        #
-# Make a pwdmgr binary release                                           #
+# Make a pwd binary release                                              #
 #                                                                        #
 # See also: bootstrap.sh, deploy.sh                                      #
 #                                                                        #
@@ -60,7 +60,7 @@ done
 
 umask 222
 
-for src in bin/pwdmgr_*
+for src in bin/pwd_*
 do
     tgt=$BIN/$(basename $src)
     if $ON_KEY; then
@@ -78,10 +78,10 @@ sed "s/#DATE#/$(date -R)/;s/#SNAPSHOT#/~${version#*~}/" -i $release_dir/debian/c
 cp exe/* $EXE/
 cp COPYING README.md $DOC/
 cp $release_dir/debian/changelog $DOC/Changelog
-cp conf/pwdmgr-local.properties $DOC/sample-local-config.rc
-cp conf/pwdmgr-remote-curl.properties $DOC/sample-remote-curl-config.rc
-cp conf/pwdmgr-remote-scp.properties $DOC/sample-remote-scp-config.rc
-cp conf/pwdmgr-remote.properties $CONF/config.rc
+cp conf/pwd-local.properties $DOC/sample-local-config.rc
+cp conf/pwd-remote-curl.properties $DOC/sample-remote-curl-config.rc
+cp conf/pwd-remote-scp.properties $DOC/sample-remote-scp-config.rc
+cp conf/pwd-remote.properties $CONF/config.rc
 cp conf/*.rc $CONF/
 cp templates/*.html $TMPL/
 

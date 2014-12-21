@@ -22,7 +22,7 @@ user      = your_remote_login
 pass      = key_in_vault
 
 # Url of the remote vault
-url       = https://my_server.com/pwdmgr/vault.txt
+url       = https://my_server.com/pwd/vault.txt
 
 # HTTP request for data retrieval (default: GET) -- set to PROPFIND for WebDAV servers
 #request.get = PROPFIND

@@ -14,4 +14,4 @@ method = curl
 [curl]
 
 # Direct backup of the file somewhere on the machine.
-url = file://$HOME/backup/pwdmgr.vault
+url = file://$HOME/backup/pwd.vault

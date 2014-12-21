@@ -2,7 +2,7 @@
 
 # General description
 
-`pwdmgr` is a small and simple password manager utility.
+`pwd` is a small and simple password manager utility.
 
 Typical use is through *dmenu* (<http://tools.suckless.org/dmenu/>)
 
@@ -35,19 +35,19 @@ An *administration console* is also provided.
 
 For a per-user install:
 
- - bind `<super>k` to *$HOME/.local/bin/pwdmgr_menu*
- - bind `<super><shift>k` to *$HOME/.local/bin/pwdmgr_console*
+ - bind `<super>k` to *$HOME/.local/bin/pwd_menu*
+ - bind `<super><shift>k` to *$HOME/.local/bin/pwd_console*
 
 # Configuration
 
 The configuration file is usually found in your home directory:
-`$HOME/.pwdmgr/config.rc`
+`$HOME/.pwd/config.rc`
 
-A system-wide configuration file may be found at `/etc/pwdmgr.rc`.
+A system-wide configuration file may be found at `/etc/pwd.rc`.
 
 Some sample files are available in the documentation section of your
 package (the default install places those files in
-`/usr/local/share/doc/pwdmgr/`). Look at the `sample-*.rc` files.
+`/usr/local/share/doc/pwd/`). Look at the `sample-*.rc` files.
 
 Those files are auto-documented. Just open them and read the comments
 to find how to modify them.
@@ -156,11 +156,11 @@ installs the `ALL_PROXY` variable using the following keys in the
 
 ## Important note
 
-pwdmgr is a local password manager. As such, it needs to provide
+pwd is a local password manager. As such, it needs to provide
 passwords in cleartext to other processes (mainly the X clipboard).
 
 It is important to understand that, under such circumstances, there is
-no reason to make pwdmgr overly secure. It can be subject to many
+no reason to make pwd overly secure. It can be subject to many
 local exploits (reading its environment variables, its memory sections
 etc. may provide cleartext passwords).
 
@@ -173,11 +173,11 @@ exploitable.
 
 # Installation
 
-There are several distinct ways of installing *pwdmgr*.
+There are several distinct ways of installing *pwd*.
 
 ## From source
 
-To install *pwdmgr* from source, you need to first install Liberty
+To install *pwd* from source, you need to first install Liberty
 Eiffel, the fresher the better.
 
 Install locally by calling `./deploy.sh bootstrap && cd

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+dist=$(dirname $(dirname $(readlink -f $0))); exe=$dist/exe; prop=$dist/conf/pwd.properties
+PATH=$exe:$PATH; export PATH
+umask 077
+exec menu $prop

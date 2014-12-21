@@ -83,7 +83,7 @@ default
 cluster
     generated: "target/bootstrap/eiffel"
 
-    pwdmgr: "src/loadpath.se"
+    pwd: "src/loadpath.se"
         default
             assertion($assert)
             debug($debug_pwd)
