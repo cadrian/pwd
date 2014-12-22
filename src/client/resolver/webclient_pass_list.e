@@ -33,6 +33,10 @@ feature {TEMPLATE_INPUT_STREAM}
             Result := paths.item(index)
          when "name" then
             Result := names.item(index)
+         when "form_token_name" then
+            Result := form_token_name
+         when "auth_token" then
+            Result := auth_token
          else
             error()
          end
@@ -55,32 +59,37 @@ feature {}
    paths: ARRAY[ABSTRACT_STRING]
    names: ARRAY[ABSTRACT_STRING]
    index: INTEGER
+   auth_token: STRING
 
-   make (a_script_name: ABSTRACT_STRING; a_list: REPLY_LIST; a_error: like error)
+   make (a_script_name: ABSTRACT_STRING; a_list: REPLY_LIST; a_auth_token: STRING; a_error: like error)
       require
          a_list /= Void
+         a_auth_token /= Void
          a_error /= Void
       do
+         auth_token := a_auth_token
+         error := a_error
          create paths.with_capacity(a_list.count_names, 1)
          create names.with_capacity(a_list.count_names, 1)
          a_list.for_each_name(agent (name: STRING)
                               do
                                  if a_script_name /= Void then
-                                    paths.add_last("#(1)/#(2)" # a_script_name # name)
+                                    paths.add_last("#(1)/pass/#(2)" # a_script_name # name)
                                  else
-                                    paths.add_last(name)
+                                    paths.add_last("/pass/#(1)" # name)
                                  end
                                  names.add_last(name)
                               end(?))
-         error := a_error
       ensure
+         auth_token = a_auth_token
+         error = a_error
          paths.count = a_list.count_names
          names.count = a_list.count_names
-         error = a_error
       end
 
 invariant
    paths.count = names.count
+   auth_token /= Void
    error /= Void
 
 end -- class WEBCLIENT_PASS_LIST

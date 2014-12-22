@@ -230,7 +230,7 @@ feature {}
       do
          create form.parse(std_input)
          if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) then
-            call_server(create {QUERY_LIST}.make, agent when_pass_list(?))
+            call_server(create {QUERY_LIST}.make, agent when_pass_list(auth_token, ?))
          else
             response_403
          end
@@ -297,7 +297,7 @@ feature {}
          end
       end
 
-   when_pass_list (a_reply: MESSAGE)
+   when_pass_list (auth_token: STRING; a_reply: MESSAGE)
       local
          reply: REPLY_LIST; script_name: ABSTRACT_STRING
       do
@@ -307,7 +307,7 @@ feature {}
                if cgi.script_name.is_set then
                   script_name := cgi.script_name.name
                end
-               html_response("pass_list.html", create {WEBCLIENT_PASS_LIST}.make(script_name, reply, agent response_503("bad template key")))
+               html_response("pass_list.html", create {WEBCLIENT_PASS_LIST}.make(script_name, reply, auth_token, agent response_503("bad template key")))
             else
                response_503(reply.error)
             end
