@@ -29,7 +29,7 @@ feature {}
          system: SYSTEM
       do
          system.set_environment_variable("XDG_CONFIG_DIRS", "webclient.conf")
-         create gen.test_parse("8a", random_file, agent extend(?, ?))
+         create gen.make("8a", random_file, agent extend(?, ?))
          assert(gen.is_valid)
          pass := gen.generated
          assert(pass.is_equal(password))

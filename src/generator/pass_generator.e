@@ -98,7 +98,7 @@ feature {}
             length := parser.total_quantity
          end
          random_file := a_random_file.intern
-         extend := agent default_extend(?, ?)
+         extend := a_extend
       ensure
          random_file = a_random_file
          extend = a_extend
