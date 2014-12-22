@@ -27,6 +27,9 @@ inherit
       end
    CGI_HANDLER
 
+insert
+   WEBCLIENT_GLOBALS
+
 create {EIFFELTEST_TOOLS}
    make
 
@@ -104,16 +107,6 @@ feature {} -- CLIENT interface
       end
 
 feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
-   form_token_name: FIXED_STRING
-      once
-         Result := "token".intern
-      end
-
-   form_password_name: FIXED_STRING
-      once
-         Result := "password".intern
-      end
-
    config_template_path: FIXED_STRING
       once
          Result := ("template.path").intern
@@ -197,28 +190,11 @@ feature {}
                read_password_and_send_master
             when "open" then
                if path_info.segments.count = 1 then
-                  --|**** TODO: potential DOS :-(
                   next_auth_token(agent (auth_token: STRING)
                                   require
                                      auth_token /= Void
                                   do
-                                     html_response("open_form.html",
-                                                   agent (key: STRING): ABSTRACT_STRING
-                                                      require
-                                                         key /= Void
-                                                      do
-                                                         inspect
-                                                            key
-                                                         when "form_token_name" then
-                                                            Result := form_token_name
-                                                         when "form_password_name" then
-                                                            Result := form_password_name
-                                                         when "auth_token" then
-                                                            Result := auth_token
-                                                         else
-                                                            response_503("bad template key")
-                                                         end
-                                                      end(?))
+                                     html_response("open_form.html", create {WEBCLIENT_OPEN_FORM}.make(auth_token, agent response_503("bad template key")))
                                   end(?))
                end
             when "auth" then
@@ -323,31 +299,15 @@ feature {}
 
    when_pass_list (a_reply: MESSAGE)
       local
-         reply: REPLY_LIST
+         reply: REPLY_LIST; script_name: ABSTRACT_STRING
       do
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               html_response("pass_list.html",
-                             agent (key: STRING; rl: REPLY_LIST): STRING
-                             require
-                                key /= Void
-                             do
-                                inspect
-                                   key
-                                when "pass_list" then
-                                   Result := ""
-                                   rl.for_each_name(agent (name, res: STRING)
-                                                    do
-                                                       res.append("<li><a href=%"#(1)/#(2)%">#(2)</a></li>%N"
-                                                          # (if cgi.script_name.is_set then "/" + cgi.script_name.name else "" end)
-                                                          # name
-                                                       )
-                                                    end(?, Result))
-                                else
-                                   response_503("bad template key")
-                                end
-                             end(?, reply))
+               if cgi.script_name.is_set then
+                  script_name := cgi.script_name.name
+               end
+               html_response("pass_list.html", create {WEBCLIENT_PASS_LIST}.make(script_name, reply, agent response_503("bad template key")))
             else
                response_503(reply.error)
             end
@@ -358,19 +318,7 @@ feature {}
 
    when_pass_get (a_pass: STRING)
       do
-         html_response("pass.html",
-                       agent (key: STRING): STRING
-                       require
-                          key /= Void
-                       do
-                          inspect
-                             key
-                          when "pass" then
-                             Result := a_pass
-                          else
-                             response_503("bad template key")
-                          end
-                       end(?))
+         html_response("pass.html", create {WEBCLIENT_PASS}.make(a_pass, agent response_503("bad template key")))
       end
 
    protect_html (a_data: ABSTRACT_STRING): STRING
@@ -409,7 +357,7 @@ feature {}
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status_and_error(503, message))
       end
 
-   html_response (template_name: ABSTRACT_STRING; template_resolver: FUNCTION[TUPLE[STRING], ABSTRACT_STRING])
+   html_response (template_name: ABSTRACT_STRING; template_resolver: TEMPLATE_RESOLVER)
       local
          doc: CGI_RESPONSE_DOCUMENT
          path: ABSTRACT_STRING
