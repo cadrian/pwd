@@ -18,9 +18,6 @@ class COMMAND_VERSION
 inherit
    COMMAND
 
-insert
-   GLOBALS
-
 create {CONSOLE}
    make
 
@@ -52,13 +49,14 @@ feature {COMMANDER}
 feature {}
    when_reply (a_reply: MESSAGE)
       local
+         v: VERSION
          reply: REPLY_VERSION
       do
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
                io.put_string("Client version: ")
-               io.put_line(version)
+               io.put_line(v.version)
                io.put_string("Server version: ")
                io.put_line(reply.version)
             else
