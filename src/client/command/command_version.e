@@ -18,6 +18,9 @@ class COMMAND_VERSION
 inherit
    COMMAND
 
+insert
+   GLOBALS
+
 create {CONSOLE}
    make
 
