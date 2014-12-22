@@ -47,8 +47,12 @@ feature {}
          int, index: INTEGER_32
       do
          int := rnd.item(ingredient.lower, ingredient.upper)
-         index := rnd.item(pass.lower, pass.upper + 1) -- extra mix
-         pass.insert_character(ingredient.item(int), index)
+         if pass.is_empty then
+            pass.extend(ingredient.item(int))
+         else
+            index := rnd.item(pass.lower, pass.upper + 1) -- extra mix
+            pass.insert_character(ingredient.item(int), index)
+         end
       ensure
          pass.count = old pass.count + 1
       end

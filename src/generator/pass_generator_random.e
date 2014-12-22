@@ -32,7 +32,7 @@ feature {ANY}
    item (lower, upper: INTEGER_32): INTEGER_32
       require
          lower >= 0
-         upper > lower
+         dont_waste_entropy: upper > lower
          is_connected
       do
          Result := (randf($read_rand, to_pointer) * (upper - lower).to_real_32 + {REAL_32 0.5}).force_to_integer_32 + lower
