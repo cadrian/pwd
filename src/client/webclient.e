@@ -32,12 +32,60 @@ create {EIFFELTEST_TOOLS}
 
 feature {} -- CLIENT interface
    run
+      do
+         if open_session_vault then
+            cgi.run
+         else
+            response_503("Could not open session vault")
+         end
+      end
+
+   open_session_vault: BOOLEAN
+      local
+         pg: PASS_GENERATOR; sessionvault: CGI_COOKIE; gen: STRING; ft: FILE_TOOLS; i: INTEGER
+      do
+         sessionvault := jar.cookie("sessionvault")
+         from
+            i := 3
+            if sessionvault.value /= Void then
+               vaultpath := session_vault_path(sessionvault.value)
+               Result := ft.file_exists(vaultpath)
+            end
+            if not Result then
+               create pg.parse("16an")
+            end
+         until
+            Result or else i < 0
+         loop
+            gen := pg.generated
+            vaultpath := session_vault_path(gen)
+            if ft.file_exists(vaultpath) then
+               ft.delete(vaultpath)
+               check not Result end
+            else
+               sessionvault.value := gen
+               sessionvault.max_age := 14400 -- 4 hours
+               if cgi.script_name.is_set then
+                  sessionvault.path := cgi.script_name.name
+               end
+               sessionvault.secure := True
+               sessionvault.http_only := True
+               Result := True
+            end
+            i := i - 1
+         end
+         if Result then
+            create session_vault.make(vaultpath)
+            session_vault.open(("#(1)!#(2)" # cgi.remote_info.user # sessionvault.value).out)
+            Result := session_vault.is_open
+         end
+      end
+
+   session_vault_path (id: ABSTRACT_STRING): STRING
       local
          xdg: XDG
       do
-         create vault.make("#(1)/webclient-#(2).vault" # xdg.cache_home # cgi.remote_info.user)
-         vault.open(cgi.remote_info.user.out)
-         cgi.run
+         Result := ("#(1)/webclient-#(2).vault" # xdg.cache_home # id).out
       end
 
    server_bootstrap
@@ -85,30 +133,29 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
 
    post
       local
+         path_info: CGI_PATH_INFO
          path: STRING
       do
-         if cgi.path_info.segments.is_empty then
-            response_403
+         path_info := cgi.path_info
+         if path_info = Void or else path_info.segments.is_empty then
+            read_password_and_send_master
          else
-            path := cgi.path_info.segments.first.out
+            path := path_info.segments.first.out
             inspect
                path
             when "vault" then
-               if cgi.path_info.segments.count = 1 then
-                  get_auth_token(agent (auth_token: STRING)
-                                 require
-                                    auth_token /= Void
-                                 local
-                                    form: CGI_FORM
-                                 do
-                                    create form.parse(std_input)
-                                    if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) and then form.form.fast_has(form_password_name) then
-                                       master_pass.make_from_string(form.form.fast_at(form_password_name))
-                                       send_master
-                                    else
-                                       response_403
-                                    end
-                                 end(?))
+               if path_info.segments.count = 1 then
+                  get_auth_token(agent post_vault(?))
+               else
+                  response_403
+               end
+            when "pass" then
+               inspect
+                  path_info.segments.count
+               when 1 then
+                  get_auth_token(agent post_pass_list(?))
+               when 2 then
+                  get_auth_token(agent post_pass_key(path_info.segments.last, ?))
                else
                   response_403
                end
@@ -177,42 +224,82 @@ feature {}
             when "auth" then
                cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
             when "pass" then
-               inspect
-                  path_info.segments.count
-               when 1 then
-                  call_server(create {QUERY_LIST}.make, agent when_pass_list(?))
-               when 2 then
-                  do_get(path_info.segments.last, agent when_pass_get(?), agent unknown_key(?))
-               else
-                  response_403
-               end
+               cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
             else
                response_403
             end
          end
       end
 
+   post_vault (auth_token: STRING)
+      require
+         auth_token /= Void
+      local
+         form: CGI_FORM
+      do
+         create form.parse(std_input)
+         if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) and then form.form.fast_has(form_password_name) then
+            master_pass.make_from_string(form.form.fast_at(form_password_name))
+            send_master
+         else
+            response_403
+         end
+      end
+
+   post_pass_list (auth_token: STRING)
+      require
+         auth_token /= Void
+      local
+         form: CGI_FORM
+      do
+         create form.parse(std_input)
+         if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) then
+            call_server(create {QUERY_LIST}.make, agent when_pass_list(?))
+         else
+            response_403
+         end
+      end
+
+   post_pass_key (key: FIXED_STRING; auth_token: STRING)
+      require
+         key /= Void
+         auth_token /= Void
+      local
+         form: CGI_FORM
+      do
+         create form.parse(std_input)
+         if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) then
+            do_get(key, agent when_pass_get(?), agent unknown_key(?))
+         else
+            response_403
+         end
+      end
+
    token_name: STRING "_http_token"
 
-   get_auth_token (action: PROCEDURE[TUPLE[STRING]])
+   get_auth_token (action: PROCEDURE[TUPLE[STRING, STRING]])
+         -- action takes the old and new auth tokens
       local
-         token: STRING
+         old_token: STRING
       do
-         token := vault.pass(token_name)
-         if token /= Void then
-            action(token)
+         old_token := session_vault.pass(token_name)
+         if old_token /= Void then
+            --|**** TODO I would have liked to write:
+            -- next_auth_token(action(old_token, ?))
+            next_auth_token(agent (new_token:STRING) do action(old_token, new_token) end(?))
          else
             response_403
          end
       end
 
    next_auth_token (action: PROCEDURE[TUPLE[STRING]])
+         -- action takes the new auth token
       local
-         token: ABSTRACT_STRING
+         new_token: ABSTRACT_STRING
       do
-         token := vault.set_random(token_name, "12an")
-         if token /= Void then
-            action(token.out)
+         new_token := session_vault.set_random(token_name, "12an")
+         if new_token /= Void then
+            action(new_token.out)
          else
             response_503("Coult not create next token")
          end
@@ -348,7 +435,7 @@ feature {}
       do
          if cgi.need_reply then
             cgi.reply(r)
-            vault.close
+            session_vault.close
          end
       end
 
@@ -362,7 +449,10 @@ feature {}
    cgi: CGI
    is_head: BOOLEAN
 
-   vault: VAULT
+   session_vault: VAULT
+   vaultpath: ABSTRACT_STRING
+
+   jar: CGI_COOKIE_JAR
 
 invariant
    cgi /= Void

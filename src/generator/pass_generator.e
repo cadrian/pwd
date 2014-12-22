@@ -19,11 +19,11 @@ insert
    LOGGING
    CONFIGURABLE
 
-create {VAULT}
+create {ANY}
    parse
 
 create {PWD_TEST}
-   test_parse
+   make
 
 feature {ANY}
    is_valid: BOOLEAN
@@ -54,7 +54,7 @@ feature {}
 
    default_random_file: FIXED_STRING
       once
-         Result := "/dev/random".intern
+         Result := "/dev/urandom".intern
       end
 
    recipe: FAST_ARRAY[PASS_GENERATOR_MIX]
@@ -74,6 +74,21 @@ feature {}
       require
          a_recipe /= Void
       local
+         rndfile: FIXED_STRING
+      do
+         rndfile := conf(conf_random_file)
+         if rndfile = Void then
+            rndfile := default_random_file
+         end
+         make(a_recipe, rndfile, agent default_extend(?, ?))
+      end
+
+   make (a_recipe, a_random_file: ABSTRACT_STRING; a_extend: like extend)
+      require
+         a_recipe /= Void
+         a_random_file /= Void
+         a_extend /= Void
+      local
          parser: PASS_GENERATOR_PARSER
       do
          create parser.parse(a_recipe)
@@ -81,23 +96,9 @@ feature {}
             is_valid := True
             recipe := parser.recipe
             length := parser.total_quantity
-            random_file := conf(conf_random_file)
-            if random_file = Void then
-               random_file := default_random_file
-            end
-            extend := agent default_extend(?, ?)
          end
-      end
-
-   test_parse (a_recipe, a_random_file: ABSTRACT_STRING; a_extend: like extend)
-      require
-         a_recipe /= Void
-         a_random_file /= Void
-         a_extend /= Void
-      do
-         parse(a_recipe)
          random_file := a_random_file.intern
-         extend := a_extend
+         extend := agent default_extend(?, ?)
       ensure
          random_file = a_random_file
          extend = a_extend
