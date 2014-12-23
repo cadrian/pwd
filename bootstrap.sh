@@ -42,7 +42,7 @@ do
     chmod a+x $tgt
 done
 
-for d in conf templates COPYING README.md
+for d in conf web COPYING README.md
 do
     cp -a $d $bootstrap_dir/
 done
@@ -128,7 +128,9 @@ fi
     printf '\tinstall -d $(PREFIX)/share/doc\n'
     printf '\tinstall -d $(PREFIX)/share/doc/pwd\n'
     printf '\tinstall -d $(PREFIX)/share/pwd\n'
-    printf '\tinstall -d $(PREFIX)/share/pwd/templates\n'
+    printf '\tinstall -d $(PREFIX)/share/pwd/web\n'
+    printf '\tinstall -d $(PREFIX)/share/pwd/web/templates\n'
+    printf '\tinstall -d $(PREFIX)/share/pwd/web/static\n'
     printf '\tinstall -d $(CONFIG)\n'
     printf '\tinstall -d $(CONFIG)/pwd\n'
     for exe in $EXE
@@ -145,9 +147,9 @@ fi
     printf '\tinstall -m444 conf/pwd-remote-curl.properties $(PREFIX)/share/doc/pwd/sample-remote-curl-config.rc\n'
     printf '\tinstall -m444 conf/pwd-remote-scp.properties $(PREFIX)/share/doc/pwd/sample-remote-scp-config.rc\n'
     printf '\tinstall -m444 README.md $(PREFIX)/share/doc/pwd/\n'
-    for template in templates/*.html
+    for template in web/{templates,static}/*
     do
-        printf '\tinstall -m444 %s $(PREFIX)/share/pwd/templates/\n' $template
+        printf '\tinstall -m444 %s $(PREFIX)/share/pwd/web/\n' $template
     done
 #    printf '\ttest -e COPYING && install -m444 COPYING $(PREFIX)/share/doc/pwd/\n'
 } >> $MAKEFILE_BOOT

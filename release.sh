@@ -51,7 +51,7 @@ BIN=$release_dir/data/bin
 EXE=$release_dir/data/lib/pwd/exe
 DOC=$release_dir/data/share/doc/pwd
 CONF=$release_dir/config/pwd/conf
-TMPL=$release_dir/config/pwd/templates
+TMPL=$release_dir/config/pwd/web
 
 for d in $BIN $EXE $DOC $CONF $TMPL
 do
@@ -83,10 +83,10 @@ cp conf/pwd-remote-curl.properties $DOC/sample-remote-curl-config.rc
 cp conf/pwd-remote-scp.properties $DOC/sample-remote-scp-config.rc
 cp conf/pwd-remote.properties $CONF/config.rc
 cp conf/*.rc $CONF/
-cp templates/*.html $TMPL/
+cp -a web/{templates,static} $TMPL/
 
 if $DEBIAN; then
-    sed -i 's!^template.path =.*$!template.path = /usr/share/pwd/templates!' $CONF/config.rc
+    sed -i 's!^template.path =.*$!template.path = /usr/share/pwd/web/templates!;s!^static.path =.*$!static.path = /usr/share/pwd/web/static!' $CONF/config.rc
 fi
 
 if $ON_KEY; then
@@ -144,7 +144,8 @@ else
 fi
 
 mkdir -p \$PREFIX_BIN
-mkdir -p \$PREFIX_DATA/pwd/templates
+mkdir -p \$PREFIX_DATA/pwd/web/templates
+mkdir -p \$PREFIX_DATA/pwd/web/static
 mkdir -p \$PREFIX_DATA/doc/pwd
 mkdir -p \$PREFIX_EXE/pwd
 mkdir -p \$CONFIG/pwd
@@ -187,9 +188,9 @@ do
     fi
 done
 
-for src in \$dir/config/pwd/templates/*
+for src in \$dir/config/pwd/web/{templates,static}/*
 do
-    tgt=\$PREFIX_DATA/pwd/templates/\${src#\$dir/config/pwd/templates}
+    tgt=\$PREFIX_DATA/pwd/web/\${src#\$dir/config/pwd/web}
     if test -e \$tgt; then
         echo "There is already a config file named \$tgt -- not overriding."
         echo " The new config file is installed as \$tgt.pkg (please check)"

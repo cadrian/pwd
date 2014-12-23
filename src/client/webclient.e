@@ -112,6 +112,11 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
          Result := ("template.path").intern
       end
 
+   config_static_path: FIXED_STRING
+      once
+         Result := ("static.path").intern
+      end
+
    get
       do
          is_head := False
@@ -173,6 +178,14 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
       end
 
+feature {WEBCLIENT_RESOLVER}
+   root: ABSTRACT_STRING
+      do
+         if cgi.script_name.is_set then
+            Result := cgi.script_name.name
+         end
+      end
+
 feature {}
    get_or_head
       local
@@ -190,17 +203,18 @@ feature {}
                read_password_and_send_master
             when "open" then
                if path_info.segments.count = 1 then
-                  next_auth_token(agent (auth_token: STRING)
-                                  require
-                                     auth_token /= Void
-                                  do
-                                     html_response("open_form.html", create {WEBCLIENT_OPEN_FORM}.make(auth_token, agent response_503("bad template key")))
-                                  end(?))
+                  next_auth_token(agent (new_token: STRING) do html_response("open_form.html", create {WEBCLIENT_OPEN_FORM}.make(new_token, Current, agent response_503("bad template key"))) end(?))
                end
             when "auth" then
                cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
             when "pass" then
                cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
+            when "static" then
+               if path_info.segments.count = 2 then
+                  html_response(path_info.segments.last, Void)
+               else
+                  response_403
+               end
             else
                response_403
             end
@@ -262,7 +276,7 @@ feature {}
          if old_token /= Void then
             --|**** TODO I would have liked to write:
             -- next_auth_token(action(old_token, ?))
-            next_auth_token(agent (new_token:STRING) do action(old_token, new_token) end(?))
+            next_auth_token(agent (new_token: STRING) do action(old_token, new_token) end(?))
          else
             response_403
          end
@@ -299,15 +313,12 @@ feature {}
 
    when_pass_list (auth_token: STRING; a_reply: MESSAGE)
       local
-         reply: REPLY_LIST; script_name: ABSTRACT_STRING
+         reply: REPLY_LIST
       do
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               if cgi.script_name.is_set then
-                  script_name := cgi.script_name.name
-               end
-               html_response("pass_list.html", create {WEBCLIENT_PASS_LIST}.make(script_name, reply, auth_token, agent response_503("bad template key")))
+               html_response("pass_list.html", create {WEBCLIENT_PASS_LIST}.make(reply, auth_token, Current, agent response_503("bad template key")))
             else
                response_503(reply.error)
             end
@@ -318,7 +329,7 @@ feature {}
 
    when_pass_get (a_pass: STRING)
       do
-         html_response("pass.html", create {WEBCLIENT_PASS}.make(a_pass, agent response_503("bad template key")))
+         html_response("pass.html", create {WEBCLIENT_PASS}.make(a_pass, Current, agent response_503("bad template key")))
       end
 
    protect_html (a_data: ABSTRACT_STRING): STRING
@@ -360,22 +371,24 @@ feature {}
    html_response (template_name: ABSTRACT_STRING; template_resolver: TEMPLATE_RESOLVER)
       local
          doc: CGI_RESPONSE_DOCUMENT
-         path: ABSTRACT_STRING
-         tis: TEMPLATE_INPUT_STREAM
          extern: EXTERN
+         input: INPUT_STREAM
       do
-         path := "#(1)/#(2)" # conf(config_template_path) # template_name
-         create tis.connect_to(create {TEXT_FILE_READ}.connect_to(path), template_resolver)
-         if tis.is_connected then
+         if template_resolver = Void then
+            create {TEXT_FILE_READ} input.connect_to("#(1)/#(2)" # conf(config_static_path) # template_name)
+         else
+            create {TEMPLATE_INPUT_STREAM} input.connect_to(create {TEXT_FILE_READ}.connect_to("#(1)/#(2)" # conf(config_template_path) # template_name), template_resolver)
+         end
+         if input.is_connected then
             create doc.set_content_type("text/html")
             doc.set_field("Cache-Control", "private,no-store,no-cache")
             if not is_head then
-               extern.splice(tis, doc.body)
+               extern.splice(input, doc.body)
             end
-            tis.disconnect
+            input.disconnect
             cgi_reply(doc)
          else
-            response_503("bad template name")
+            response_503("unknown file name")
          end
       end
 

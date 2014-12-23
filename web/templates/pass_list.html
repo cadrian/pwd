@@ -1,19 +1,14 @@
 <html>
   <head>
     <title>CAD's password vault list</title>
-    <script language="JavaScript">
-      function submit_passform(path) {
-        var form = document.getElementById('passform');
-        form.action = path;
-        form.submit();
-      }
-    </script>
+    <script src="#(root)/static/webclient.js"></script>
+    <link rel="stylesheet" href="#(root)/static/webclient.css">
   </head>
   <body>
     <ul>#(*pass)
       <li><a href="##" onclick="submit_passform('#(path)');">#(name)</a></li>#(pass*)
     </ul>
-    <div style="visibility:hidden;">
+    <div class="hidden">
       <form id="passform" method="post" action="/">
         <input type="hidden" name="#(form_token_name)" value="#(auth_token)" />
       </form>
