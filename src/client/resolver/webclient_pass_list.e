@@ -16,10 +16,12 @@
 class WEBCLIENT_PASS_LIST
 
 inherit
-   TEMPLATE_RESOLVER
-
-insert
-   WEBCLIENT_GLOBALS
+   WEBCLIENT_RESOLVER
+      rename
+         make as resolver_make
+      redefine
+         item, while
+      end
 
 create {WEBCLIENT}
    make
@@ -38,7 +40,7 @@ feature {TEMPLATE_INPUT_STREAM}
          when "auth_token" then
             Result := auth_token
          else
-            error()
+            Result := Precursor(key)
          end
       end
 
@@ -50,38 +52,39 @@ feature {TEMPLATE_INPUT_STREAM}
             index := index + 1
             Result := paths.valid_index(index)
          else
-            error()
+            Result := Precursor(key)
          end
       end
 
 feature {}
-   error: PROCEDURE[TUPLE]
    paths: ARRAY[ABSTRACT_STRING]
    names: ARRAY[ABSTRACT_STRING]
    index: INTEGER
    auth_token: STRING
 
-   make (a_script_name: ABSTRACT_STRING; a_list: REPLY_LIST; a_auth_token: STRING; a_error: like error)
+   make (a_list: REPLY_LIST; a_auth_token: STRING; a_webclient: like webclient; a_error: like error)
       require
          a_list /= Void
          a_auth_token /= Void
+         a_webclient /= Void
          a_error /= Void
       do
          auth_token := a_auth_token
-         error := a_error
+         resolver_make(a_webclient, a_error)
          create paths.with_capacity(a_list.count_names, 1)
          create names.with_capacity(a_list.count_names, 1)
-         a_list.for_each_name(agent (name: STRING)
+         a_list.for_each_name(agent (root: ABSTRACT_STRING; name: STRING)
                               do
-                                 if a_script_name /= Void then
-                                    paths.add_last("#(1)/pass/#(2)" # a_script_name # name)
+                                 if root /= Void then
+                                    paths.add_last("#(1)/pass/#(2)" # root # name)
                                  else
                                     paths.add_last("/pass/#(1)" # name)
                                  end
                                  names.add_last(name)
-                              end(?))
+                              end(webclient.root, ?))
       ensure
          auth_token = a_auth_token
+         webclient = a_webclient
          error = a_error
          paths.count = a_list.count_names
          names.count = a_list.count_names
@@ -90,6 +93,5 @@ feature {}
 invariant
    paths.count = names.count
    auth_token /= Void
-   error /= Void
 
 end -- class WEBCLIENT_PASS_LIST

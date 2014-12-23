@@ -16,10 +16,12 @@
 class WEBCLIENT_OPEN_FORM
 
 inherit
-   TEMPLATE_RESOLVER
-
-insert
-   WEBCLIENT_GLOBALS
+   WEBCLIENT_RESOLVER
+      rename
+         make as resolver_make
+      redefine
+         item
+      end
 
 create {WEBCLIENT}
    make
@@ -36,33 +38,28 @@ feature {TEMPLATE_INPUT_STREAM}
          when "auth_token" then
             Result := auth_token
          else
-            error()
+            Result := Precursor(key)
          end
       end
 
-   while (key: STRING): BOOLEAN
-      do
-         error()
-      end
-
 feature {}
-   error: PROCEDURE[TUPLE]
    auth_token: STRING
 
-   make (a_auth_token: STRING; a_error: like error)
+   make (a_auth_token: STRING; a_webclient: like webclient; a_error: like error)
       require
          a_auth_token /= Void
+         a_webclient /= Void
          a_error /= Void
       do
          auth_token := a_auth_token
-         error := a_error
+         resolver_make(a_webclient, a_error)
       ensure
          auth_token = a_auth_token
+         webclient = a_webclient
          error = a_error
       end
 
 invariant
    auth_token /= Void
-   error /= Void
 
 end -- class WEBCLIENT_OPEN_FORM

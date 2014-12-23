@@ -13,49 +13,49 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-class WEBCLIENT_PASS
+deferred class WEBCLIENT_RESOLVER
 
 inherit
-   WEBCLIENT_RESOLVER
-      rename
-         make as resolver_make
-      redefine
-         item
-      end
+   TEMPLATE_RESOLVER
 
-create {WEBCLIENT}
-   make
+insert
+   WEBCLIENT_GLOBALS
 
 feature {TEMPLATE_INPUT_STREAM}
    item (key: STRING): ABSTRACT_STRING
       do
          inspect
             key
-         when "pass" then
-            Result := pass
+         when "root" then
+            Result := webclient.root
          else
-            Result := Precursor(key)
+            error()
          end
       end
 
-feature {}
-   pass: ABSTRACT_STRING
+   while (key: STRING): BOOLEAN
+      do
+         error()
+      end
 
-   make (a_pass: like pass; a_webclient: like webclient; a_error: like error)
+feature {}
+   error: PROCEDURE[TUPLE]
+   webclient: WEBCLIENT
+
+   make (a_webclient: like webclient; a_error: like error)
       require
-         a_pass /= Void
          a_webclient /= Void
          a_error /= Void
       do
-         pass := a_pass
-         resolver_make(a_webclient, a_error)
+         webclient := a_webclient
+         error := a_error
       ensure
-         pass = a_pass
          webclient = a_webclient
          error = a_error
       end
 
 invariant
-   pass /= Void
+   webclient /= Void
+   error /= Void
 
-end -- class WEBCLIENT_PASS
+end -- class WEBCLIENT_RESOLVER

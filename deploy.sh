@@ -89,7 +89,7 @@ fi
 
 if $DEBIAN; then
     echo Building Debian packages
-    for file in bin c conf templates README.md Makefile; do
+    for file in bin c conf web README.md Makefile; do
         cp -a bootstrap/$file release-debian/pwd/
     done
     cd release-debian/pwd
