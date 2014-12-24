@@ -147,11 +147,14 @@ fi
     printf '\tinstall -m444 conf/pwd-remote-curl.properties $(PREFIX)/share/doc/pwd/sample-remote-curl-config.rc\n'
     printf '\tinstall -m444 conf/pwd-remote-scp.properties $(PREFIX)/share/doc/pwd/sample-remote-scp-config.rc\n'
     printf '\tinstall -m444 README.md $(PREFIX)/share/doc/pwd/\n'
-    for template in web/{templates,static}/*
+    for template in web/templates/*
     do
-        printf '\tinstall -m444 %s $(PREFIX)/share/pwd/web/\n' $template
+        printf '\tinstall -m444 %s $(PREFIX)/share/pwd/web/templates/\n' $template
     done
-#    printf '\ttest -e COPYING && install -m444 COPYING $(PREFIX)/share/doc/pwd/\n'
+    for template in web/static/*
+    do
+        printf '\tinstall -m444 %s $(PREFIX)/share/pwd/web/static/\n' $template
+    done
 } >> $MAKEFILE_BOOT
 
 chmod +x $MAKEFILE_BOOT
