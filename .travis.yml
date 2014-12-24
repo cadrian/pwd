@@ -84,7 +84,7 @@ before_install:
 - sudo apt-get update -qq
 - sudo apt-get install -qq curl wget libgc1c2 coreutils devscripts
 - mkdir $HOME/liberty
-- curl -s http://apt.liberty-eiffel.org/dists/snapshot/main/binary-amd64/Packages.gz | zcat
+- curl -s http://apt.liberty-eiffel.org/dists/commits/main/binary-amd64/Packages.gz | zcat
   | awk '/^Package:/ {pkg=$2} /^Version:/ {ver=$2} /^Architecture:/ {arch=$2} /^$/ {printf("http://apt.liberty-eiffel.org/pool/main/libe/liberty-eiffel/%s_%s_%s.deb\n", pkg, ver, arch)}'
   | grep -v -e '-doc_'
   | while read pkg; do wget -nd -nH -P $HOME/liberty -m $pkg; done
