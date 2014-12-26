@@ -195,11 +195,15 @@ feature {WEBCLIENT_RESOLVER}
 
 feature {}
    log_query (method: ABSTRACT_STRING)
+      local
+         path_info: STRING
       do
-         log.info.put_line("#(1) #(2):#(3)"
-                           # method
-                           # root
-                           # (if cgi.path_info /= Void then cgi.path_info.out else "" end))
+         if cgi.path_info = Void then
+            path_info := ""
+         else
+            path_info := cgi.path_info.out
+         end
+         log.info.put_line("#(1) #(2):#(3)" # method # root # path_info)
       end
 
    get_or_head
