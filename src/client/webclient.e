@@ -103,7 +103,7 @@ feature {} -- CLIENT interface
 
    unknown_key (key: ABSTRACT_STRING)
       do
-         log.error("Unknown key: #(1)" + key)
+         log.error.put_line("Unknown key: #(1)" + key)
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(404))
       end
 
