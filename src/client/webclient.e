@@ -103,6 +103,7 @@ feature {} -- CLIENT interface
 
    unknown_key (key: ABSTRACT_STRING)
       do
+         log.error("Unknown key: #(1)" + key)
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(404))
       end
 
@@ -119,12 +120,14 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
 
    get
       do
+         log_query("GET")
          is_head := False
          get_or_head
       end
 
    head
       do
+         log_query("HEAD")
          is_head := True
          get_or_head
       end
@@ -134,6 +137,7 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
          path_info: CGI_PATH_INFO
          path: STRING
       do
+         log_query("POST")
          path_info := cgi.path_info
          if path_info = Void or else path_info.segments.is_empty then
             read_password_and_send_master
@@ -165,16 +169,19 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
 
    delete
       do
+         log_query("DELETE")
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
       end
 
    put
       do
+         log_query("PUT")
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
       end
 
    invoke_method (a_method: FIXED_STRING)
       do
+         log_query(a_method)
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
       end
 
@@ -187,6 +194,14 @@ feature {WEBCLIENT_RESOLVER}
       end
 
 feature {}
+   log_query (method: ABSTRACT_STRING)
+      do
+         log.info.put_line("#(1) #(2):#(3)"
+                           # method
+                           # root
+                           # (if cgi.path_info /= Void then cgi.path_info.out else "" end))
+      end
+
    get_or_head
       local
          path_info: CGI_PATH_INFO
@@ -291,7 +306,7 @@ feature {}
          if new_token /= Void then
             action(new_token.out)
          else
-            response_503("Coult not create next token")
+            response_503("Could not create next token")
          end
       end
 
@@ -360,11 +375,13 @@ feature {}
 
    response_403
       do
+         log.error.put_line("Not authenticated")
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(403))
       end
 
    response_503 (message: ABSTRACT_STRING)
       do
+         log.error.put_line(message)
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status_and_error(503, message))
       end
 
@@ -393,9 +410,23 @@ feature {}
       end
 
    cgi_reply (r: CGI_RESPONSE)
+      local
+         doc: CGI_RESPONSE_DOCUMENT
       do
          if cgi.need_reply then
+            if log.is_info then
+               if doc ?:= r then
+                  doc ::= r
+                  log.info.put_line("Reply document with status #(1)" # doc.status.out)
+               else
+                  log.info.put_line("Reply #(1)" # r.out)
+               end
+               if log.is_trace then
+                  cgi.set_output(create {MONITORED_OUTPUT_STREAM}.connect_to(cgi.output, log.trace))
+               end
+            end
             cgi.reply(r)
+            cgi.output.disconnect
             session_vault.close
          end
       end
