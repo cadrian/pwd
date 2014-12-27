@@ -24,16 +24,13 @@ create {}
 feature {}
    make
       do
-         assert(call_cgi("GET", "", Void).is_equal("Location: /open%N"))
-         assert(call_cgi("GET", "/", Void).is_equal("Location: /open%N"))
+         assert(call_cgi("GET", "", Void).is_equal("Location:https://testserver/open%R%N"))
+         assert(call_cgi("GET", "/", Void).is_equal("Location:https://testserver/open%R%N"))
 
-         assert(call_cgi("GET", "/open", Void).is_equal("[
-                                                         Content-Type: text/html
-                                                         Cache-Control: "private,no-store,no-cache"
-
-                                                         <html><body></body></html>
-
-                                                         ]"))
+         assert(call_cgi("GET", "/open", Void).is_equal("Content-Type:text/html%R%N%
+                                                        %Cache-Control:%"private,no-store,no-cache%"%R%N%
+                                                        %%R%N%
+                                                        %<html><body></body></html>%N"))
 
 
          --assert(call_cgi("GET", "/pass", "[

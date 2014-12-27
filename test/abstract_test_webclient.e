@@ -17,7 +17,6 @@ deferred class ABSTRACT_TEST_WEBCLIENT
 
 insert
    EIFFELTEST_TOOLS
-   STREAM_HANDLER
 
 feature {}
    client: WEBCLIENT
@@ -25,7 +24,10 @@ feature {}
    call_cgi (method, path: STRING; server_commands: STRING): STRING
       local
          system: SYSTEM; tfw: TEXT_FILE_WRITE; pf: PROCESS_FACTORY; p: PROCESS
+         cgi_io: CGI_IO
       do
+         Result := ""
+
          if server_commands /= Void then
             create tfw.connect_to("webclient.conf/run/server.out")
             if tfw.is_connected then
@@ -45,15 +47,19 @@ feature {}
          system.set_environment_variable("REQUEST_METHOD", method)
          system.set_environment_variable("REMOTE_USER", "testuser")
          system.set_environment_variable("PATH_INFO", path)
+         system.set_environment_variable("SERVER_NAME", "testserver")
+         system.set_environment_variable("SERVER_PORT", "443")
+         system.set_environment_variable("SERVER_PROTOCOL", "https")
+         system.set_environment_variable("SERVER_SOFTWARE", "eiffeltest")
 
-         std_output.redirect_to("webclient.out")
+         cgi_io.set_output(create {STRING_OUTPUT_STREAM}.connect_to(Result))
+
          create client.make
          if server_commands /= Void then
             p.wait
          end
-         std_output.restore_default_output
 
-         Result := read_file("webclient.out")
+         sedb_breakpoint
       end
 
    read_file (file: STRING): STRING
