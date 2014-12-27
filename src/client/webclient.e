@@ -98,7 +98,7 @@ feature {} -- CLIENT interface
 
    read_password_and_send_master
       do
-         cgi_reply(create {CGI_RESPONSE_CLIENT_REDIRECT}.set_redirect("/open"))
+         cgi_reply(create {CGI_RESPONSE_CLIENT_REDIRECT}.set_redirect("/open", Void))
       end
 
    unknown_key (key: ABSTRACT_STRING)
@@ -321,7 +321,7 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               cgi_reply(create {CGI_RESPONSE_CLIENT_REDIRECT}.set_redirect("/pass"))
+               cgi_reply(create {CGI_RESPONSE_CLIENT_REDIRECT}.set_redirect("/pass", Void))
             else
                response_403
             end
