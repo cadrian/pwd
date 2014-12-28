@@ -31,7 +31,7 @@ exe:
 	mkdir exe
 
 %.ace: make_ace.sh
-	assert=require ./make_ace.sh $@
+	./make_ace.sh $@
 
 .PHONY: all clean
 .SILENT:
