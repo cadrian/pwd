@@ -80,6 +80,7 @@ env:
   - secure: nvb+5a04cnPek/u1NeCCNEHseaTXz1doKTsUKXOFBPYvAFDEEj+zD0G6gALn6UDeD9CCkllmk/LpOnGOYx4Id085XnVn70U6lXu07/bPR0Af2IbAhJGtCTvu6kNsdbfsJqgnG/1QRB02PrJ9gvwDLzUFypAFSJtFfq8FdpELNh8=
   - secure: XyUascj2MlRhtnC33NO6Fcs78XjRD7KBfoqYJ7d35BEFHrWJUmI5Y9/MlKjuYtF9Ntsfe88ZDr/SxpHhTIbuw2lBKiFAwrvsmf+3wXlPFsuh3/g9shCxom/53CGo9rSCOYDXpNVNUl7mTEqFdW3syr/zoqU+KSZz+AdGB701JRM=
   - secure: XiT8OxGudKhGoJ8aqkGZ71Xr//fYVUN4ZtZlWFYCpBwIitFszhqTDRA3U3QUMz3R2XR5TeEwsWQvuNHgfhoky1UW/ShKyvjBHBSz8z7w0fEkiH/ZBsNkFGojAHm+SfdvSbCYm20kMmU3icDAgiHsMWpPbrbk21QNnWfYpVj8jX0=
+  - assert=require
 before_install:
 - sudo apt-get update -qq
 - sudo apt-get install -qq curl wget libgc1c2 coreutils devscripts
