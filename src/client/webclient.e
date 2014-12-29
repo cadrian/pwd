@@ -199,6 +199,7 @@ feature {WEBCLIENT_RESOLVER}
          Result.append(cgi.header(once "HOST"))
          sn := cgi.script_name
          if sn.is_set then
+            Result.extend('/')
             Result.append(sn.name)
          end
       end
