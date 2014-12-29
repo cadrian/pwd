@@ -49,8 +49,10 @@ feature {}
          system.set_environment_variable("PATH_INFO", path)
          system.set_environment_variable("SERVER_NAME", "testserver")
          system.set_environment_variable("SERVER_PORT", "443")
-         system.set_environment_variable("SERVER_PROTOCOL", "https")
+         system.set_environment_variable("SERVER_PROTOCOL", "HTTP/1.1")
          system.set_environment_variable("SERVER_SOFTWARE", "eiffeltest")
+         system.set_environment_variable("HTTPS", "on")
+         system.set_environment_variable("HTTP_HOST", "test.server.net:8943")
 
          cgi_io.set_output(create {STRING_OUTPUT_STREAM}.connect_to(Result))
 
