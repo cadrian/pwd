@@ -186,21 +186,21 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
       end
 
 feature {WEBCLIENT_RESOLVER}
-   root: ABSTRACT_STRING
+   root: STRING
       local
-         url: URL; sn: CGI_SCRIPT_NAME; path: STRING
+         sn: CGI_SCRIPT_NAME; si: CGI_SERVER_INFO
       do
-         path := "/"
-         sn := cgi.script_name
-         if sn.is_set and then not sn.name.is_empty then
-            if sn.name.first = '/' then
-               path.make_from_string(sn.name)
-            else
-               path.append(sn.name)
-            end
+         Result := ""
+         si := cgi.server_info
+         if si.protocol /= Void then
+            Result.append(si.protocol.name)
          end
-         create url.relative(cgi.url, path)
-         Result := url.out
+         Result.append(once "://")
+         Result.append(cgi.header(once "HOST"))
+         sn := cgi.script_name
+         if sn.is_set then
+            Result.append(sn.name)
+         end
       end
 
 feature {}
