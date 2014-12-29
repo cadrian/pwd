@@ -421,7 +421,7 @@ feature {}
             input.disconnect
             cgi_reply(doc)
          else
-            response_503("unknown file name: #(1)" # template_resolver)
+            response_503("unknown file name: #(1)" # template_name)
          end
       end
 
