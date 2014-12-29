@@ -186,25 +186,33 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
       end
 
 feature {WEBCLIENT_RESOLVER}
-   root: STRING
+   root: FIXED_STRING
       local
+         string: STRING
          sn: CGI_SCRIPT_NAME; si: CGI_SERVER_INFO
       do
-         Result := ""
-         si := cgi.server_info
-         if si.protocol /= Void then
-            Result.append(si.protocol.name)
-         end
-         Result.append(once "://")
-         Result.append(cgi.header(once "HOST"))
-         sn := cgi.script_name
-         if sn.is_set then
-            Result.extend('/')
-            Result.append(sn.name)
+         Result := root_memory
+         if Result = Void then
+            string := ""
+            si := cgi.server_info
+            if si.protocol /= Void then
+               string.append(si.protocol.name)
+            end
+            string.append("://")
+            string.append(cgi.header("HOST"))
+            sn := cgi.script_name
+            if sn.is_set then
+               string.extend('/')
+               string.append(sn.name)
+            end
+            Result := string.intern
+            root_memory := Result
          end
       end
 
 feature {}
+   root_memory: FIXED_STRING
+
    log_query (method: ABSTRACT_STRING)
       local
          path_info: STRING
