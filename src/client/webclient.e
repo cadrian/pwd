@@ -187,10 +187,20 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
 
 feature {WEBCLIENT_RESOLVER}
    root: ABSTRACT_STRING
+      local
+         url: URL; sn: CGI_SCRIPT_NAME; path: STRING
       do
-         if cgi.script_name.is_set then
-            Result := cgi.script_name.name
+         path := "/"
+         sn := cgi.script_name
+         if sn.is_set and then not sn.name.is_empty then
+            if sn.name.first = '/' then
+               path.make_from_string(sn.name)
+            else
+               path.append(sn.name)
+            end
          end
+         create url.relative(cgi.url, path)
+         Result := url.out
       end
 
 feature {}
@@ -390,6 +400,8 @@ feature {}
       end
 
    html_response (template_name: ABSTRACT_STRING; template_resolver: TEMPLATE_RESOLVER)
+      require
+         template_name /= Void
       local
          doc: CGI_RESPONSE_DOCUMENT
          extern: EXTERN
@@ -409,7 +421,7 @@ feature {}
             input.disconnect
             cgi_reply(doc)
          else
-            response_503("unknown file name")
+            response_503("unknown file name: #(1)" # template_resolver)
          end
       end
 
