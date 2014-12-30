@@ -17,9 +17,15 @@ deferred class WEBCLIENT_RESOLVER
 
 inherit
    TEMPLATE_RESOLVER
+      undefine
+         out_in_tagged_out_memory
+      end
 
 insert
    WEBCLIENT_GLOBALS
+      undefine
+         out_in_tagged_out_memory
+      end
 
 feature {TEMPLATE_INPUT_STREAM}
    item (key: STRING): ABSTRACT_STRING

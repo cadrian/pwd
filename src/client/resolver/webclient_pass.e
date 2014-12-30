@@ -38,6 +38,12 @@ feature {TEMPLATE_INPUT_STREAM}
          end
       end
 
+feature {ANY}
+   out_in_tagged_out_memory
+      do
+         tagged_out_memory.append(once "{WEBCLIENT_PASS}")
+      end
+
 feature {}
    pass: ABSTRACT_STRING
 

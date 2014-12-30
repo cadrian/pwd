@@ -56,6 +56,14 @@ feature {TEMPLATE_INPUT_STREAM}
          end
       end
 
+feature {ANY}
+   out_in_tagged_out_memory
+      do
+         tagged_out_memory.append(once "{WEBCLIENT_PASS_LIST count=")
+         paths.count.append_in(tagged_out_memory)
+         tagged_out_memory.extend('}')
+      end
+
 feature {}
    paths: ARRAY[ABSTRACT_STRING]
    names: ARRAY[ABSTRACT_STRING]

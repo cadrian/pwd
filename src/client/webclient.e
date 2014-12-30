@@ -149,7 +149,7 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
                if path_info.segments.count = 1 then
                   get_auth_token(agent post_vault(?))
                else
-                  response_403
+                  response_403("/vault: too many path segments")
                end
             when "pass" then
                inspect
@@ -159,10 +159,10 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
                when 2 then
                   get_auth_token(agent post_pass_key(path_info.segments.last, ?))
                else
-                  response_403
+                  response_403("/pass: too many path segments")
                end
             else
-               response_403
+               response_403("Invalid path")
             end
          end
       end
@@ -248,13 +248,17 @@ feature {}
             when "pass" then
                cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
             when "static" then
-               if path_info.segments.count = 2 then
+               inspect
+                  path_info.segments.count
+               when 1 then
+                  response_403("/static: too few path segments")
+               when 2 then
                   html_response(path_info.segments.last, Void)
                else
-                  response_403
+                  response_403("/static: too many path segments")
                end
             else
-               response_403
+               response_403("Invalid path")
             end
          end
       end
@@ -266,11 +270,22 @@ feature {}
          form: CGI_FORM
       do
          create form.parse(std_input)
-         if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) and then form.form.fast_has(form_password_name) then
+         if log.is_trace then
+            form.form.do_all(agent (value, key: FIXED_STRING)
+                                do
+                                   log.trace.put_string("Form field: ")
+                                   log.trace.put_line(key)
+                                end (?, ?))
+         end
+         if not form.form.fast_has(form_token_name) then
+            response_403("Missing token field")
+         elseif not form.form.fast_at(form_token_name).is_equal(auth_token) then
+            response_403("Invalid token value")
+         elseif not form.form.fast_has(form_password_name) then
+            response_403("Missing password name field")
+         else
             master_pass.make_from_string(form.form.fast_at(form_password_name))
             send_master
-         else
-            response_403
          end
       end
 
@@ -281,10 +296,12 @@ feature {}
          form: CGI_FORM
       do
          create form.parse(std_input)
-         if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) then
-            call_server(create {QUERY_LIST}.make, agent when_pass_list(auth_token, ?))
+         if not form.form.fast_has(form_token_name) then
+            response_403("Missing token field")
+         elseif form.form.fast_at(form_token_name).is_equal(auth_token) then
+            response_403("Invalid token value")
          else
-            response_403
+            call_server(create {QUERY_LIST}.make, agent when_pass_list(auth_token, ?))
          end
       end
 
@@ -296,10 +313,12 @@ feature {}
          form: CGI_FORM
       do
          create form.parse(std_input)
-         if form.form.fast_has(form_token_name) and then form.form.fast_at(form_token_name).is_equal(auth_token) then
-            do_get(key, agent when_pass_get(?), agent unknown_key(?))
+         if not form.form.fast_has(form_token_name)
+            response_403("Missing token field")
+         elseif form.form.fast_at(form_token_name).is_equal(auth_token) then
+            response_403("Invalid token name")
          else
-            response_403
+            do_get(key, agent when_pass_get(?), agent unknown_key(?))
          end
       end
 
@@ -316,7 +335,7 @@ feature {}
             -- next_auth_token(action(old_token, ?))
             next_auth_token(agent (new_token: STRING) do action(old_token, new_token) end(?))
          else
-            response_403
+            response_403("Old token not found")
          end
       end
 
@@ -329,6 +348,7 @@ feature {}
          if new_token /= Void then
             action(new_token.out)
          else
+            log.error.put_line("Could not create next token")
             response_503("Could not create next token")
          end
       end
@@ -342,10 +362,10 @@ feature {}
             if reply.error.is_empty then
                cgi_reply(create {CGI_RESPONSE_CLIENT_REDIRECT}.set_redirect("/pass", Void))
             else
-               response_403
+               response_403("Empty server reply")
             end
          else
-            response_403
+            response_403("Invalid server reply")
          end
       end
 
@@ -396,9 +416,9 @@ feature {}
          end
       end
 
-   response_403
+   response_403 (message: ABSTRACT_STRING)
       do
-         log.error.put_line("Not authenticated")
+         log.error.put_line(message)
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(403))
       end
 
@@ -416,6 +436,13 @@ feature {}
          extern: EXTERN
          input: INPUT_STREAM
       do
+         if log.is_trace then
+            if template_resolver = Void then
+               log.trace.put_line("html_response: static #(1)" # template_name)
+            else
+               log.trace.put_line("html_response: template #(1) - resolver #(2)" # template_name # template_resolver)
+            end
+         end
          if template_resolver = Void then
             create {TEXT_FILE_READ} input.connect_to("#(1)/#(2)" # conf(config_static_path) # template_name)
          else
