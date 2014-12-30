@@ -271,11 +271,11 @@ feature {}
       do
          create form.parse(std_input)
          if log.is_trace then
-            form.form.do_all(agent (value, key: FIXED_STRING)
-                                do
-                                   log.trace.put_string("Form field: ")
-                                   log.trace.put_line(key)
-                                end (?, ?))
+            form.form.for_each(agent (value, key: FIXED_STRING)
+                                  do
+                                     log.trace.put_string("Form field: ")
+                                     log.trace.put_line(key)
+                                  end (?, ?))
          end
          if not form.form.fast_has(form_token_name) then
             response_403("Missing token field")
@@ -313,7 +313,7 @@ feature {}
          form: CGI_FORM
       do
          create form.parse(std_input)
-         if not form.form.fast_has(form_token_name)
+         if not form.form.fast_has(form_token_name) then
             response_403("Missing token field")
          elseif form.form.fast_at(form_token_name).is_equal(auth_token) then
             response_403("Invalid token name")
@@ -440,7 +440,7 @@ feature {}
             if template_resolver = Void then
                log.trace.put_line("html_response: static #(1)" # template_name)
             else
-               log.trace.put_line("html_response: template #(1) - resolver #(2)" # template_name # template_resolver)
+               log.trace.put_line("html_response: template #(1) - resolver #(2)" # template_name # template_resolver.out)
             end
          end
          if template_resolver = Void then
