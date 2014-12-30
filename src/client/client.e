@@ -219,13 +219,18 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.is_open then
-               log.info.put_line(once "Server vault is already open")
+               on_open
             else
                read_password_and_send_master
             end
          else
             log.error.put_line(once "Unexpected reply")
          end
+      end
+
+   on_open
+      do
+         log.info.put_line(once "Server vault is open")
       end
 
    read_password_and_send_master

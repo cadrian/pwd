@@ -23,7 +23,7 @@ inherit
       redefine
          read_password_and_send_master,
          server_bootstrap,
-         when_master
+         on_open
       end
    CGI_HANDLER
 
@@ -244,9 +244,15 @@ feature {}
                read_password_and_send_master
             when "open" then
                if path_info.segments.count = 1 then
-                  next_auth_token(agent (new_token: STRING) do html_response("open_form.html", create {WEBCLIENT_OPEN_FORM}.make(new_token, Current, agent response_503("bad template key"))) end(?))
+                  if channel.server_running then
+                     cgi_reply(create {CGI_RESPONSE_CLIENT_REDIRECT}.set_redirect("/pass", Void))
+                  else
+                     next_auth_token(agent (new_token: STRING) do html_response("open_form.html", create {WEBCLIENT_OPEN_FORM}.make(new_token, Current, agent response_503("bad template key"))) end(?))
+                  end
+               else
+                  response_403("/open: too many path segments")
                end
-            when "auth" then
+            when "vault" then
                cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
             when "pass" then
                cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
@@ -290,6 +296,12 @@ feature {}
             master_pass.make_from_string(form.form.fast_at(form_password_name))
             send_master
          end
+      end
+
+   on_open
+      do
+         log.info.put_line(once "Server vault is open")
+         cgi_reply(create {CGI_RESPONSE_CLIENT_REDIRECT}.set_redirect("/pass", Void))
       end
 
    post_pass_list (auth_token: STRING)
@@ -353,22 +365,6 @@ feature {}
          else
             log.error.put_line("Could not create next token")
             response_503("Could not create next token")
-         end
-      end
-
-   when_master (a_reply: MESSAGE)
-      local
-         reply: REPLY_MASTER
-      do
-         if reply ?:= a_reply then
-            reply ::= a_reply
-            if reply.error.is_empty then
-               cgi_reply(create {CGI_RESPONSE_CLIENT_REDIRECT}.set_redirect("/pass", Void))
-            else
-               response_403("Empty server reply")
-            end
-         else
-            response_403("Invalid server reply")
          end
       end
 
