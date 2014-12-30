@@ -54,7 +54,9 @@ feature {} -- CLIENT interface
                vaultpath := session_vault_path(sessionvault.value)
                Result := ft.file_exists(vaultpath)
             end
-            if not Result then
+            if Result then
+               log.trace.put_line("Using sessionvault cookie")
+            else
                create pg.parse("16an")
             end
          until
@@ -66,6 +68,7 @@ feature {} -- CLIENT interface
                ft.delete(vaultpath)
                check not Result end
             else
+               log.trace.put_line("Creating new sessionvault cookie")
                sessionvault.value := gen
                sessionvault.max_age := 14400 -- 4 hours
                if cgi.script_name.is_set then
