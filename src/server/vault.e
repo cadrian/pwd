@@ -29,17 +29,17 @@ feature {ANY}
 
 feature {ANY}
    close
+      require
+         is_open
       do
-         if is_open then
-            data.for_each(agent (key: KEY)
-               do
-                  key.clear
-               end(?))
-            data.clear_count
-            set_environment_variable(once "VAULT_MASTER", once "")
-            is_open := False
-            log.info.put_line(once "Vault closed: #(1)" # file)
-         end
+         data.for_each(agent (key: KEY)
+            do
+               key.clear
+            end(?))
+         data.clear_count
+         set_environment_variable(once "VAULT_MASTER", once "")
+         is_open := False
+         log.info.put_line(once "Vault closed: #(1)" # file)
       ensure
          not is_open
       end

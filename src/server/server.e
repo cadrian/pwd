@@ -33,8 +33,7 @@ feature {LOOP_ITEM}
       local
          t: TIME_EVENTS
       do
-         events.expect(t.timeout(1000))
-         -- 1 second
+         events.expect(t.timeout(3_600_000)) -- 1 hour
          channel.prepare(events)
       end
 
@@ -48,9 +47,10 @@ feature {LOOP_ITEM}
       do
          if channel_ready then
             channel.continue
-            sandglass := 60 * 60 * 4 -- 4 hours before timeout
-         elseif sandglass > 0 then
-            sandglass := sandglass - 1
+            sandglass := 4 -- 4 hours before timeout
+         elseif sandglass > 60 then
+            sandglass := sandglass - 1 -- 1 hour elapsed
+            log.trace.put_line("Remaining idle time: #(1)h" # &sandglass)
          elseif vault.is_open then
             vault.close
          end
@@ -275,14 +275,13 @@ feature {QUERY_MASTER}
    visit_master (query: QUERY_MASTER)
       do
          if vault.is_open then
-            create {REPLY_MASTER} reply.make(once "Vault already open")
+            vault.close
+         end
+         vault.open(query.master)
+         if vault.is_open then
+            create {REPLY_MASTER} reply.make(once "")
          else
-            vault.open(query.master)
-            if vault.is_open then
-               create {REPLY_MASTER} reply.make(once "")
-            else
-               create {REPLY_MASTER} reply.make(once "Vault not open")
-            end
+            create {REPLY_MASTER} reply.make(once "Vault not open")
          end
       end
 
@@ -346,7 +345,9 @@ feature {QUERY_SET}
 feature {QUERY_STOP}
    visit_stop (query: QUERY_STOP)
       do
-         vault.close
+         if vault.is_open then
+            vault.close
+         end
          log.info.put_line(once "Terminating...")
          collect_garbage
          channel.disconnect
