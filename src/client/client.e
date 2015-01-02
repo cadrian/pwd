@@ -161,7 +161,6 @@ feature {}
    check_server_version
       do
          call_server(create {QUERY_VERSION}.make, agent when_version(?))
-         server_open
       end
 
    when_version (a_reply: MESSAGE)
