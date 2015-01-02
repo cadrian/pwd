@@ -16,8 +16,9 @@
 class SERVER
 
 inherit
-   JOB
+   PERIODIC_JOB
       undefine default_create
+      redefine prepare, is_ready
       end
    QUERY_VISITOR
 
@@ -30,29 +31,38 @@ create {}
 
 feature {LOOP_ITEM}
    prepare (events: EVENTS_SET)
-      local
-         t: TIME_EVENTS
       do
-         events.expect(t.timeout(3_600_000)) -- 1 hour
          channel.prepare(events)
+         Precursor(events)
       end
 
    is_ready (events: EVENTS_SET): BOOLEAN
       do
          channel_ready := channel.is_ready(events)
-         Result := True
+         if channel_ready then
+            timeout_ready := False
+            Result := True
+         else
+            timeout_ready := Precursor(events)
+            Result := timeout_ready
+         end
       end
 
    continue
       do
          if channel_ready then
+            log.trace.put_line("Channel event received")
             channel.continue
-            sandglass := 4 -- 4 hours before timeout
-         elseif sandglass > 1 then
-            sandglass := sandglass - 1 -- 1 hour elapsed
-            log.trace.put_line("Remaining idle time: #(1)h" # &sandglass)
-         elseif vault.is_open then
-            vault.close
+         elseif timeout_ready then
+            if vault.is_open then
+               log.trace.put_line("Idle time exhausted, closing")
+               vault.close
+            else
+               log.trace.put_line("Vault is closed")
+            end
+            period := {REAL 86400.0} -- one day
+         else
+            log.trace.put_line("Spurious continue, ignored")
          end
       end
 
@@ -74,9 +84,7 @@ feature {LOOP_ITEM}
       end
 
 feature {}
-   sandglass: INTEGER
-
-   channel_ready: BOOLEAN
+   channel_ready, timeout_ready: BOOLEAN
 
    processor: PROCESSOR
 
@@ -94,6 +102,8 @@ feature {}
          loop_stack: LOOP_STACK; tfw: TEXT_FILE_WRITE; pid: INTEGER; is_killed, initialized: BOOLEAN
       do
          if not is_killed then
+            period := {REAL 86400.0} -- one day
+
             if initialized then
                log.info.put_line(once "Resuming main loop.")
             else
@@ -225,6 +235,7 @@ feature {QUERY_CLOSE}
    visit_close (query: QUERY_CLOSE)
       do
          vault.close
+         period := {REAL 86400.0} -- one day
          collect_garbage
          create {REPLY_CLOSE} reply.make(once "")
       end
@@ -279,8 +290,10 @@ feature {QUERY_MASTER}
          end
          vault.open(query.master)
          if vault.is_open then
+            period := {REAL 14400.0} -- 4 hours idle time
             create {REPLY_MASTER} reply.make(once "")
          else
+            period := {REAL 86400.0} -- one day
             create {REPLY_MASTER} reply.make(once "Vault not open")
          end
       end
