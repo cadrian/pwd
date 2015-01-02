@@ -173,6 +173,7 @@ feature {}
                log.info.put_line(once "Server version matches, now opening")
                server_open
             else
+               log.info.put_line(once "Server version mismatch, now restarting")
                call_server(create {QUERY_STOP}.make, agent when_stop_then_restart(?))
             end
          else
