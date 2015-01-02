@@ -48,7 +48,7 @@ feature {LOOP_ITEM}
          if channel_ready then
             channel.continue
             sandglass := 4 -- 4 hours before timeout
-         elseif sandglass > 60 then
+         elseif sandglass > 1 then
             sandglass := sandglass - 1 -- 1 hour elapsed
             log.trace.put_line("Remaining idle time: #(1)h" # &sandglass)
          elseif vault.is_open then
