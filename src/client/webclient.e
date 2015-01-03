@@ -343,7 +343,7 @@ feature {}
          old_token := session_vault.pass(token_name)
          if old_token /= Void then
             --|**** TODO I would have liked to write:
-            -- next_auth_token(action(old_token, ?))
+            -- next_auth_token(agent action(old_token, ?))
             next_auth_token(agent (new_token: STRING) do action(old_token, new_token) end(?))
          else
             response_403("Old token not found")
