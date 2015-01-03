@@ -47,16 +47,19 @@ feature {ANY}
 feature {}
    pass: ABSTRACT_STRING
 
-   make (a_pass: like pass; a_webclient: like webclient; a_error: like error)
+   make (a_pass: like pass; a_auth_token: STRING; a_webclient: like webclient; a_error: like error)
       require
          a_pass /= Void
+         a_auth_token /= Void
          a_webclient /= Void
          a_error /= Void
       do
          pass := a_pass
+         auth_token := a_auth_token
          resolver_make(a_webclient, a_error)
       ensure
          pass = a_pass
+         auth_token = a_auth_token
          webclient = a_webclient
          error = a_error
       end

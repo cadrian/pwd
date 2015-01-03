@@ -31,12 +31,8 @@ feature {TEMPLATE_INPUT_STREAM}
       do
          inspect
             key
-         when "form_token_name" then
-            Result := form_token_name
          when "form_password_name" then
             Result := form_password_name
-         when "auth_token" then
-            Result := auth_token
          else
             Result := Precursor(key)
          end
@@ -49,8 +45,6 @@ feature {ANY}
       end
 
 feature {}
-   auth_token: STRING
-
    make (a_auth_token: STRING; a_webclient: like webclient; a_error: like error)
       require
          a_auth_token /= Void
@@ -64,8 +58,5 @@ feature {}
          webclient = a_webclient
          error = a_error
       end
-
-invariant
-   auth_token /= Void
 
 end -- class WEBCLIENT_OPEN_FORM

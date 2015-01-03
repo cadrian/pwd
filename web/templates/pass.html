@@ -10,5 +10,9 @@
       <textarea id="holdtext"></textarea>
     </div>
     <button onClick="copy();">Copy</button>
+    <form method="post" action="#(root)/pass">
+      <input type="hidden" name="#(form_token_name)" value="#(auth_token)" />
+      <input type="submit" value="Back" />
+    </form>
   </body>
 </html>

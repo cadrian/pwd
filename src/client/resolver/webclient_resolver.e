@@ -34,6 +34,10 @@ feature {TEMPLATE_INPUT_STREAM}
             key
          when "root" then
             Result := webclient.root
+         when "form_token_name" then
+            Result := form_token_name
+         when "auth_token" then
+            Result := auth_token
          else
             error()
          end
@@ -47,6 +51,7 @@ feature {TEMPLATE_INPUT_STREAM}
 feature {}
    error: PROCEDURE[TUPLE]
    webclient: WEBCLIENT
+   auth_token: STRING
 
    make (a_webclient: like webclient; a_error: like error)
       require
@@ -63,5 +68,6 @@ feature {}
 invariant
    webclient /= Void
    error /= Void
+   auth_token /= Void
 
 end -- class WEBCLIENT_RESOLVER

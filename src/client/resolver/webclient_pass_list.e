@@ -68,7 +68,6 @@ feature {}
    paths: ARRAY[ABSTRACT_STRING]
    names: ARRAY[ABSTRACT_STRING]
    index: INTEGER
-   auth_token: STRING
 
    make (a_list: REPLY_LIST; a_auth_token: STRING; a_webclient: like webclient; a_error: like error)
       require
@@ -100,6 +99,5 @@ feature {}
 
 invariant
    paths.count = names.count
-   auth_token /= Void
 
 end -- class WEBCLIENT_PASS_LIST

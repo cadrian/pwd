@@ -173,19 +173,19 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
    delete
       do
          log_query("DELETE")
-         cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
+         response_405("DELETE not supported")
       end
 
    put
       do
          log_query("PUT")
-         cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
+         response_405("PUT not supported")
       end
 
    invoke_method (a_method: FIXED_STRING)
       do
          log_query(a_method)
-         cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
+         response_405("#(1) not supported" # a_method)
       end
 
 feature {WEBCLIENT_RESOLVER}
@@ -249,9 +249,9 @@ feature {}
                   response_403("/open: too many path segments")
                end
             when "vault" then
-               cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
+               response_405("/vault: GET not supported")
             when "pass" then
-               cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
+               response_405("/pass: GET not supported")
             when "static" then
                inspect
                   path_info.segments.count
@@ -297,7 +297,7 @@ feature {}
    on_open
       do
          log.info.put_line(once "Server vault is open")
-         cgi_reply(create {CGI_RESPONSE_CLIENT_REDIRECT}.set_redirect("/pass", Void))
+         cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/pass", Void))
       end
 
    post_pass_list (auth_token: STRING)
@@ -382,7 +382,7 @@ feature {}
 
    when_pass_get (a_pass: STRING)
       do
-         html_response("pass.html", create {WEBCLIENT_PASS}.make(a_pass, Current, agent response_503("bad template key")))
+         next_auth_token(agent (new_token: STRING) do html_response("pass.html", create {WEBCLIENT_PASS}.make(a_pass, new_token, Current, agent response_503("bad template key"))) end(?))
       end
 
    protect_html (a_data: ABSTRACT_STRING): STRING
@@ -415,6 +415,12 @@ feature {}
       do
          log.error.put_line(message)
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(403))
+      end
+
+   response_405 (message: ABSTRACT_STRING)
+      do
+         log.error.put_line(message)
+         cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(405))
       end
 
    response_503 (message: ABSTRACT_STRING)
