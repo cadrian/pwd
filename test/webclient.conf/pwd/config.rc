@@ -16,6 +16,7 @@ command    = false
 arguments  =
 
 [vault]
+openssl.cipher   = bf
 
 [webclient]
 template.path = webclient.conf/templates
