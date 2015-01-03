@@ -1,6 +1,7 @@
 #!/usr/exe/env make -f
 
 COMMON_FILES = src/*.e src/config/*.e src/extern/*.e
+VAULT_FILES = src/vault/*.e
 
 all: exe/server exe/menu exe/console exe/webclient
 
@@ -11,7 +12,7 @@ clean:
 	test -e webclient.ace && se clean webclient.ace
 	rm -f exe/server exe/menu exe/console exe/webclient *.ace
 
-exe/server: exe server.ace src/server/*.e src/generator/*.e $(COMMON_FILES)
+exe/server: exe server.ace src/server/*.e src/generator/*.e $(COMMON_FILES) $(VAULT_FILES)
 	se c server.ace
 	mv server.exe $@
 
@@ -23,7 +24,7 @@ exe/console: exe console.ace src/client/console.e src/client/client.e src/client
 	se c console.ace
 	mv console.exe $@
 
-exe/webclient: exe webclient.ace src/client/webclient.e src/client/client.e $(COMMON_FILES)
+exe/webclient: exe webclient.ace src/client/webclient.e src/client/client.e $(COMMON_FILES) $(VAULT_FILES)
 	se c webclient.ace
 	mv webclient.exe $@
 

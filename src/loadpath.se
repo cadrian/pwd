@@ -7,3 +7,4 @@ generator/
 protocol/
 server/
 extern/
+vault/
