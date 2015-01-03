@@ -458,7 +458,7 @@ feature {}
 
    cgi_reply (r: CGI_RESPONSE)
       local
-         doc: CGI_RESPONSE_DOCUMENT
+         doc: CGI_RESPONSE_DOCUMENT; save: ABSTRACT_STRING
       do
          if cgi.need_reply then
             if log.is_info then
@@ -474,6 +474,10 @@ feature {}
             end
             cgi.reply(r)
             cgi.output.disconnect
+            save := session_vault.save
+            if not save.is_empty then
+               log.warning.put_line(save)
+            end
             session_vault.close
          end
       end

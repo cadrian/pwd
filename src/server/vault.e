@@ -32,6 +32,9 @@ feature {ANY}
       require
          is_open
       do
+         if dirty then
+            log.warning.put_line("**** CLOSING DIRTY VAULT!")
+         end
          data.for_each(agent (key: KEY)
             do
                key.clear
@@ -128,6 +131,7 @@ feature {ANY}
       local
          proc: PROCESS; tfw: TEXT_FILE_WRITE; ft: FILE_TOOLS; backup: STRING
       do
+         Result := once ""
          if dirty then
             backup := once ""
             backup.make_from_string(file)
@@ -144,7 +148,7 @@ feature {ANY}
                   extern.splice(proc.output, tfw)
                   tfw.flush
                   tfw.disconnect
-                  Result := once ""
+                  dirty := False
                else
                   Result := once "could not write to file #(1)" # file
                end
@@ -156,6 +160,9 @@ feature {ANY}
                end
             end
          end
+      ensure
+         Result /= Void
+         Result.is_empty = not dirty
       end
 
    set_random (a_name, a_recipe: STRING): ABSTRACT_STRING
@@ -172,6 +179,9 @@ feature {ANY}
          else
             Result := set(a_name, pass_)
          end
+      ensure
+         Result /= Void
+         Result.is_empty implies dirty
       end
 
    set (a_name, a_pass: STRING): ABSTRACT_STRING
@@ -192,6 +202,8 @@ feature {ANY}
 
          dirty := True
          Result := once ""
+      ensure
+         dirty
       end
 
    unset (a_name: STRING): ABSTRACT_STRING
