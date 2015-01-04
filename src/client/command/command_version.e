@@ -43,7 +43,7 @@ feature {COMMANDER}
 
    help (command: COLLECTION[STRING]): STRING
       do
-         Result := once "[33mversion[0m            Display the server version."
+         Result := once "[33mversion[0m            Display the version."
       end
 
 feature {}
@@ -55,10 +55,16 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               io.put_string("Client version: ")
-               io.put_line(v.version)
-               io.put_string("Server version: ")
-               io.put_line(reply.version)
+               if v.version.is_equal(reply.version) then
+                  io.put_string("Version: ")
+                  io.put_line(v.version)
+               else
+                  io.put_line("[1;33mVersion mismatch![0m")
+                  io.put_string("Client version: ")
+                  io.put_line(v.version)
+                  io.put_string("Server version: ")
+                  io.put_line(reply.version)
+               end
             else
                error_and_help(reply.error, Void)
             end
