@@ -356,7 +356,7 @@ feature {}
          new_token: ABSTRACT_STRING
       do
          new_token := session_vault.set_random(token_name, "12an")
-         if new_token /= Void then
+         if new_token.is_empty then
             action(new_token.out)
          else
             log.error.put_line("Could not create next token")
