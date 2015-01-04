@@ -353,14 +353,13 @@ feature {}
    next_auth_token (action: PROCEDURE[TUPLE[STRING]])
          -- action takes the new auth token
       local
-         new_token: ABSTRACT_STRING
+         error: ABSTRACT_STRING
       do
-         new_token := session_vault.set_random(token_name, "12an")
-         if new_token.is_empty then
-            action(new_token.out)
+         error := session_vault.set_random(token_name, "12an")
+         if error.is_empty then
+            action(session_vault.pass(token_name))
          else
-            log.error.put_line("Could not create next token")
-            response_503("Could not create next token")
+            response_503("Could not set auth token: #(1)" # error)
          end
       end
 
