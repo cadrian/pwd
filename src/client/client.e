@@ -184,18 +184,21 @@ feature {}
    when_stop_then_restart (a_reply: MESSAGE)
       local
          reply: REPLY_STOP; extern: EXTERN
-         delay: INTEGER_64
+         delay: INTEGER_64; i: INTEGER
       do
          if reply ?:= a_reply then
             reply ::= a_reply
             from
+               i := 5
                delay := 100
-               extern.sleep(delay)
+            variant
+               i
             until
-               not channel.server_running or else delay > 10000
+               not channel.server_running or else i = 0
             loop
-               delay := delay * 2
                extern.sleep(delay)
+               delay := delay * 2
+               i := i - 1
             end
             if channel.server_running then
                log.error.put_line(once "Could not kill server, trying to work with the current one")
