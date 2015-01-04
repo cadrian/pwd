@@ -191,6 +191,7 @@ feature {}
             from
                i := 5
                delay := 100
+               cleanup
             variant
                i
             until
