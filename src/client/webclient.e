@@ -47,6 +47,10 @@ feature {} -- CLIENT interface
       local
          pg: PASS_GENERATOR; sessionvault: CGI_COOKIE; gen: STRING; ft: FILE_TOOLS; i: INTEGER
       do
+         if log.is_trace then
+            jar.for_each(agent (cookie: CGI_COOKIE) do log.trace.put_line("COOKIE: #(1)=#(2)" # cookie.name # cookie.value) end(?))
+         end
+
          sessionvault := jar.cookie("sessionvault")
          from
             i := 3
