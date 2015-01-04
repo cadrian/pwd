@@ -15,6 +15,9 @@
 --
 class PASS_GENERATOR_RANDOM
 
+insert
+   LOGGING
+
 create {ANY}
    connect_to
 
@@ -34,8 +37,12 @@ feature {ANY}
          lower >= 0
          dont_waste_entropy: upper > lower
          is_connected
+      local
+         r: REAL_32
       do
-         Result := (randf($read_rand, to_pointer) * (upper - lower).to_real_32 + {REAL_32 0.5}).force_to_integer_32 + lower
+         r := randf($read_rand, to_pointer)
+         Result := (r * (upper - lower + 1).to_real_32 + {REAL_32 0.5}).force_to_integer_32 + lower
+         log.trace.put_line("RAND: (#(3)) [#(1)..#(2)] => #(4)" # &r # &lower # &upper # &Result)
       ensure
          Result.in_range(lower, upper)
       end
