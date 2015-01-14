@@ -14,14 +14,14 @@ ROOT=$DIR/root
 LOG=$DIR/log
 RUN=$DIR/run
 
-mkdir -p $CONF $ROOT $LOG $RUN
+mkdir -p $CONF/pwd $ROOT $LOG $RUN
 
 cat > $CONF/lighttpd.conf <<EOF
 server.chroot = "$DIR"
 server.document-root = "$ROOT"
 server.port = 8888
 server.tag = "test_webclient"
-server.modules = ("mod_cgi","mod_auth")
+server.modules = ("mod_cgi","mod_auth","mod_accesslog")
 
 auth.backend = "plain"
 auth.backend.plain.userfile = "$CONF/users"
@@ -45,6 +45,7 @@ index-file.names = ( "index.html" )
 
 server.errorlog = "$LOG/error.log"
 server.breakagelog = "$LOG/breakage.log"
+accesslog.filename = "$LOG/access.log"
 
 \$HTTP["url"] =~ "^/pwd\.cgi" {
     cgi.assign = ( ".cgi" => "$(which bash)" )
@@ -64,11 +65,19 @@ cat > $ROOT/index.html <<EOF
 EOF
 
 cat >$ROOT/pwd.cgi <<EOF
-PATH=$pwdhome/exe:\$PATH
-exec webclient $CONF/pwd.properties
+#!/bin/dash
+export PATH=$pwdhome/exe:/bin:/usr/bin
+export HOME=$DIR
+export XDG_CACHE_HOME=$RUN
+export XDG_RUNTIME_DIR=$RUN
+export XDG_DATA_HOME=$RUN
+export XDG_CONFIG_HOME=$CONF
+export XDG_DATA_DIRS=$RUN
+export XDG_CONFIG_DIRS=$RUN
+exec webclient
 EOF
 
-cat > $CONF/pwd.properties <<EOF
+cat > $CONF/pwd/config.rc <<EOF
 [shared]
 log.level        = trace
 default_recipe   = 8ans
@@ -81,14 +90,6 @@ static.path      = $pwdhome/web/static
 [vault]
 openssl.cipher   = bf
 EOF
-
-export HOME=$DIR
-export XDG_CACHE_HOME=$RUN
-export XDG_RUNTIME_DIR=$RUN
-export XDG_DATA_HOME=$RUN
-export XDG_CONFIG_HOME=$CONF
-export XDG_DATA_DIRS=$RUN
-export XDG_CONFIG_DIRS=$RUN
 
 echo -n | openssl bf -a -pass pass:pwd > $RUN/vault
 
