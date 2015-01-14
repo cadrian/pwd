@@ -41,7 +41,7 @@ feature {ANY}
          r: REAL_32
       do
          r := randf($read_rand, to_pointer)
-         Result := (r * (upper - lower + 1).to_real_32 + {REAL_32 0.5}).force_to_integer_32 + lower
+         Result := (r * (upper - lower).to_real_32 + {REAL_32 0.5}).force_to_integer_32 + lower
          log.trace.put_line("RANDOM: (#(1)) [#(2)..#(3)] => #(4)" # &r # &lower # &upper # &Result)
       ensure
          Result.in_range(lower, upper)
