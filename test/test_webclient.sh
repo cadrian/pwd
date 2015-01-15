@@ -8,7 +8,7 @@
 echo "Configuring..."
 
 pwdhome=$(dirname $(dirname $(readlink -f $0)))
-DIR=$(mktemp --tmpdir -d test_webclient.XXXXXX)
+DIR=${TESTDIR:-$(mktemp --tmpdir -d test_webclient.XXXXXX)}
 CONF=$DIR/conf
 ROOT=$DIR/root
 LOG=$DIR/log
