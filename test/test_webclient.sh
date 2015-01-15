@@ -14,7 +14,7 @@ ROOT=$DIR/root
 LOG=$DIR/log
 RUN=$DIR/run
 
-mkdir -p $CONF/pwd $ROOT $LOG $RUN
+mkdir -p $CONF/pwd $ROOT $LOG $RUN/pwd
 
 cat > $CONF/lighttpd.conf <<EOF
 server.chroot = "$DIR"
@@ -91,7 +91,7 @@ static.path      = $pwdhome/web/static
 openssl.cipher   = bf
 EOF
 
-echo -n | openssl bf -a -pass pass:pwd > $RUN/vault
+echo -n | openssl bf -a -pass pass:pwd > $RUN/pwd/vault
 
 echo "Starting HTTP server into $DIR"
 
