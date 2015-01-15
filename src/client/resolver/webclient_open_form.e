@@ -45,7 +45,7 @@ feature {ANY}
       end
 
 feature {}
-   make (a_auth_token: STRING; a_webclient: like webclient; a_error: like error)
+   make (a_auth_token: FIXED_STRING; a_webclient: like webclient; a_error: like error)
       require
          a_auth_token /= Void
          a_webclient /= Void

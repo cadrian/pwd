@@ -14,9 +14,9 @@
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
 expanded class EXTERN
---
--- originally POSIX fifo helpers, now misc helpers too
---
+   --
+   -- originally POSIX fifo helpers, now misc helpers too
+   --
 
 insert
    LOGGING

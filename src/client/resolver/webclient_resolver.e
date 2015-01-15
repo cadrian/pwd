@@ -51,7 +51,7 @@ feature {TEMPLATE_INPUT_STREAM}
 feature {}
    error: PROCEDURE[TUPLE]
    webclient: WEBCLIENT
-   auth_token: STRING
+   auth_token: FIXED_STRING
 
    make (a_webclient: like webclient; a_error: like error)
       require

@@ -69,7 +69,7 @@ feature {}
    names: ARRAY[ABSTRACT_STRING]
    index: INTEGER
 
-   make (a_list: REPLY_LIST; a_auth_token: STRING; a_webclient: like webclient; a_error: like error)
+   make (a_list: REPLY_LIST; a_auth_token: FIXED_STRING; a_webclient: like webclient; a_error: like error)
       require
          a_list /= Void
          a_auth_token /= Void

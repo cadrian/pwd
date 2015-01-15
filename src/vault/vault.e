@@ -317,7 +317,6 @@ feature {}
 
 feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]
-
    file: FIXED_STRING
 
 invariant

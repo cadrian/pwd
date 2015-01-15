@@ -47,7 +47,7 @@ feature {ANY}
 feature {}
    pass: ABSTRACT_STRING
 
-   make (a_pass: like pass; a_auth_token: STRING; a_webclient: like webclient; a_error: like error)
+   make (a_pass: like pass; a_auth_token: FIXED_STRING; a_webclient: like webclient; a_error: like error)
       require
          a_pass /= Void
          a_auth_token /= Void
