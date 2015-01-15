@@ -210,3 +210,8 @@ The Debian package is named *pwd*.
 `deb-src http://apt.cadrian.net unstable main`
 
 Currently available for the architectures: *amd64* and *armhf*.
+
+# Development
+
+After having called `./deploy.sh bootstrap` once, usually just
+building the exes using `make` is enough.
