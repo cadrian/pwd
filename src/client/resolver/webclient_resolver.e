@@ -39,17 +39,17 @@ feature {TEMPLATE_INPUT_STREAM}
          when "auth_token" then
             Result := auth_token
          else
-            error()
+            error.call([key])
          end
       end
 
    while (key: STRING): BOOLEAN
       do
-         error()
+         error.call([key])
       end
 
 feature {}
-   error: PROCEDURE[TUPLE]
+   error: PROCEDURE[TUPLE[STRING]]
    webclient: WEBCLIENT
    auth_token: FIXED_STRING
 

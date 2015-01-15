@@ -46,6 +46,7 @@ feature {} -- CLIENT interface
    open_session_vault: BOOLEAN
       local
          pg: PASS_GENERATOR; sessionvault: CGI_COOKIE; gen: STRING; ft: FILE_TOOLS; i: INTEGER
+         protocols: PROTOCOLS
       do
          if log.is_trace then
             jar.for_each(agent (cookie: CGI_COOKIE) do log.trace.put_line("COOKIE: #(1)=#(2)" # cookie.name # cookie.value) end(?))
@@ -82,14 +83,16 @@ feature {} -- CLIENT interface
                if cgi.script_name.is_set then
                   sessionvault.path := cgi.script_name.name
                end
-               -- sessionvault.secure := True
+               if cgi.server_info.protocol = protocols.protocol("https") then
+                  sessionvault.secure := True
+               end
                -- sessionvault.http_only := True
                Result := True
             end
             i := i - 1
          end
          if Result then
-            create lock_file.connect_for_appending_to(vaultpath)
+            create lock_file.connect_to(vaultpath + ".lock")
             if lock_file.is_connected then
                lock := flock.lock(lock_file)
                lock.write
@@ -257,7 +260,10 @@ feature {}
                read_password_and_send_master
             when "open" then
                if path_info.segments.count = 1 then
-                  next_auth_token(agent (new_token: FIXED_STRING) do html_response("open_form.html", create {WEBCLIENT_OPEN_FORM}.make(new_token, Current, agent response_503("bad template key"))) end(?))
+                  next_auth_token(agent (new_token: FIXED_STRING)
+                                     do
+                                        html_response("open_form.html", create {WEBCLIENT_OPEN_FORM}.make(new_token, Current, agent (key: STRING) do response_503("open_form: bad template key " + key) end(?)))
+                                     end(?))
                else
                   response_403("/open: too many path segments")
                end
@@ -266,6 +272,7 @@ feature {}
             when "pass" then
                response_405("/pass: GET not supported")
             when "static" then
+               close_session_vault
                inspect
                   path_info.segments.count
                when 1 then
@@ -311,9 +318,16 @@ feature {}
       end
 
    on_open
+      local
+         auth_token: STRING
       do
          log.info.put_line(once "Server vault is open")
-         cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/pass", Void))
+         auth_token := session_vault.pass(token_name)
+         if auth_token = Void then
+            cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/open", Void))
+         else
+            call_server(create {QUERY_LIST}.make, agent when_pass_list(auth_token.intern, ?))
+         end
       end
 
    post_pass_list (auth_token: FIXED_STRING)
@@ -389,7 +403,7 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               html_response("pass_list.html", create {WEBCLIENT_PASS_LIST}.make(reply, auth_token, Current, agent response_503("bad template key")))
+               html_response("pass_list.html", create {WEBCLIENT_PASS_LIST}.make(reply, auth_token, Current, agent (key: STRING) do response_503("pass_list: bad template key " + key) end(?)))
             else
                response_503(reply.error)
             end
@@ -400,7 +414,10 @@ feature {}
 
    when_pass_get (a_pass: STRING)
       do
-         next_auth_token(agent (new_token: FIXED_STRING) do html_response("pass.html", create {WEBCLIENT_PASS}.make(a_pass, new_token, Current, agent response_503("bad template key"))) end(?))
+         next_auth_token(agent (new_token: FIXED_STRING)
+                            do
+                               html_response("pass.html", create {WEBCLIENT_PASS}.make(a_pass, new_token, Current, agent (key: STRING) do response_503("pass: bad template key " + key) end(?)))
+                            end(?))
       end
 
    protect_html (a_data: ABSTRACT_STRING): STRING
@@ -498,14 +515,21 @@ feature {}
             end
             cgi.reply(r)
             cgi.output.disconnect
-            save := session_vault.save
-            if not save.is_empty then
-               log.warning.put_line(save)
+            if session_vault.is_open then
+               save := session_vault.save
+               if not save.is_empty then
+                  log.warning.put_line(save)
+               end
+               close_session_vault
             end
-            session_vault.close
-            lock.done
-            lock_file.disconnect
          end
+      end
+
+   close_session_vault
+      do
+         session_vault.close
+         lock.done
+         lock_file.disconnect
       end
 
 feature {}
