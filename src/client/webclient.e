@@ -57,6 +57,9 @@ feature {} -- CLIENT interface
             if sessionvault.value /= Void then
                vaultpath := session_vault_path(sessionvault.value)
                Result := ft.file_exists(vaultpath)
+               if not Result then
+                  log.trace.put_line("Invalid sessionvault cookie: " + sessionvault.value)
+               end
             end
             if Result then
                log.trace.put_line("Using sessionvault cookie")
@@ -69,6 +72,7 @@ feature {} -- CLIENT interface
             gen := pg.generated
             vaultpath := session_vault_path(gen)
             if ft.file_exists(vaultpath) then
+               log.trace.put_line("Deleting stale sessionvault cookie: " + gen)
                ft.delete(vaultpath)
                check not Result end
             else
