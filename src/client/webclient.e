@@ -46,7 +46,6 @@ feature {} -- CLIENT interface
    open_session_vault: BOOLEAN
       local
          pg: PASS_GENERATOR; sessionvault: CGI_COOKIE; gen: STRING; ft: FILE_TOOLS; i: INTEGER
-         protocols: PROTOCOLS
       do
          if log.is_trace then
             jar.for_each(agent (cookie: CGI_COOKIE) do log.trace.put_line("COOKIE: #(1)=#(2)" # cookie.name # cookie.value) end(?))
@@ -83,7 +82,7 @@ feature {} -- CLIENT interface
                if cgi.script_name.is_set then
                   sessionvault.path := cgi.script_name.name
                end
-               if cgi.server_info.protocol = protocols.protocol("https") then
+               if cgi.server_info.is_secure then
                   sessionvault.secure := True
                end
                -- sessionvault.http_only := True
