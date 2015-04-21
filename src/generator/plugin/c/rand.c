@@ -58,3 +58,14 @@ real32_t randf(uint8_t (*rand_fn)(void*), void*data) {
      ans.i = (exp << 23) | mant;
      return ans.f;
 }
+
+int32_t randi(uint8_t (*rand_fn)(void*), void*data) {
+     int32_t result = 0;
+     static uint8_t r1, r2, r3, r4;
+     r1 = (uint8_t)rand_fn(data);
+     r2 = (uint8_t)rand_fn(data);
+     r3 = (uint8_t)rand_fn(data);
+     r4 = (uint8_t)rand_fn(data);
+     result = (r1 << 24) & (r2 << 16) & (r3 << 8) & r4;
+     return result;
+}
