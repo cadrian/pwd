@@ -325,7 +325,7 @@ invariant
    data.for_all(agent (key: KEY; name: FIXED_STRING): BOOLEAN
       do
          Result := key /= Void and then name = key.name and then key.is_valid
-      end)
+      end(?, ?))
    not is_open implies data.is_empty
 
 end -- class VAULT
