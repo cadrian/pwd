@@ -66,6 +66,16 @@ esac
 path_liberty_core=$(se -environment|egrep '^path_(.+_)?core='|awk -F= '{print $1}')
 path_liberty_extra=$(se -environment|egrep '^path_(.+_)?extra='|awk -F= '{print $1}')
 
+if [[ -z "$path_liberty_core" ]]; then
+    echo "Missing path_liberty_core" >&2
+    se -environment
+    exit 1
+elif [[ -z "$path_liberty_extra" ]]; then
+    echo "Missing path_liberty_extra" >&2
+    se -environment
+    exit 1
+fi
+
 cat > $target <<EOF
 system "$exe"
 
@@ -89,12 +99,12 @@ cluster
             debug($debug_pwd)
         end
 
-    liberty_core: "\${path_liberty_core}loadpath.se"
+    liberty_core: "\${$path_liberty_core}loadpath.se"
         default
             debug($debug_liberty)
         end
 
-    liberty_extra: "\${path_liberty_extra}loadpath.se"
+    liberty_extra: "\${$path_liberty_extra}loadpath.se"
         default
             debug($debug_extra)
         end
