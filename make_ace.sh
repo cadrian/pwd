@@ -89,12 +89,12 @@ cluster
             debug($debug_pwd)
         end
 
-    liberty_core: "\${$path_liberty_core}loadpath.se"
+    liberty_core: "\${path_liberty_core}loadpath.se"
         default
             debug($debug_liberty)
         end
 
-    liberty_extra: "\${$path_liberty_extra}loadpath.se"
+    liberty_extra: "\${path_liberty_extra}loadpath.se"
         default
             debug($debug_extra)
         end
