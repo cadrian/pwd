@@ -57,6 +57,15 @@ feature {}
       ]"
       end
 
+   randi (fun, obj: POINTER): INTEGER_32
+      external "plug_in"
+      alias "[
+         location: "."
+         module_name: "plugin"
+         feature_name: "randi"
+      ]"
+      end
+
    read_rand: NATURAL_8
       do
          file.read_byte
