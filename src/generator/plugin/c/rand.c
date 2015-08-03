@@ -1,19 +1,21 @@
-/**
- * Copied from http://allendowney.com/research/rand/downey07randfloat.pdf
- */
+static uint8_t rand_bit(uint8_t (*rand_fn)(void*), void*data) {
+   static uint8_t count = 0;
+   static uint8_t byte;
+   uint8_t result;
+   if (count == 0) {
+      byte = rand_fn(data);
+      count = 8;
+   }
+   result = byte & 1;
+   byte >>= 1;
+   return result;
+}
 
-/* BOX: this union is used to access the bits
-   of real32_ting-point values */
-typedef union box {
-     real32_t f;
-     int32_t i;
-} box_t;
-
-uint32_t randi(uint8_t (*rand_fn)(void*), void*data) {
-     return (uint32_t)(
-          (rand_fn(data) << 24) |
-          (rand_fn(data) << 16) |
-          (rand_fn(data) <<  8) |
-          (rand_fn(data))
-     );
+uint32_t randi(uint32_t range, uint8_t (*rand_fn)(void*), void*data) {
+   uint32_t result = 0;
+   while (range) {
+      result = (result << 1) | rand_bit(rand_fn, data);
+      range >>= 1;
+   }
+   return result % range;
 }

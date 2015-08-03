@@ -37,18 +37,15 @@ feature {ANY}
          lower >= 0
          dont_waste_entropy: upper > lower
          is_connected
-      local
-         i: NATURAL_32
       do
-         i := randi($read_rand, to_pointer)
-         Result := (i \\ (upper - lower + 1).to_natural_32).to_integer_32 + lower
-         log.trace.put_line("RANDOM: (#(1)) [#(2)..#(3)] => #(4)" # &i # &lower # &upper # &Result)
+         Result := randi((upper - lower + 1).to_natural_32, $read_rand, to_pointer).to_integer_32 + lower
+         log.trace.put_line("RANDOM: [#(1)..#(2)] => #(3)" # &lower # &upper # &Result)
       ensure
          Result.in_range(lower, upper)
       end
 
 feature {}
-   randi (fun, obj: POINTER): NATURAL_32
+   randi (range: NATURAL_32; fun, obj: POINTER): NATURAL_32
       external "plug_in"
       alias "[
          location: "."
