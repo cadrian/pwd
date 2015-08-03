@@ -110,7 +110,7 @@ feature {ANY}
       do
          data.for_each(agent (a: PROCEDURE[TUPLE[FIXED_STRING]]; k: KEY; n: FIXED_STRING)
             do
-               if not key.is_deleted then
+               if not k.is_deleted then
                   a.call([n])
                end
             end(action, ?, ?))
