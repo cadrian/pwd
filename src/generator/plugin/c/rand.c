@@ -8,12 +8,13 @@ static uint8_t rand_bit(uint8_t (*rand_fn)(void*), void*data) {
    }
    result = byte & 1;
    byte >>= 1;
+   count--;
    return result;
 }
 
 uint32_t randi(uint32_t range, uint8_t (*rand_fn)(void*), void*data) {
    uint32_t result = 0;
-   while (range) {
+   while (range > 0) {
       result = (result << 1) | rand_bit(rand_fn, data);
       range >>= 1;
    }
