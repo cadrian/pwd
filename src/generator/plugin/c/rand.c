@@ -14,9 +14,10 @@ static uint8_t rand_bit(uint8_t (*rand_fn)(void*), void*data) {
 
 uint32_t randi(uint32_t range, uint8_t (*rand_fn)(void*), void*data) {
    uint32_t result = 0;
-   while (range > 0) {
+   uint32_t r = range;
+   while (r > 0) {
       result = (result << 1) | rand_bit(rand_fn, data);
-      range >>= 1;
+      r >>= 1;
    }
    return result % range;
 }
