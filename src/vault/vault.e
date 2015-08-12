@@ -28,6 +28,8 @@ feature {ANY}
    is_open: BOOLEAN
 
 feature {ANY}
+   file: FIXED_STRING
+
    close
       require
          is_open
@@ -319,7 +321,6 @@ feature {}
 
 feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]
-   file: FIXED_STRING
 
 invariant
    file /= Void

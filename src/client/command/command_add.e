@@ -63,9 +63,6 @@ feature {COMMANDER}
          end
          if query /= Void then
             client.call_server(query, agent when_reply(?))
-            if not client.send_save then
-               std_output.put_line(once "Failed to save the vault!")
-            end
          end
       end
 
@@ -116,6 +113,9 @@ feature {}
             if reply.error.is_empty then
                client.copy_to_clipboard(reply.pass)
                io.put_line(once "[1mDone[0m")
+               if not client.send_save then
+                  std_output.put_line(once "Failed to save the vault!")
+               end
             else
                error_and_help(reply.error, Void)
             end

@@ -33,9 +33,6 @@ feature {COMMANDER}
             error_and_help(message_invalid_arguments, command)
          else
             client.call_server(create {QUERY_UNSET}.make(command.first), agent when_reply(?))
-            if not client.send_save then
-               std_output.put_line(once "Failed to save the vault!")
-            end
          end
       end
 
@@ -59,6 +56,9 @@ feature {}
             if reply.error.is_empty then
                client.copy_to_clipboard(once "")
                io.put_line(once "[1mDone[0m")
+               if not client.send_save then
+                  std_output.put_line(once "Failed to save the vault!")
+               end
             else
                error_and_help(reply.error, Void)
             end

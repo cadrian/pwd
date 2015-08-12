@@ -298,6 +298,44 @@ feature {QUERY_MASTER}
          end
       end
 
+feature {QUERY_CHANGE_MASTER}
+   visit_change_master (query: QUERY_CHANGE_MASTER)
+      local
+         other: VAULT; ft: FILE_TOOLS; error: ABSTRACT_STRING
+      do
+         if vault.is_open then
+            vault.close
+         end
+         vault.open(query.old_master)
+         if vault.is_open then
+            create other.make("#(1).new" # vault.file)
+            other.open(query.new_master)
+            error := other.merge(vault)
+            other.close
+            vault.close
+
+            if error.is_empty then
+               ft.rename_to(vault.file, "#(1).old" # vault.file)
+               ft.rename_to("#(1).new" # vault.file, vault.file)
+
+               vault.open(query.new_master)
+               if vault.is_open then
+                  period := {REAL 14400.0} -- 4 hours idle time
+                  create {REPLY_CHANGE_MASTER} reply.make(once "")
+               else
+                  period := {REAL 86400.0} -- one day
+                  create {REPLY_CHANGE_MASTER} reply.make(once "Vault not open")
+               end
+            else
+               period := {REAL 86400.0} -- one day
+               create {REPLY_CHANGE_MASTER} reply.make(error)
+            end
+         else
+            period := {REAL 86400.0} -- one day
+            create {REPLY_CHANGE_MASTER} reply.make(once "Vault not open")
+         end
+      end
+
 feature {QUERY_MERGE}
    visit_merge (query: QUERY_MERGE)
       local
