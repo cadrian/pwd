@@ -26,13 +26,9 @@ create {CHANNEL_FACTORY}
    make
 
 feature {CLIENT}
-   server_running: BOOLEAN
+   server_running (when_reply: PROCEDURE[TUPLE[BOOLEAN]])
       do
-         if channel = Void or else not channel.is_connected then
-            channel := access.stream
-         end
-         Result := channel /= Void and then channel.is_connected
-         log.info.put_line(once "Server is running: #(1)" # Result.out)
+         when_reply.call([is_server_running])
       end
 
    server_start
@@ -78,11 +74,6 @@ feature {CLIENT}
          Result := not busy
       end
 
-   server_is_ready: BOOLEAN
-      do
-         Result := server_running and then not busy
-      end
-
    cleanup
       do
          if channel /= Void then
@@ -98,6 +89,15 @@ feature {}
          create access.make(create {IPV4_ADDRESS}.make(127, 0, 0, 1), socket.port, True)
          channel := access.stream
          log.info.put_line(once "Starting client on port #(1)" # socket.port.out)
+      end
+
+   is_server_running: BOOLEAN
+      do
+         if channel = Void or else not channel.is_connected then
+            channel := access.stream
+         end
+         Result := channel /= Void and then channel.is_connected
+         log.info.put_line(once "Server is running: #(1)" # Result.out)
       end
 
    access: TCP_ACCESS

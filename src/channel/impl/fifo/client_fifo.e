@@ -7,7 +7,7 @@
 --
 -- pwd is distributed in the hope that it will be useful,
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 -- GNU General Public License for more details.
 --
 -- You should have received a copy of the GNU General Public License
@@ -28,9 +28,10 @@ create {CHANNEL_FACTORY}
    make
 
 feature {CLIENT}
-   server_running: BOOLEAN
+   server_running (when_reply: PROCEDURE[TUPLE[BOOLEAN]])
       local
          tfr: TEXT_FILE_READ; pid: INTEGER; shared: SHARED
+         res: BOOLEAN
       do
          if extern.exists(server_fifo) then
             check
@@ -43,22 +44,24 @@ feature {CLIENT}
                   if tfr.last_string.is_integer then
                      pid := tfr.last_string.to_integer
                      if extern.process_running(pid) then
-                        Result := True
+                        res := True
                      end
                   end
 
                   tfr.disconnect
                end
 
-               if not Result then
+               if not res then
                   delete(shared.server_pidfile)
                end
             end
 
-            if not Result then
+            if not res then
                delete(server_fifo)
             end
          end
+
+         when_reply.call([res])
       end
 
    server_start
@@ -133,11 +136,6 @@ feature {CLIENT}
    is_ready: BOOLEAN
       do
          Result := not extern.exists(client_fifo)
-      end
-
-   server_is_ready: BOOLEAN
-      do
-         Result := extern.exists(server_fifo)
       end
 
    cleanup

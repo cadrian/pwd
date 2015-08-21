@@ -13,36 +13,37 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-deferred class CLIENT_CHANNEL
+expanded class ZMQ
 
-feature {CLIENT}
-   server_running (when_reply: PROCEDURE[TUPLE[BOOLEAN]])
-         -- True if the server is running, False otherwise
-      require
-         when_reply /= Void
-      deferred
+insert
+   CONFIGURABLE
+   LOGGING
+
+feature {ANY}
+   address: ABSTRACT_STRING
+      local
+         conf_: FIXED_STRING
+      do
+         Result := once "localhost"
+         if has_conf(once "address") then
+            conf_ := conf(once "address")
+            if conf_ /= Void then
+               Result := conf_
+            end
+         end
       end
 
-   server_start
-      deferred
+   port: INTEGER
+      local
+         conf_: FIXED_STRING
+      do
+         Result := 4793
+         if has_conf(once "port") then
+            conf_ := conf(once "port")
+            if conf_ /= Void and then conf_.is_integer then
+               Result := conf_.to_integer
+            end
+         end
       end
 
-   call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]])
-      require
-         is_ready
-         query /= Void
-         when_reply /= Void
-      deferred
-      ensure
-         is_ready
-      end
-
-   is_ready: BOOLEAN
-      deferred
-      end
-
-   cleanup
-      deferred
-      end
-
-end -- class CLIENT_CHANNEL
+end -- class ZMQ

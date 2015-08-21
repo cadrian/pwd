@@ -108,54 +108,49 @@ feature {}
          end
          if not file_exists(shared.vault_file) then
             check
-               not channel.server_running
+               not server_running
                not file_exists(server_pidfile)
             end
             server_bootstrap
-         elseif not channel.server_running then
-            server_restart
          else
-            check_server_version
+            check_server_running(agent do if server_running then server_restart else check_server_version end end)
          end
       end
 
-   server_start
-      local
-         tries: INTEGER; extern: EXTERN
+   server_start (action: PROCEDURE[TUPLE])
       do
-         from
-            channel.server_start
-            tries := 5
-         until
-            channel.server_running or else tries = 0
-         loop
+         channel.server_start
+         check_server_running(agent try_server_start(5, action))
+      end
+
+   try_server_start (tries: INTEGER; action: PROCEDURE[TUPLE])
+      local
+         extern: EXTERN
+      do
+         if server_running then
+            do_ping(action)
+         elseif tries > 0 then
             extern.sleep(50)
             channel := new_channel.item([])
-            tries := tries - 1
-         end
-         if not channel.server_running then
+            channel.server_start
+            check_server_running(agent try_server_start(tries - 1, action))
+         else
             log.error.put_line(once "Could not start server")
             die_with_code(1)
-         else
-            do_ping
          end
-      ensure
-         channel.server_running
       end
 
    server_bootstrap
       do
          log.info.put_line(once "Creating new vault: #(1)" # shared.vault_file)
          read_new_master(once "This is a new vault")
-         server_start
-         send_master
+         server_start(agent send_master)
       end
 
    server_restart
       do
          log.info.put_line(once "Starting server using vault: #(1)" # shared.vault_file)
-         server_start
-         read_password_and_send_master
+         server_start(agent read_password_and_send_master)
       end
 
    check_server_version
@@ -183,31 +178,27 @@ feature {}
 
    when_stop_then_restart (a_reply: MESSAGE)
       local
-         reply: REPLY_STOP; extern: EXTERN
-         delay: INTEGER_64; i: INTEGER
+         reply: REPLY_STOP
       do
          if reply ?:= a_reply then
-            reply ::= a_reply
-            from
-               i := 5
-               delay := 100
-               cleanup
-            variant
-               i
-            until
-               not channel.server_running or else i = 0
-            loop
-               extern.sleep(delay)
-               delay := delay * 2
-               i := i - 1
-            end
-            if channel.server_running then
-               log.error.put_line(once "Could not kill server, trying to work with the current one")
-            else
-               server_restart
-            end
+            cleanup
+            check_server_running(agent try_server_stop_then_restart(5, 100))
          else
             log.error.put_line(once "Unexpected reply")
+         end
+      end
+
+   try_server_stop_then_restart (tries: INTEGER; delay: INTEGER_64)
+      local
+         extern: EXTERN
+      do
+         if not server_running then
+            server_restart
+         elseif tries > 0 then
+            extern.sleep(delay)
+            check_server_running(agent try_server_stop_then_restart(tries - 1, delay * 2))
+         else
+            log.error.put_line(once "Could not kill server, trying to work with the current one")
          end
       end
 
@@ -289,12 +280,12 @@ feature {} -- get a password from the server
       deferred
       end
 
-   do_ping
+   do_ping (action: PROCEDURE[TUPLE])
       do
-         call_server(create {QUERY_PING}.make(once ""), agent when_ping(?))
+         call_server(create {QUERY_PING}.make(once ""), agent when_ping(?, action))
       end
 
-   when_ping (a_reply: MESSAGE)
+   when_ping (a_reply: MESSAGE; action: PROCEDURE[TUPLE])
       local
          reply: REPLY_PING
       do
@@ -302,6 +293,8 @@ feature {} -- get a password from the server
             reply ::= a_reply
             if not reply.error.is_empty then
                log.error.put_line(reply.error)
+            else
+               action.call([])
             end
          else
             log.error.put_line(once "Unexpected reply")
@@ -359,7 +352,7 @@ feature {} -- master phrase
 
    send_master
       require
-         channel.server_running
+         server_running
       do
          log.info.put_line(once "Sending master password")
          call_server(create {QUERY_MASTER}.make(master_pass), agent when_master(?))
@@ -441,6 +434,20 @@ feature {} -- create a brand new vault
             by_construction: pass1.is_equal(pass2)
          end
          master_pass.copy(pass1)
+      end
+
+feature {}
+   server_running: BOOLEAN
+
+   check_server_running (action: PROCEDURE[TUPLE])
+      do
+         channel.server_running(agent on_server_running(?, action))
+      end
+
+   on_server_running (value: BOOLEAN; action: PROCEDURE[TUPLE])
+      do
+         server_running := value
+         action.call([])
       end
 
 end -- class CLIENT

@@ -85,7 +85,8 @@ feature {SERVER}
       end
 
    cleanup
-      do -- nothing to do
+      do
+         -- nothing to do
       end
 
 feature {}

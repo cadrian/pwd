@@ -29,6 +29,8 @@ feature {CLIENT}
             create {CLIENT_FIFO} Result.make(tmpdir)
          when "socket" then
             create {CLIENT_SOCKET} Result.make(tmpdir)
+         when "zmq" then
+            create {CLIENT_ZMQ} Result.make(tmpdir)
          else
             log.error.put_line(once "Unknown channel method: #(1)" # shared.channel_method)
             die_with_code(1)
@@ -44,6 +46,8 @@ feature {SERVER}
             create {SERVER_FIFO} Result.make
          when "socket" then
             create {SERVER_SOCKET} Result.make
+         when "zmq" then
+            create {SERVER_ZMQ} Result.make
          else
             log.error.put_line(once "Unknown channel method: #(1)" # shared.channel_method)
             die_with_code(1)
