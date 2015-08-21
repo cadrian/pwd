@@ -186,8 +186,8 @@ feature {}
          create {EZMQ_ENDPOINT_ZMQ} endpoint.tcp(zmq.address, zmq.port)
          create {EZMQ_SOCKET_ZMQ_CONNECT} socket.make(t.Req, endpoint)
          hub := {EZMQ_HUB_ZMQ <<
-            create {EZMQ_POLL_INPUT}.make(socket, agent on_input),
-            create {EZMQ_POLL_TIMEOUT}.make(agent calc_timeout, agent on_timeout)
+            create {EZMQ_POLL_INPUT}.make(socket, agent on_input(?, ?, ?, ?)),
+            create {EZMQ_POLL_TIMEOUT}.make(agent calc_timeout(?, ?), agent on_timeout(?, ?))
          >>}
 
          create data
