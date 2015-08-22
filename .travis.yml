@@ -98,7 +98,7 @@ script:
 - "make"
 - se test -verbose test
 after_failure:
-- cat test/eiffeltest/log.ref
+- diff test/eiffeltest/log.ref test/eiffeltest/log.new
 after_success:
 - rsync -aSH --stats -e 'ssh -i '$HOME'/.ssh/id_rsa_travis -p '$PORT' -q -C -o StrictHostKeyChecking=no' target/*.tgz $RSYNC:pwd/target/
 - "./deploy.sh debian"
