@@ -106,15 +106,19 @@ feature {}
          if channel = Void then
             channel := new_channel.item([])
          end
-         if not file_exists(shared.vault_file) then
-            check
-               not server_running
-               not file_exists(server_pidfile)
-            end
-            server_bootstrap
-         else
-            check_server_running(agent do if server_running then server_restart else check_server_version end end)
-         end
+         check_server_running(agent
+                              do
+                                 if server_running then
+                                    check_server_version
+                                 elseif not file_exists(shared.vault_file) then
+                                    check
+                                       not file_exists(server_pidfile)
+                                    end
+                                    server_bootstrap
+                                 else
+                                    server_restart
+                                 end
+                              end)
       end
 
    server_start (action: PROCEDURE[TUPLE])
