@@ -32,17 +32,17 @@ feature {ANY}
          last_message := Void
          error := Void
          json := parser.parse_json_text(input)
-         if json = Void then
-            -- no object (closed connection?)
-         elseif error = Void then
-            if not (obj ?:= json) then
-               error := once "Malformed request"
-            else
+         if error = Void then
+            if json = Void then
+               error := once "No object" -- closed connection?
+            elseif obj ?:= json then
                obj ::= json
                last_message := factory.from_json(obj)
                if last_message = Void then
                   error := once "Invalid object"
                end
+            else
+               error := once "Invalid message"
             end
          end
       ensure
