@@ -1,5 +1,5 @@
 -- This file is part of pwd.
--- Copyright (C) 2012-2014 Cyril Adrian <cyril.adrian@gmail.com>
+-- Copyright (C) 2012-2015 Cyril Adrian <cyril.adrian@gmail.com>
 --
 -- pwd is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ feature {} -- the CLIENT interface
             io.put_string(once "[
                                 [1;32mWelcome to the pwd administration console![0m
 
-                                [32mpwd Copyright (C) 2012-2014 Cyril Adrian <cyril.adrian@gmail.com>
+                                [32mpwd Copyright (C) 2012-2015 Cyril Adrian <cyril.adrian@gmail.com>
                                 This program comes with ABSOLUTELY NO WARRANTY; for details type [33mshow w[32m.
                                 This is free software, and you are welcome to redistribute it
                                 under certain conditions; type [33mshow c[32m for details.[0m
