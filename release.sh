@@ -201,7 +201,7 @@ do
 done
 
 if test \$(id -u) -ne 0; then
-    chmod u+w \$CONFIG/pwd/conf/*.rc
+    chmod u+w \$CONFIG/pwd/*.rc
 fi
 EOF
 fi >$release_dir/install.sh
