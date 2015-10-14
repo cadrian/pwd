@@ -261,7 +261,9 @@ feature {}
                if path_info.segments.count = 1 then
                   next_auth_token(agent (new_token: FIXED_STRING)
                                      do
-                                        html_response("open_form.html", create {WEBCLIENT_OPEN_FORM}.make(new_token, Current, agent (key: STRING) do response_503("open_form: bad template key " + key) end(?)))
+                                        html_response("open_form.html",
+                                                      create {WEBCLIENT_OPEN_FORM}.make(new_token, Current,
+                                                                                        agent (key: STRING) do response_503("open_form: bad template key " + key) end(?)))
                                      end(?))
                else
                   response_403("/open: too many path segments")
@@ -402,7 +404,9 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               html_response("pass_list.html", create {WEBCLIENT_PASS_LIST}.make(reply, auth_token, Current, agent (key: STRING) do response_503("pass_list: bad template key " + key) end(?)))
+               html_response("pass_list.html",
+                             create {WEBCLIENT_PASS_LIST}.make(reply, auth_token, Current,
+                                                               agent (key: STRING) do response_503("pass_list: bad template key " + key) end(?)))
             else
                response_503(reply.error)
             end
@@ -415,7 +419,9 @@ feature {}
       do
          next_auth_token(agent (new_token: FIXED_STRING)
                             do
-                               html_response("pass.html", create {WEBCLIENT_PASS}.make(a_pass, new_token, Current, agent (key: STRING) do response_503("pass: bad template key " + key) end(?)))
+                               html_response("pass.html",
+                                             create {WEBCLIENT_PASS}.make(a_pass, new_token, Current,
+                                                                          agent (key: STRING) do response_503("pass: bad template key " + key) end(?)))
                             end(?))
       end
 
