@@ -20,3 +20,4 @@ openssl.cipher   = bf
 
 [webclient]
 template.path = webclient.conf/templates
+static.path = webclient.conf/static

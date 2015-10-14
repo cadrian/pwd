@@ -512,6 +512,7 @@ feature {}
                   cgi.set_output(create {MONITORED_OUTPUT_STREAM}.connect_to(cgi.output, log.trace))
                end
             end
+            cgi.set_output(create {CRLF_OUTPUT_STREAM}.connect_to(cgi.output))
             cgi.reply(r)
             cgi.output.disconnect
             if session_vault.is_open then

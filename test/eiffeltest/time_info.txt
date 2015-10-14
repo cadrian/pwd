@@ -1,0 +1,3 @@
+Execution of "se test" started: Wednesday October 14 21:35:38 2015
+                    terminated: Wednesday October 14 21:41:5 2015
+327 (Elapsed seconds in "/home/cadrian/Workspace/Dev/pwd/pwd/test/".)

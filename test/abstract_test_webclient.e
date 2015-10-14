@@ -25,6 +25,7 @@ feature {}
       local
          system: SYSTEM; tfw: TEXT_FILE_WRITE; pf: PROCESS_FACTORY; p: PROCESS
          cgi_io: CGI_IO
+         bd: BASIC_DIRECTORY; home: ABSTRACT_STRING
       do
          Result := ""
 
@@ -40,10 +41,13 @@ feature {}
             p := pf.execute_command_line("webclient.conf/exe/server")
          end
 
-         system.set_environment_variable("XDG_CACHE_HOME", "webclient.conf/run")
-         system.set_environment_variable("XDG_RUNTIME_DIR", "webclient.conf/run")
-         system.set_environment_variable("XDG_CONFIG_DIRS", "webclient.conf")
-         system.set_environment_variable("XDG_DATA_HOME", "webclient.conf")
+
+         home := "#(1)/webclient.conf" # bd.current_working_directory
+         system.set_environment_variable("XDG_CONFIG_HOME", home.out)
+         system.set_environment_variable("XDG_CACHE_HOME", ("#(1)/run" # home).out)
+         system.set_environment_variable("XDG_RUNTIME_DIR", ("#(1)/run" # home).out)
+         system.set_environment_variable("XDG_CONFIG_DIRS", home.out)
+         system.set_environment_variable("XDG_DATA_HOME", home.out)
          system.set_environment_variable("REQUEST_METHOD", method)
          system.set_environment_variable("REMOTE_USER", "testuser")
          system.set_environment_variable("PATH_INFO", path)
