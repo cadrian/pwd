@@ -83,6 +83,9 @@ feature {}
          loop
             path := once "#(1)/pwd/#(2)" # dirs.item(i) # filename
             if file_exists(path) then
+               debug
+                  std_error.put_line("Reading config from #(1)" # path)
+               end
                create Result.connect_to(path)
             end
 
