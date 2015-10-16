@@ -99,6 +99,8 @@ feature {} -- CLIENT interface
                session_vault.open(("#(1)!#(2)" # cgi.remote_info.user # sessionvault.value).out)
                Result := session_vault.is_open
             end
+         else
+            log.warning.put_line("Could not create session vault")
          end
       end
 
@@ -116,12 +118,13 @@ feature {} -- CLIENT interface
 
    read_password_and_send_master
       do
+         log.trace.put_line("Need to read master password -- sending redirect to /open")
          cgi_reply(create {CGI_RESPONSE_CLIENT_REDIRECT}.set_redirect("/open", Void))
       end
 
    unknown_key (key: ABSTRACT_STRING)
       do
-         log.error.put_line("Unknown key: #(1)" + key)
+         log.error.put_line("Unknown key: #(1) -- sending 401" + key)
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(404))
       end
 
@@ -173,9 +176,17 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
                inspect
                   path_info.segments.count
                when 1 then
-                  get_auth_token(agent post_pass_list(?))
+                  get_auth_token(agent (auth_token: FIXED_STRING)
+                                 do
+                                    log.trace.put_line("Server provided auth token, fetching pass list")
+                                    post_pass_list(auth_token)
+                                 end(?))
                when 2 then
-                  get_auth_token(agent post_pass_key(path_info.segments.last, ?))
+                  get_auth_token(agent (ot, nt: FIXED_STRING)
+                                 do
+                                    log.trace.put_line("Server provided auth token, fetching pass")
+                                    post_pass_key(ot, nt)
+                                 end (path_info.segments.last, ?))
                else
                   response_403("/pass: too many path segments")
                end
@@ -240,7 +251,7 @@ feature {}
          else
             path_info := cgi.path_info.out
          end
-         log.info.put_line("#(1) #(2):#(3)" # method # root # path_info)
+         log.info.put_line("#(1) [#(2)] #(3)" # method # root # path_info)
       end
 
    get_or_head
@@ -261,6 +272,7 @@ feature {}
                if path_info.segments.count = 1 then
                   next_auth_token(agent (new_token: FIXED_STRING)
                                      do
+                                        log.trace.put_line("Session vault provided auth token, responding with the open form")
                                         html_response("open_form.html",
                                                       create {WEBCLIENT_OPEN_FORM}.make(new_token, Current,
                                                                                         agent (key: STRING) do response_503("open_form: bad template key " + key) end(?)))
@@ -325,11 +337,13 @@ feature {}
       local
          auth_token: STRING
       do
-         log.info.put_line(once "Server vault is open")
+         log.info.put_line("Server vault is open")
          auth_token := session_vault.pass(token_name)
          if auth_token = Void then
+            log.trace.put_line("No auth token -- sending redirect to /open")
             cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/open", Void))
          else
+            log.trace.put_line("Auth token is set -- calling server with list query")
             call_server(create {QUERY_LIST}.make, agent when_pass_list(auth_token.intern, ?))
          end
       end
@@ -346,6 +360,7 @@ feature {}
          elseif form.form.fast_at(form_token_name).is_equal(auth_token) then
             response_403("Invalid token value")
          else
+            log.trace.put_line("Form seems legit -- calling server with list query")
             call_server(create {QUERY_LIST}.make, agent when_pass_list(auth_token, ?))
          end
       end
@@ -381,7 +396,10 @@ feature {}
             end
             --|**** TODO (Liberty Eiffel) I would have liked to write:
             -- next_auth_token(agent action(old_token, ?))
-            next_auth_token(agent (ot, nt: FIXED_STRING) do action(ot, nt) end(old_token.intern, ?))
+            next_auth_token(agent (ot, nt: FIXED_STRING)
+                            do
+                               action(ot, nt)
+                            end(old_token.intern, ?))
          else
             response_403("Old token not found")
          end
@@ -392,6 +410,7 @@ feature {}
       local
          error: ABSTRACT_STRING; new_token: STRING
       do
+         log.trace.put_line("Need to get a new auth token")
          error := session_vault.set_random(token_name, "12an")
          if error.is_empty then
             new_token := session_vault.pass(token_name)
@@ -411,6 +430,7 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
+               log.trace.put_line("Session vault provided auth token, responding with the pass list")
                html_response("pass_list.html",
                              create {WEBCLIENT_PASS_LIST}.make(reply, auth_token, Current,
                                                                agent (key: STRING) do response_503("pass_list: bad template key " + key) end(?)))
@@ -426,6 +446,7 @@ feature {}
       do
          next_auth_token(agent (new_token: FIXED_STRING)
                             do
+                               log.trace.put_line("Session vault provided auth token, responding with the pass")
                                html_response("pass.html",
                                              create {WEBCLIENT_PASS}.make(a_pass, new_token, Current,
                                                                           agent (key: STRING) do response_503("pass: bad template key " + key) end(?)))
@@ -446,11 +467,11 @@ feature {}
             inspect
                c
             when '<' then
-               Result.append(once "&lt;")
+               Result.append("&lt;")
             when '>' then
-               Result.append(once "&gt;")
+               Result.append("&gt;")
             when '&' then
-               Result.append(once "&amp;")
+               Result.append("&amp;")
             else
                Result.extend(c)
             end
@@ -503,6 +524,7 @@ feature {}
                extern.splice(input, doc.body)
             end
             input.disconnect
+            log.trace.put_line("Replying document")
             cgi_reply(doc)
          else
             response_503("unknown file name: #(1)" # template_name)
@@ -535,11 +557,14 @@ feature {}
                end
                close_session_vault
             end
+         else
+            log.trace.put_line("CGI does not need reply / reply already sent")
          end
       end
 
    close_session_vault
       do
+         log.trace.put_line("Closing session vault")
          session_vault.close
          lock.done
          lock_file.disconnect
