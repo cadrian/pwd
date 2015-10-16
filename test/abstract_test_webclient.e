@@ -41,7 +41,6 @@ feature {}
             p := pf.execute_command_line("webclient.conf/exe/server")
          end
 
-
          home := "#(1)/webclient.conf" # bd.current_working_directory
          system.set_environment_variable("XDG_CONFIG_HOME", home.out)
          system.set_environment_variable("XDG_CACHE_HOME", ("#(1)/run" # home).out)
