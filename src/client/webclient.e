@@ -300,7 +300,12 @@ feature {}
             form.form.for_each(agent (value, key: FIXED_STRING)
                                   do
                                      log.trace.put_string("Form field: ")
-                                     log.trace.put_line(key)
+                                     log.trace.put_string(key)
+                                     debug
+                                        log.trace.put_character('=')
+                                        log.trace.put_string(value)
+                                     end
+                                     log.trace.put_new_line
                                   end (?, ?))
          end
          if not form.form.fast_has(form_token_name) then
@@ -371,7 +376,9 @@ feature {}
       do
          old_token := session_vault.pass(token_name)
          if old_token /= Void then
-            log.trace.put_line("Old token was: #(1)" # old_token)
+            debug
+               log.trace.put_line("Old token was: #(1)" # old_token)
+            end
             --|**** TODO (Liberty Eiffel) I would have liked to write:
             -- next_auth_token(agent action(old_token, ?))
             next_auth_token(agent (ot, nt: FIXED_STRING) do action(ot, nt) end(old_token.intern, ?))
@@ -388,7 +395,9 @@ feature {}
          error := session_vault.set_random(token_name, "12an")
          if error.is_empty then
             new_token := session_vault.pass(token_name)
-            log.trace.put_line("New token is: #(1)" # new_token)
+            debug
+               log.trace.put_line("New token is: #(1)" # new_token)
+            end
             action(new_token.intern)
          else
             response_503("Could not set auth token: #(1)" # error)
