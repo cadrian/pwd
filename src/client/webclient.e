@@ -37,7 +37,9 @@ feature {} -- CLIENT interface
    run
       do
          if open_session_vault then
+            is_running := True
             cgi.run
+            is_running := False
          else
             response_503("Could not open session vault")
          end
@@ -95,9 +97,17 @@ feature {} -- CLIENT interface
             if lock_file.is_connected then
                lock := flock.lock(lock_file)
                lock.write
+               log.trace.put_line("Got session vault lock")
                create session_vault.make(vaultpath)
                session_vault.open(("#(1)!#(2)" # cgi.remote_info.user # sessionvault.value).out)
                Result := session_vault.is_open
+               if Result then
+                  log.trace.put_line("Session vault is open")
+               else
+                  log.warning.put_line("Session vault is not open!")
+               end
+            else
+               log.warning.put_line("Could not connect to lock file")
             end
          else
             log.warning.put_line("Could not create session vault")
@@ -338,13 +348,15 @@ feature {}
          auth_token: STRING
       do
          log.info.put_line("Server vault is open")
-         auth_token := session_vault.pass(token_name)
-         if auth_token = Void then
-            log.trace.put_line("No auth token -- sending redirect to /open")
-            cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/open", Void))
-         else
-            log.trace.put_line("Auth token is set -- calling server with list query")
-            call_server(create {QUERY_LIST}.make, agent when_pass_list(auth_token.intern, ?))
+         if is_running then
+            auth_token := session_vault.pass(token_name)
+            if auth_token = Void then
+               log.trace.put_line("No auth token -- sending redirect to /open")
+               cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/open", Void))
+            else
+               log.trace.put_line("Auth token is set -- calling server with list query")
+               call_server(create {QUERY_LIST}.make, agent when_pass_list(auth_token.intern, ?))
+            end
          end
       end
 
@@ -504,6 +516,7 @@ feature {}
          doc: CGI_RESPONSE_DOCUMENT
          extern: EXTERN
          input: INPUT_STREAM
+         filename: ABSTRACT_STRING
       do
          if log.is_trace then
             if template_resolver = Void then
@@ -513,11 +526,14 @@ feature {}
             end
          end
          if template_resolver = Void then
-            create {TEXT_FILE_READ} input.connect_to("#(1)/#(2)" # conf(config_static_path) # template_name)
+            filename := "#(1)/#(2)" # conf(config_static_path) # template_name
+            create {TEXT_FILE_READ} input.connect_to(filename)
          else
-            create {TEMPLATE_INPUT_STREAM} input.connect_to(create {TEXT_FILE_READ}.connect_to("#(1)/#(2)" # conf(config_template_path) # template_name), template_resolver)
+            filename := "#(1)/#(2)" # conf(config_template_path) # template_name
+            create {TEMPLATE_INPUT_STREAM} input.connect_to(create {TEXT_FILE_READ}.connect_to(filename), template_resolver)
          end
          if input.is_connected then
+            log.trace.put_line("Connected to file: #(1)" # filename)
             create doc.set_content_type("text/html")
             doc.set_field("Cache-Control", "private,no-store,no-cache")
             if not is_head then
@@ -588,6 +604,8 @@ feature {}
    flock: FILE_LOCKER
    lock: FILE_LOCK
    lock_file: TEXT_FILE_WRITE
+
+   is_running: BOOLEAN
 
 invariant
    cgi /= Void

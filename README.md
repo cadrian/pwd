@@ -215,3 +215,13 @@ Currently available for the architectures: *amd64* and *armhf*.
 
 After having called `./deploy.sh bootstrap` once, usually just
 building the exes using `make` is enough.
+
+# Testing
+
+Unit tests: `se test test`
+
+Integration tests: for webclient - you need lighttpd installed
+* `./test.sh`
+* go to http://localhost:8888
+* login is `test` / `pwd`
+* vault pass is `pwd`

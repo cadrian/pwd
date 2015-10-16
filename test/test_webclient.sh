@@ -81,7 +81,7 @@ cat > $CONF/pwd/config.rc <<EOF
 [shared]
 log.level        = trace
 default_recipe   = 8ans
-channel.method   = fifo
+channel.method   = socket
 master.command   = /bin/false
 master.arguments =
 [webclient]
@@ -91,7 +91,10 @@ static.path      = $pwdhome/web/static
 openssl.cipher   = bf
 EOF
 
-echo -n | openssl bf -a -pass pass:pwd > $RUN/pwd/vault
+openssl bf -a -pass pass:pwd > $RUN/pwd/vault <<EOF
+foo:1:0:foopass
+bar:1:0:barpass
+EOF
 
 echo "Starting HTTP server into $DIR"
 
