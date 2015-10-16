@@ -300,9 +300,7 @@ feature {}
             form.form.for_each(agent (value, key: FIXED_STRING)
                                   do
                                      log.trace.put_string("Form field: ")
-                                     log.trace.put_string(key)
-                                     log.trace.put_character('=')
-                                     log.trace.put_line(value)
+                                     log.trace.put_line(key)
                                   end (?, ?))
          end
          if not form.form.fast_has(form_token_name) then
