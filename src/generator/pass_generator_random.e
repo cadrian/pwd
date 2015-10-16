@@ -39,7 +39,6 @@ feature {ANY}
          is_connected
       do
          Result := randi((upper - lower + 1).to_natural_32, $read_rand, to_pointer).to_integer_32 + lower
-         log.trace.put_line("RANDOM: [#(1)..#(2)] => #(3)" # &lower # &upper # &Result)
       ensure
          Result.in_range(lower, upper)
       end
