@@ -23,7 +23,7 @@ inherit
       redefine
          read_password_and_send_master,
          server_bootstrap,
-         on_open
+         on_open, check_server
       end
    CGI_HANDLER
 
@@ -36,20 +36,57 @@ create {EIFFELTEST_TOOLS}
 feature {} -- CLIENT interface
    run
       do
-         if open_session_vault then
-            is_running := True
-            cgi.run
-            is_running := False
+         if lock_session_vault then
+            log.trace.put_line("Now running CGI: session vault is open")
+         else
+            log.warning.put_line("Now running CGI: ** THE SESSION VAULT IS NOT OPEN **")
+         end
+         cgi.run
+      end
+
+   check_server
+      do
+         if lock_session_vault then
+            log.trace.put_line("Now checking server: session vault is open")
+         else
+            log.warning.put_line("Now checking server: ** THE SESSION VAULT IS NOT OPEN **")
+         end
+         Precursor
+      end
+
+   start: BOOLEAN
+      require
+         cgi.need_reply
+      local
+         auth_token: STRING
+      do
+         if lock_session_vault then
+            if is_open then
+               log.info.put_line("Server vault is open")
+               auth_token := session_vault.pass(token_name)
+               if auth_token = Void then
+                  log.trace.put_line("No auth token -- sending redirect to /open")
+                  cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/open", Void))
+               else
+                  Result := True
+               end
+            else
+               Result := True
+            end
          else
             response_503("Could not open session vault")
          end
+      ensure
+         Result = cgi.need_reply
       end
 
-   open_session_vault: BOOLEAN
+   lock_session_vault: BOOLEAN
+         -- open and lock the session vault
       local
          pg: PASS_GENERATOR; sessionvault: CGI_COOKIE; gen: STRING; ft: FILE_TOOLS; i: INTEGER
-      do
+      once
          if log.is_trace then
+            log.trace.put_line("Opening session vault")
             jar.for_each(agent (cookie: CGI_COOKIE) do log.trace.put_line("COOKIE: #(1)=#(2)" # cookie.name # cookie.value) end(?))
          end
 
@@ -96,21 +133,23 @@ feature {} -- CLIENT interface
             create lock_file.connect_to(vaultpath + ".lock")
             if lock_file.is_connected then
                lock := flock.lock(lock_file)
+               log.trace.put_line("Locking session vault...")
                lock.write
-               log.trace.put_line("Got session vault lock")
+               log.trace.put_line("Session vault locked, may proceed")
                create session_vault.make(vaultpath)
                session_vault.open(("#(1)!#(2)" # cgi.remote_info.user # sessionvault.value).out)
                Result := session_vault.is_open
                if Result then
                   log.trace.put_line("Session vault is open")
                else
-                  log.warning.put_line("Session vault is not open!")
+                  log.error.put_line("Session vault is not open!")
                end
             else
-               log.warning.put_line("Could not connect to lock file")
+               log.error.put_line("Could not connect to lock file")
+               Result := False
             end
          else
-            log.warning.put_line("Could not create session vault")
+            log.error.put_line("Could not create session vault")
          end
       end
 
@@ -152,15 +191,19 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
    get
       do
          log_query("GET")
-         is_head := False
-         get_or_head
+         if start then
+            is_head := False
+            get_or_head
+         end
       end
 
    head
       do
          log_query("HEAD")
-         is_head := True
-         get_or_head
+         if start then
+            is_head := True
+            get_or_head
+         end
       end
 
    post
@@ -169,39 +212,41 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
          path: STRING
       do
          log_query("POST")
-         path_info := cgi.path_info
-         if path_info = Void or else path_info.segments.is_empty then
-            read_password_and_send_master
-         else
-            path := path_info.segments.first.out
-            inspect
-               path
-            when "vault" then
-               if path_info.segments.count = 1 then
-                  get_auth_token(agent post_vault(?))
-               else
-                  response_403("/vault: too many path segments")
-               end
-            when "pass" then
-               inspect
-                  path_info.segments.count
-               when 1 then
-                  get_auth_token(agent (auth_token: FIXED_STRING)
-                                 do
-                                    log.trace.put_line("Server provided auth token, fetching pass list")
-                                    post_pass_list(auth_token)
-                                 end(?))
-               when 2 then
-                  get_auth_token(agent (ot, nt: FIXED_STRING)
-                                 do
-                                    log.trace.put_line("Server provided auth token, fetching pass")
-                                    post_pass_key(ot, nt)
-                                 end (path_info.segments.last, ?))
-               else
-                  response_403("/pass: too many path segments")
-               end
+         if start then
+            path_info := cgi.path_info
+            if path_info = Void or else path_info.segments.is_empty then
+               read_password_and_send_master
             else
-               response_403("Invalid path")
+               path := path_info.segments.first.out
+               inspect
+                  path
+               when "vault" then
+                  if path_info.segments.count = 1 then
+                     get_auth_token(agent post_vault(?))
+                  else
+                     response_403("/vault: too many path segments")
+                  end
+               when "pass" then
+                  inspect
+                     path_info.segments.count
+                  when 1 then
+                     get_auth_token(agent (auth_token: FIXED_STRING)
+                                    do
+                                       log.trace.put_line("Server provided auth token, fetching pass list")
+                                       post_pass_list(auth_token)
+                                    end(?))
+                  when 2 then
+                     get_auth_token(agent (ot, nt: FIXED_STRING)
+                                    do
+                                       log.trace.put_line("Server provided auth token, fetching pass")
+                                       post_pass_key(ot, nt)
+                                    end (path_info.segments.last, ?))
+                  else
+                     response_403("/pass: too many path segments")
+                  end
+               else
+                  response_403("Invalid path")
+               end
             end
          end
       end
@@ -344,20 +389,8 @@ feature {}
       end
 
    on_open
-      local
-         auth_token: STRING
       do
-         log.info.put_line("Server vault is open")
-         if is_running then
-            auth_token := session_vault.pass(token_name)
-            if auth_token = Void then
-               log.trace.put_line("No auth token -- sending redirect to /open")
-               cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/open", Void))
-            else
-               log.trace.put_line("Auth token is set -- calling server with list query")
-               call_server(create {QUERY_LIST}.make, agent when_pass_list(auth_token.intern, ?))
-            end
-         end
+         is_open := True
       end
 
    post_pass_list (auth_token: FIXED_STRING)
@@ -574,7 +607,7 @@ feature {}
                close_session_vault
             end
          else
-            log.trace.put_line("CGI does not need reply / reply already sent")
+            log.warning.put_line("CGI does not need reply / reply already sent")
          end
       end
 
@@ -598,14 +631,13 @@ feature {}
 
    session_vault: VAULT
    vaultpath: ABSTRACT_STRING
+   is_open: BOOLEAN
 
    jar: CGI_COOKIE_JAR
 
    flock: FILE_LOCKER
    lock: FILE_LOCK
    lock_file: TEXT_FILE_WRITE
-
-   is_running: BOOLEAN
 
 invariant
    cgi /= Void

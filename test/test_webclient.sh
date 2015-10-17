@@ -91,10 +91,17 @@ static.path      = $pwdhome/web/static
 openssl.cipher   = bf
 EOF
 
-openssl bf -a -pass pass:pwd > $RUN/pwd/vault <<EOF
-foo:1:0:foopass
-bar:1:0:barpass
-EOF
+{
+    case "$1" in
+        empty)
+            echo
+            ;;
+        *)
+            echo foo:1:0:foopass
+            echo bar:1:0:barpass
+            ;;
+    esac
+} | openssl bf -a -pass pass:pwd > $RUN/pwd/vault
 
 echo "Starting HTTP server into $DIR"
 

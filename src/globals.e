@@ -53,7 +53,7 @@ feature {}
                               default is
                                  file "#(2)"
                                  rotated each day keeping 3
-                                 format "(@t) @C #(3) - @m%N"
+                                 format "(@t) @C #(3):@I - @m%N"
                               end
 
                            logger

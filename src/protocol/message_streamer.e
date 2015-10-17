@@ -59,6 +59,7 @@ feature {ANY}
          output.is_connected
       do
          debug
+            log.trace.put_string("Writing message: ")
             encoder.encode_in(message.json, log.trace)
             log.trace.put_new_line
          end

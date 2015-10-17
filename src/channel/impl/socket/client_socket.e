@@ -60,6 +60,7 @@ feature {CLIENT}
          streamer.write_message(query, channel)
          channel.put_new_line
          channel.flush
+         log.trace.put_line("Reading message...")
          streamer.read_message(channel)
          busy := False
          if streamer.error /= Void then
