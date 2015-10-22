@@ -23,7 +23,7 @@ inherit
       redefine
          read_password_and_send_master,
          server_bootstrap,
-         on_open, check_server
+         on_open
       end
    CGI_HANDLER
 
@@ -36,128 +36,8 @@ create {EIFFELTEST_TOOLS}
 feature {} -- CLIENT interface
    run
       do
-         if lock_session_vault then
-            log.trace.put_line("Now running CGI: session vault is open")
-         else
-            log.warning.put_line("Now running CGI: ** THE SESSION VAULT IS NOT OPEN **")
-         end
          cgi.run
-      end
-
-   check_server
-      do
-         if lock_session_vault then
-            log.trace.put_line("Now checking server: session vault is open")
-         else
-            log.warning.put_line("Now checking server: ** THE SESSION VAULT IS NOT OPEN **")
-         end
-         Precursor
-      end
-
-   start: BOOLEAN
-      require
-         cgi.need_reply
-      local
-         auth_token: STRING
-      do
-         if lock_session_vault then
-            if is_open then
-               log.info.put_line("Server vault is open")
-               auth_token := session_vault.pass(token_name)
-               if auth_token = Void then
-                  log.trace.put_line("No auth token -- sending redirect to /open")
-                  cgi_reply(create {CGI_RESPONSE_LOCAL_REDIRECT}.set_redirect("/open", Void))
-               else
-                  Result := True
-               end
-            else
-               Result := True
-            end
-         else
-            response_503("Could not open session vault")
-         end
-      ensure
-         Result = cgi.need_reply
-      end
-
-   lock_session_vault: BOOLEAN
-         -- open and lock the session vault
-      local
-         pg: PASS_GENERATOR; sessionvault: CGI_COOKIE; gen: STRING; ft: FILE_TOOLS; i: INTEGER
-      once
-         if log.is_trace then
-            log.trace.put_line("Opening session vault")
-            jar.for_each(agent (cookie: CGI_COOKIE) do log.trace.put_line("COOKIE: #(1)=#(2)" # cookie.name # cookie.value) end(?))
-         end
-
-         sessionvault := jar.cookie("sessionvault")
-         from
-            i := 3
-            if sessionvault.value /= Void then
-               vaultpath := session_vault_path(sessionvault.value)
-               Result := ft.file_exists(vaultpath)
-               if not Result then
-                  log.trace.put_line("Invalid sessionvault cookie: " + sessionvault.value)
-               end
-            end
-            if Result then
-               log.trace.put_line("Using sessionvault cookie")
-            else
-               create pg.parse("16an")
-            end
-         until
-            Result or else i < 0
-         loop
-            gen := pg.generated
-            vaultpath := session_vault_path(gen)
-            if ft.file_exists(vaultpath) then
-               log.trace.put_line("Deleting stale sessionvault cookie: " + gen)
-               ft.delete(vaultpath)
-               check not Result end
-            else
-               log.trace.put_line("Creating new sessionvault cookie")
-               sessionvault.value := gen
-               sessionvault.max_age := 14400 -- 4 hours
-               if cgi.script_name.is_set then
-                  sessionvault.path := cgi.script_name.name
-               end
-               if cgi.server_info.is_secure then
-                  sessionvault.secure := True
-               end
-               -- sessionvault.http_only := True
-               Result := True
-            end
-            i := i - 1
-         end
-         if Result then
-            create lock_file.connect_to(vaultpath + ".lock")
-            if lock_file.is_connected then
-               lock := flock.lock(lock_file)
-               log.trace.put_line("Locking session vault...")
-               lock.write
-               log.trace.put_line("Session vault locked, may proceed")
-               create session_vault.make(vaultpath)
-               session_vault.open(("#(1)!#(2)" # cgi.remote_info.user # sessionvault.value).out)
-               Result := session_vault.is_open
-               if Result then
-                  log.trace.put_line("Session vault is open")
-               else
-                  log.error.put_line("Session vault is not open!")
-               end
-            else
-               log.error.put_line("Could not connect to lock file")
-               Result := False
-            end
-         else
-            log.error.put_line("Could not create session vault")
-         end
-      end
-
-   session_vault_path (id: ABSTRACT_STRING): STRING
-      local
-         xdg: XDG
-      do
-         Result := ("#(1)/webclient-#(2).vault" # xdg.cache_home # id).out
+         end_session
       end
 
    server_bootstrap
@@ -177,6 +57,15 @@ feature {} -- CLIENT interface
          cgi_reply(create {CGI_RESPONSE_DOCUMENT}.set_status(404))
       end
 
+   on_open
+      do
+         Precursor
+         if open_action /= Void then
+            open_action()
+            open_action := Void
+         end
+      end
+
 feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
    config_template_path: FIXED_STRING
       once
@@ -191,65 +80,57 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
    get
       do
          log_query("GET")
-         if start then
-            is_head := False
-            get_or_head
-         end
+         is_head := False
+         get_or_head
       end
 
    head
       do
          log_query("HEAD")
-         if start then
-            is_head := True
-            get_or_head
-         end
+         is_head := True
+         get_or_head
       end
 
    post
       local
-         path_info: CGI_PATH_INFO
          path: STRING
       do
          log_query("POST")
-         if start then
-            path_info := cgi.path_info
-            if path_info = Void or else path_info.segments.is_empty then
-               read_password_and_send_master
-            else
-               path := path_info.segments.first.out
+         if path_info = Void or else path_info.segments.is_empty then
+            read_password_and_send_master
+         else
+            path := path_info.segments.first.out
+            inspect
+               path
+            when "vault" then
+               if path_info.segments.count = 1 then
+                  get_auth_token(agent post_vault(?,?))
+               else
+                  response_403("/vault: too many path segments")
+               end
+            when "pass" then
                inspect
-                  path
-               when "vault" then
-                  if path_info.segments.count = 1 then
-                     get_auth_token(agent post_vault(?))
-                  else
-                     response_403("/vault: too many path segments")
-                  end
-               when "pass" then
-                  inspect
-                     path_info.segments.count
-                  when 1 then
-                     get_auth_token(agent (auth_token: FIXED_STRING)
+                  path_info.segments.count
+               when 1 then
+                  get_auth_token(agent (auth_token, new_auth_token: FIXED_STRING)
                                     do
                                        log.trace.put_line("Server provided auth token, fetching pass list")
-                                       post_pass_list(auth_token)
-                                    end(?))
-                  when 2 then
-                     get_auth_token(agent (ot, nt: FIXED_STRING)
+                                       post_pass_list(auth_token, new_auth_token)
+                                    end(?, ?))
+               when 2 then
+                  get_auth_token(agent (key, auth_token, new_auth_token: FIXED_STRING)
                                     do
                                        log.trace.put_line("Server provided auth token, fetching pass")
-                                       post_pass_key(ot, nt)
-                                    end (path_info.segments.last, ?))
-                  else
-                     response_403("/pass: too many path segments")
-                  end
+                                       post_pass_key(key, auth_token, new_auth_token)
+                                    end(path_info.segments.last, ?, ?))
                else
-                  response_403("Invalid path")
+                  response_403("/pass: too many path segments")
                end
+            else
+               response_403("Invalid path")
             end
          end
-      end
+   end
 
    delete
       do
@@ -269,25 +150,43 @@ feature {CGI_REQUEST_METHOD} -- CGI_HANDLER method
          response_405("#(1) not supported" # a_method)
       end
 
+feature {WEBCLIENT_SESSION}
+   script_name: CGI_SCRIPT_NAME
+      do
+         Result := cgi.script_name
+      end
+
+   server_info: CGI_SERVER_INFO
+      do
+         Result := cgi.server_info
+      end
+
+   remote_info: CGI_REMOTE_INFO
+      do
+         Result := cgi.remote_info
+      end
+
+   path_info: CGI_PATH_INFO
+      do
+         Result := cgi.path_info
+      end
+
 feature {WEBCLIENT_RESOLVER}
    root: FIXED_STRING
       local
          string: STRING
-         sn: CGI_SCRIPT_NAME; si: CGI_SERVER_INFO
       do
          Result := root_memory
          if Result = Void then
             string := ""
-            si := cgi.server_info
-            if si.protocol /= Void then
-               string.append(si.protocol.name)
+            if server_info.protocol /= Void then
+               string.append(server_info.protocol.name)
             end
             string.append("://")
             string.append(cgi.header("HOST"))
-            sn := cgi.script_name
-            if sn.is_set then
-               string.extend('/')
-               string.append(sn.name)
+            if script_name.is_set then
+               string.extend_unless('/')
+               string.append(script_name.name)
             end
             Result := string.intern
             root_memory := Result
@@ -298,23 +197,14 @@ feature {}
    root_memory: FIXED_STRING
 
    log_query (method: ABSTRACT_STRING)
-      local
-         path_info: STRING
       do
-         if cgi.path_info = Void then
-            path_info := ""
-         else
-            path_info := cgi.path_info.out
-         end
-         log.info.put_line("#(1) [#(2)] #(3)" # method # root # path_info)
+         log.info.put_line("#(1) [#(2)] #(3)" # method # root # (if path_info = Void then "/" else path_info.out end))
       end
 
    get_or_head
       local
-         path_info: CGI_PATH_INFO
          path: STRING
       do
-         path_info := cgi.path_info
          if path_info = Void or else path_info.segments.is_empty then
             read_password_and_send_master
          else
@@ -328,9 +218,13 @@ feature {}
                   next_auth_token(agent (new_token: FIXED_STRING)
                                      do
                                         log.trace.put_line("Session vault provided auth token, responding with the open form")
+                                        first_response := Void
                                         html_response("open_form.html",
                                                       create {WEBCLIENT_OPEN_FORM}.make(new_token, Current,
-                                                                                        agent (key: STRING) do response_503("open_form: bad template key " + key) end(?)))
+                                                                                        agent (key: STRING)
+                                                                                           do
+                                                                                              response_503("open_form: bad template key " + key)
+                                                                                           end(?)))
                                      end(?))
                else
                   response_403("/open: too many path segments")
@@ -340,7 +234,6 @@ feature {}
             when "pass" then
                response_405("/pass: GET not supported")
             when "static" then
-               close_session_vault
                inspect
                   path_info.segments.count
                when 1 then
@@ -356,9 +249,10 @@ feature {}
          end
       end
 
-   post_vault (auth_token: FIXED_STRING)
+   post_vault (auth_token, new_auth_token: FIXED_STRING)
       require
          auth_token /= Void
+         new_auth_token /= Void
       local
          form: CGI_FORM
       do
@@ -376,41 +270,48 @@ feature {}
                                   end (?, ?))
          end
          if not form.form.fast_has(form_token_name) then
-            response_403("Missing token field")
+            response_403("/vault: missing token field")
          elseif not form.form.fast_at(form_token_name).is_equal(auth_token) then
-            log.trace.put_line("#(1) =/= #(2)" # form.form.fast_at(form_token_name) # auth_token)
-            response_403("Invalid token value")
+            debug
+               log.trace.put_line("'#(1)' =/= '#(2)'" # form.form.fast_at(form_token_name) # auth_token)
+            end
+            response_403("/vault: invalid token value")
          elseif not form.form.fast_has(form_password_name) then
-            response_403("Missing password name field")
+            response_403("/vault: missing password name field")
          else
+            first_response := Void
             master_pass.make_from_string(form.form.fast_at(form_password_name))
+            open_action := agent (ot: FIXED_STRING)
+                             do
+                                first_response := Void
+                                call_server(create {QUERY_LIST}.make, agent when_pass_list(new_auth_token, ?))
+                             end(auth_token)
             send_master
          end
       end
 
-   on_open
-      do
-         is_open := True
-      end
-
-   post_pass_list (auth_token: FIXED_STRING)
+   post_pass_list (auth_token, new_auth_token: FIXED_STRING)
       require
          auth_token /= Void
+         new_auth_token /= Void
       local
          form: CGI_FORM
       do
          create form.parse(std_input)
          if not form.form.fast_has(form_token_name) then
-            response_403("Missing token field")
-         elseif form.form.fast_at(form_token_name).is_equal(auth_token) then
-            response_403("Invalid token value")
+            response_403("/pass: missing token field")
+         elseif not form.form.fast_at(form_token_name).is_equal(auth_token) then
+            debug
+               log.trace.put_line("'#(1)' =/= '#(2)'" # form.form.fast_at(form_token_name) # auth_token)
+            end
+            response_403("/pass: invalid token value")
          else
-            log.trace.put_line("Form seems legit -- calling server with list query")
-            call_server(create {QUERY_LIST}.make, agent when_pass_list(auth_token, ?))
+            log.trace.put_line("/pass: form seems legit -- calling server with list query")
+            call_server(create {QUERY_LIST}.make, agent when_pass_list(new_auth_token, ?))
          end
       end
 
-   post_pass_key (key, auth_token: FIXED_STRING)
+   post_pass_key (key, auth_token, new_auth_token: FIXED_STRING)
       require
          key /= Void
          auth_token /= Void
@@ -419,56 +320,40 @@ feature {}
       do
          create form.parse(std_input)
          if not form.form.fast_has(form_token_name) then
-            response_403("Missing token field")
-         elseif form.form.fast_at(form_token_name).is_equal(auth_token) then
-            response_403("Invalid token name")
+            response_403("/pass/*: missing token field")
+         elseif not form.form.fast_at(form_token_name).is_equal(auth_token) then
+            debug
+               log.trace.put_line("'#(1)' =/= '#(2)'" # form.form.fast_at(form_token_name) # auth_token)
+            end
+            response_403("/pass: invalid token value")
          else
-            do_get(key, agent when_pass_get(?), agent unknown_key(?))
+            do_get(key, agent when_pass_get(?, new_auth_token), agent unknown_key(?))
          end
       end
 
    token_name: STRING "_http_token"
 
    get_auth_token (action: PROCEDURE[TUPLE[FIXED_STRING, FIXED_STRING]])
-         -- action takes the old and new auth tokens
-      local
-         old_token: STRING
       do
-         old_token := session_vault.pass(token_name)
-         if old_token /= Void then
-            debug
-               log.trace.put_line("Old token was: #(1)" # old_token)
-            end
-            --|**** TODO (Liberty Eiffel) I would have liked to write:
-            -- next_auth_token(agent action(old_token, ?))
-            next_auth_token(agent (ot, nt: FIXED_STRING)
-                            do
-                               action(ot, nt)
-                            end(old_token.intern, ?))
+         start_session
+         if session.is_available then
+            session.get_auth_token(action, agent response_403(?))
          else
-            response_403("Old token not found")
+            response_403("Invalid session")
          end
       end
 
    next_auth_token (action: PROCEDURE[TUPLE[FIXED_STRING]])
-         -- action takes the new auth token
-      local
-         error: ABSTRACT_STRING; new_token: STRING
       do
-         log.trace.put_line("Need to get a new auth token")
-         error := session_vault.set_random(token_name, "12an")
-         if error.is_empty then
-            new_token := session_vault.pass(token_name)
-            debug
-               log.trace.put_line("New token is: #(1)" # new_token)
-            end
-            action(new_token.intern)
+         start_session
+         if session.is_available then
+            session.next_auth_token(action, agent response_503(?))
          else
-            response_503("Could not set auth token: #(1)" # error)
+            response_403("Invalid session")
          end
       end
 
-   when_pass_list (auth_token: FIXED_STRING; a_reply: MESSAGE)
+   when_pass_list (new_auth_token: FIXED_STRING; a_reply: MESSAGE)
       local
          reply: REPLY_LIST
       do
@@ -477,8 +362,11 @@ feature {}
             if reply.error.is_empty then
                log.trace.put_line("Session vault provided auth token, responding with the pass list")
                html_response("pass_list.html",
-                             create {WEBCLIENT_PASS_LIST}.make(reply, auth_token, Current,
-                                                               agent (key: STRING) do response_503("pass_list: bad template key " + key) end(?)))
+                             create {WEBCLIENT_PASS_LIST}.make(reply, new_auth_token, Current,
+                                                               agent (key: STRING)
+                                                                 do
+                                                                    response_503("/pass: bad template key " + key)
+                                                                 end(?)))
             else
                response_503(reply.error)
             end
@@ -487,15 +375,15 @@ feature {}
          end
       end
 
-   when_pass_get (a_pass: STRING)
+   when_pass_get (a_pass: STRING new_auth_token: FIXED_STRING)
       do
-         next_auth_token(agent (new_token: FIXED_STRING)
-                            do
-                               log.trace.put_line("Session vault provided auth token, responding with the pass")
-                               html_response("pass.html",
-                                             create {WEBCLIENT_PASS}.make(a_pass, new_token, Current,
-                                                                          agent (key: STRING) do response_503("pass: bad template key " + key) end(?)))
-                            end(?))
+         log.trace.put_line("Session vault provided auth token, responding with the pass")
+         html_response("pass.html",
+                       create {WEBCLIENT_PASS}.make(a_pass, new_auth_token, Current,
+                                                    agent (key: STRING)
+                                                       do
+                                                          response_503("/pass/*: bad template key " + key)
+                                                       end(?)))
       end
 
    protect_html (a_data: ABSTRACT_STRING): STRING
@@ -561,6 +449,7 @@ feature {}
          if template_resolver = Void then
             filename := "#(1)/#(2)" # conf(config_static_path) # template_name
             create {TEXT_FILE_READ} input.connect_to(filename)
+            first_response := Void
          else
             filename := "#(1)/#(2)" # conf(config_template_path) # template_name
             create {TEMPLATE_INPUT_STREAM} input.connect_to(create {TEXT_FILE_READ}.connect_to(filename), template_resolver)
@@ -582,42 +471,54 @@ feature {}
 
    cgi_reply (r: CGI_RESPONSE)
       local
-         doc: CGI_RESPONSE_DOCUMENT; save: ABSTRACT_STRING
+         doc: CGI_RESPONSE_DOCUMENT; fr: like first_response
       do
          if cgi.need_reply then
-            if log.is_info then
-               if doc ?:= r then
-                  doc ::= r
-                  log.info.put_line("Reply document with status #(1)" # doc.status.out)
-               else
-                  log.info.put_line("Reply #(1)" # r.out)
+            if first_response /= Void then
+               fr := first_response
+               first_response := Void
+               cgi_reply(fr)
+            else
+               if log.is_info then
+                  if doc ?:= r then
+                     doc ::= r
+                     log.info.put_line("Reply document with status #(1)" # doc.status.out)
+                  else
+                     log.info.put_line("Reply #(1)" # r.out)
+                  end
+                  debug
+                     if log.is_trace then
+                        cgi.set_output(create {MONITORED_OUTPUT_STREAM}.connect_to(cgi.output, log.trace))
+                     end
+                  end
                end
-               if log.is_trace then
-                  cgi.set_output(create {MONITORED_OUTPUT_STREAM}.connect_to(cgi.output, log.trace))
-               end
+               cgi.set_output(create {CRLF_OUTPUT_STREAM}.connect_to(cgi.output))
+               cgi.reply(r)
+               cgi.output.disconnect
             end
-            cgi.set_output(create {CRLF_OUTPUT_STREAM}.connect_to(cgi.output))
-            cgi.reply(r)
-            cgi.output.disconnect
-            if session_vault.is_open then
-               save := session_vault.save
-               if not save.is_empty then
-                  log.warning.put_line(save)
-               end
-               close_session_vault
-            end
+         elseif first_response = Void then
+            log.warning.put_line("CGI does not need reply or reply already sent -- response is kept for later")
+            first_response := r
          else
-            log.warning.put_line("CGI does not need reply / reply already sent")
+            log.warning.put_line("CGI does not need reply or reply already sent -- response is lost")
          end
       end
 
-   close_session_vault
+   start_session
       do
-         log.trace.put_line("Closing session vault")
-         session_vault.close
-         lock.done
-         lock_file.disconnect
+         if session = Void then
+            create session.make(Current)
+         end
       end
+
+   end_session
+      do
+         if session /= Void then
+            session.relinquish
+         end
+      end
+
+   first_response: CGI_RESPONSE
 
 feature {}
    make
@@ -629,20 +530,10 @@ feature {}
    cgi: CGI
    is_head: BOOLEAN
 
-   session_vault: VAULT
-   vaultpath: ABSTRACT_STRING
-   is_open: BOOLEAN
-
-   jar: CGI_COOKIE_JAR
-
-   flock: FILE_LOCKER
-   lock: FILE_LOCK
-   lock_file: TEXT_FILE_WRITE
+   session: WEBCLIENT_SESSION
+   open_action: PROCEDURE[TUPLE]
 
 invariant
    cgi /= Void
-   session_vault /= Void implies lock /= Void
-   lock /= Void implies lock_file /= Void
-   lock.locked implies lock_file.is_connected
 
 end -- class WEBCLIENT
