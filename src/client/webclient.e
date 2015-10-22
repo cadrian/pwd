@@ -457,7 +457,11 @@ feature {}
          if input.is_connected then
             log.trace.put_line("Connected to file: #(1)" # filename)
             create doc.set_content_type("text/html")
-            doc.set_field("Cache-Control", "private,no-store,no-cache")
+            if template_resolver = Void then
+               doc.set_field("Cache-Control", "private,max-age:300")
+            else
+               doc.set_field("Cache-Control", "private,no-store,no-cache")
+            end
             if not is_head then
                extern.splice(input, doc.body)
             end
