@@ -1,15 +1,15 @@
 <html>
   <head>
     <title>CAD's password vault pass</title>
+    <script src="#(root)/static/clipboard.min.js"></script>
     <script src="#(root)/static/webclient.js"></script>
     <link rel="stylesheet" href="#(root)/static/webclient.css">
+    <script type="text/javascript">
+      document.addEventListener('DOMContentLoaded', setClipboard, false);
+    </script>
   </head>
   <body>
-    <div class="hidden">
-      <span id="copytext">#(pass)</span>
-      <textarea id="holdtext"></textarea>
-    </div>
-    <button onClick="copy();">Copy</button>
+    <button class="clip" data-clipboard-text="#(pass)">Copy</button>
     <form method="post" action="#(root)/pass">
       <input type="hidden" name="#(form_token_name)" value="#(auth_token)" />
       <input type="submit" value="Back" />
