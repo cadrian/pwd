@@ -29,7 +29,7 @@ case $name in
         #rescue=no
         #debug_pwd=yes
         #debug_liberty='"json/parser"); debug("socket"'
-        #assert=require
+        #assert=no
         #no_strip=yes
         #clean=no
         ;;
@@ -45,10 +45,10 @@ case $name in
     webclient)
         #trace=yes
         rescue=no
-        #debug_pwd=yes
+        debug_pwd=yes
         #debug_liberty='"json/parser"); debug("socket"'
         assert=require
-        #no_strip=yes
+        no_strip=yes
         #clean=no
         ;;
     server)

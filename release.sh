@@ -8,8 +8,11 @@
 #                                                                        #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
+set -e
+set -u
+
 JOBS=${NB_JOBS:+-j$NB_JOBS}
-JOBS=${JOBS:--j$((2 * $(cat /proc/cpuinfo | grep ^processor | wc -l)))}
+JOBS=${JOBS:--j$(($(cat /proc/cpuinfo | grep ^processor | wc -l) - 1))}
 
 ON_KEY=false
 MINGW=false
