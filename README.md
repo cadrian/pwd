@@ -2,7 +2,8 @@
 
 # General description
 
-`pwd` is a small and simple password manager utility.
+`pwd` -- Passwords With Dignity -- is a small and simple password
+management utility.
 
 Typical use is through *dmenu* (<http://tools.suckless.org/dmenu/>)
 
