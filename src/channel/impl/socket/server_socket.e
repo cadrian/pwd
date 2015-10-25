@@ -23,7 +23,7 @@ inherit
 insert
    LOGGING
 
-create {CHANNEL_FACTORY}
+create {ANY}
    make
 
 feature {SERVER}

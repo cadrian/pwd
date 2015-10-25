@@ -68,6 +68,26 @@ endif
 all:$(for exe in $EXE; do printf ' %s' exe/$exe; done; echo)
 EOF
 
+
+while read class; do
+    mkdir -p $dir/test/testable/$(dirname "$class")
+    base=$(echo "$class" | sed 's!\.e$!!;s!_def$!!')
+    expect=$dir/test/testable/${base}_expect.e
+    mock=$dir/test/testable/${base}_mock.e
+    source=$dir/src/$class
+
+    rm -f $expect $mock
+    se mock --expect $expect --mock $mock $source
+
+done <<EOF
+channel/channel_factory_def.e
+channel/client_channel.e
+channel/server_channel.e
+config/shared_def.e
+extern/extern_def.e
+EOF
+
+
 for exe in $EXE
 do
     mkdir -p $bootstrap_dir/c/$exe

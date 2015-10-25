@@ -24,21 +24,21 @@ create {}
 feature {}
    make
       do
-         assert(call_cgi("GET", "", Void).is_equal("Location:https://test.server.net:8943/open%R%NSet-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%R%N"))
+         assert(call_cgi("GET", "").is_equal("Location:https://test.server.net:8943/open%R%NSet-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%R%N"))
 
-         assert(call_cgi("GET", "/", Void).is_equal("Location:https://test.server.net:8943/open%R%NSet-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%R%N"))
+         assert(call_cgi("GET", "/").is_equal("Location:https://test.server.net:8943/open%R%NSet-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%R%N"))
 
-         assert(call_cgi("GET", "/open", Void).is_equal("Content-Type:text/html%R%N%
-                                                        %Cache-Control:%"private,no-store,no-cache%"%R%N%
-                                                        %Set-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%
-                                                        %%R%N%
-                                                        %<html><body></body></html>%R%N"))
+         assert(call_cgi("GET", "/open").is_equal("Content-Type:text/html%R%N%
+                                                  %Cache-Control:%"private,no-store,no-cache%"%R%N%
+                                                  %Set-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%
+                                                  %%R%N%
+                                                  %<html><body></body></html>%R%N"))
 
-         assert(call_cgi("GET", "/static/some.txt", Void).is_equal("Content-Type:text/html%R%N%
-                                                                   %Cache-Control:%"private,no-store,no-cache%"%R%N%
-                                                                   %Set-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%
-                                                                   %%R%N%
-                                                                   %SOME TEXT%R%N"))
+         assert(call_cgi("GET", "/static/some.txt").is_equal("Content-Type:text/html%R%N%
+                                                             %Cache-Control:%"private,no-store,no-cache%"%R%N%
+                                                             %Set-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%
+                                                             %%R%N%
+                                                             %SOME TEXT%R%N"))
 
 
          --assert(call_cgi("GET", "/pass", "[

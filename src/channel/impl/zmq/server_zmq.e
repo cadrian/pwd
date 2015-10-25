@@ -18,7 +18,7 @@ class SERVER_ZMQ
 inherit
    SERVER_CHANNEL
 
-create {CHANNEL_FACTORY}
+create {ANY}
    make
 
 feature {SERVER}

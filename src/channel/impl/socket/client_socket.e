@@ -22,7 +22,7 @@ insert
    CONFIGURABLE
    LOGGING
 
-create {CHANNEL_FACTORY}
+create {ANY}
    make
 
 feature {CLIENT}

@@ -13,84 +13,48 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class SHARED
-   --
-   -- A façade to the actual shared configuration
-   --
+deferred class SHARED_DEF
 
-insert
-   TEST_FACADE[SHARED_DEF]
+inherit
+   TESTABLE
 
-feature {ANY}
+feature {SHARED}
    server_pidfile: FIXED_STRING
-      do
-         Result := def.server_pidfile
-      ensure
-         Result /= Void
+      deferred
       end
 
    vault_file: FIXED_STRING
-      do
-         Result := def.vault_file
-      ensure
-         Result /= Void
+      deferred
       end
 
    log_file (tag: ABSTRACT_STRING): FIXED_STRING
       require
          tag /= Void
-      do
-         Result := def.log_file(tag)
-      ensure
-         Result /= Void
+      deferred
       end
 
    runtime_dir: FIXED_STRING
-      do
-         Result := def.runtime_dir
-      ensure
-         Result /= Void
+      deferred
       end
 
    log_level: FIXED_STRING
-      do
-         Result := def.log_level
-      ensure
-         Result /= Void
+      deferred
       end
 
    default_recipe: FIXED_STRING
-      do
-         Result := def.default_recipe
-      ensure
-         Result /= Void
+      deferred
       end
 
    channel_method: FIXED_STRING
-      do
-         Result := def.channel_method
-      ensure
-         Result /= Void
+      deferred
       end
 
    master_command: FIXED_STRING
-      do
-         Result := def.master_command
-      ensure
-         Result /= Void
+      deferred
       end
 
    master_arguments: FIXED_STRING
-      do
-         Result := def.master_arguments
-      ensure
-         Result /= Void
+      deferred
       end
 
-feature {}
-   def_impl: SHARED_IMPL
-      once
-         create Result
-      end
-
-end -- class SHARED
+end -- class SHARED_DEF

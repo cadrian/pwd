@@ -17,36 +17,73 @@ deferred class ABSTRACT_TEST_WEBCLIENT
 
 insert
    EIFFELTEST_TOOLS
+      redefine
+         default_create
+      end
+
+feature {}
+   default_create
+      local
+         channel_factory: CHANNEL_FACTORY
+         shared: SHARED
+         extern: EXTERN
+      do
+         create mock_extern
+         extern.set_def(mock_extern.mock)
+         scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
+            mock_extern.tmp.whenever.then_return(tmpdir)
+         >>})
+
+         create mock_shared
+         shared.set_def(mock_shared.mock)
+         scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
+            mock_shared.log_file("webclient").then_return(logfile)
+         >>})
+
+         create mock_channel_factory
+         channel_factory.set_def(mock_channel_factory.mock)
+         create mock_client_channel
+         create mock_server_channel
+         scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
+            mock_channel_factory.new_client_channel(tmpdir).then_return(mock_client_channel.mock),
+            mock_channel_factory.new_server_channel.then_return(mock_server_channel.mock)
+         >>})
+
+         -- Mock expectations for channels start, server start...
+         scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
+            mock_client_channel.server_running__match(create {MOCK_ANY[PROCEDURE[TUPLE[BOOLEAN]]]})
+               .with_side_effect(agent (args: MOCK_ARGUMENTS)
+                                    require
+                                       args.count = 1
+                                    local
+                                       when_reply: MOCK_TYPED_ARGUMENT[PROCEDURE[TUPLE[BOOLEAN]]]
+                                    do
+                                       when_reply ::= args.item(1)
+                                       assert(when_reply.item /= Void)
+                                       when_reply.item.call([True])
+                                    end(?))
+         >>})
+
+         scenario.replay_all
+      end
+
+   tmpdir: FIXED_STRING once then "tmpdir".intern end
+   logfile: FIXED_STRING once then ("#(1).log" # generating_type).intern end
+
+   mock_shared: SHARED_EXPECT
+   mock_extern: EXTERN_EXPECT
+   mock_channel_factory: CHANNEL_FACTORY_EXPECT
+   mock_client_channel: CLIENT_CHANNEL_EXPECT
+   mock_server_channel: SERVER_CHANNEL_EXPECT
 
 feature {}
    client: WEBCLIENT
 
-   call_cgi (method, path: STRING; server_commands: STRING): STRING
+   call_cgi (method, path: STRING): STRING
       local
-         system: SYSTEM; tfw: TEXT_FILE_WRITE; pf: PROCESS_FACTORY; p: PROCESS
-         cgi_io: CGI_IO
-         bd: BASIC_DIRECTORY; home: ABSTRACT_STRING
+         system: SYSTEM; cgi: CGI_IO
+         sos: STRING_OUTPUT_STREAM
       do
-         Result := ""
-
-         if server_commands /= Void then
-            create tfw.connect_to("webclient.conf/run/server.out")
-            if tfw.is_connected then
-               tfw.put_string(server_commands)
-               tfw.disconnect
-            end
-            pf.set_direct_input(True)
-            pf.set_direct_output(True)
-            pf.set_direct_error(True)
-            p := pf.execute_command_line("webclient.conf/exe/server")
-         end
-
-         home := "#(1)/webclient.conf" # bd.current_working_directory
-         system.set_environment_variable("XDG_CONFIG_HOME", home.out)
-         system.set_environment_variable("XDG_CACHE_HOME", ("#(1)/run" # home).out)
-         system.set_environment_variable("XDG_RUNTIME_DIR", ("#(1)/run" # home).out)
-         system.set_environment_variable("XDG_CONFIG_DIRS", home.out)
-         system.set_environment_variable("XDG_DATA_HOME", home.out)
          system.set_environment_variable("REQUEST_METHOD", method)
          system.set_environment_variable("REMOTE_USER", "testuser")
          system.set_environment_variable("PATH_INFO", path)
@@ -57,12 +94,11 @@ feature {}
          system.set_environment_variable("HTTPS", "on")
          system.set_environment_variable("HTTP_HOST", "test.server.net:8943")
 
-         cgi_io.set_output(create {STRING_OUTPUT_STREAM}.connect_to(Result))
+         Result := ""
+         create sos.connect_to(Result)
+         cgi.set_output(sos)
 
          create client.make
-         if server_commands /= Void then
-            p.wait
-         end
 
          sedb_breakpoint
       end

@@ -99,6 +99,12 @@ cluster
             debug($debug_pwd)
         end
 
+    testable: "src/testable"
+        default
+            assertion($assert)
+            debug($debug_pwd)
+        end
+
     liberty_core: "\${$path_liberty_core}loadpath.se"
         default
             debug($debug_liberty)

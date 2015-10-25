@@ -24,7 +24,7 @@ insert
    LOGGING
    FILE_TOOLS
 
-create {CHANNEL_FACTORY}
+create {ANY}
    make
 
 feature {CLIENT}

@@ -1,2 +1,3 @@
 ./
 ../src/loadpath.se
+testable/loadpath.se

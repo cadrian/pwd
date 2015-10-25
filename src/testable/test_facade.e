@@ -13,33 +13,23 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class CHANNEL_FACTORY
-
-insert
-   TEST_FACADE[CHANNEL_FACTORY_DEF]
-
-feature {CLIENT}
-   new_client_channel (tmpdir: ABSTRACT_STRING): CLIENT_CHANNEL
-      require
-         tmpdir /= Void
-      do
-         Result := def.new_client_channel(tmpdir)
-      ensure
-         Result /= Void
-      end
-
-feature {SERVER}
-   new_server_channel: SERVER_CHANNEL
-      do
-         Result := def.new_server_channel
-      ensure
-         Result /= Void
-      end
+deferred class TEST_FACADE[T_ -> TESTABLE]
+   --
+   -- Production version of "testable" objects
+   --
 
 feature {}
-   def_impl: CHANNEL_FACTORY_IMPL
-      once
-         create Result
+   def: T_
+      do
+         Result := def_impl
+      ensure
+         Result /= Void
       end
 
-end -- class CHANNEL_FACTORY
+   def_impl: T_
+      deferred
+      ensure
+         Result /= Void
+      end
+
+end -- class TEST_FACADE

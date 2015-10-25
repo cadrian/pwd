@@ -13,29 +13,24 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class EXTERN
-   --
-   -- A façade to the actual extern implementation
-   --
+deferred class EXTERN_DEF
 
-insert
-   TEST_FACADE[EXTERN_DEF]
+inherit
+   TESTABLE
 
-feature {ANY}
-   make (fifo: FIXED_STRING)
+feature {EXTERN}
+   makefifo (fifo: FIXED_STRING)
          -- create a named fifo
       require
          fifo /= Void
-      do
-         def.makefifo(fifo)
+      deferred
       ensure
          exists(fifo)
       end
 
    tmp: FIXED_STRING
          -- create a temporary directory
-      do
-         Result := def.tmp
+      deferred
       ensure
          Result /= Void
       end
@@ -44,40 +39,32 @@ feature {ANY}
          -- True if the file exists and is a fifo
       require
          name /= Void
-      do
-         Result := def.exists(name)
+      deferred
       end
 
    sleep (milliseconds: INTEGER_64)
       require
          milliseconds >= 0
-      do
-         def.sleep(milliseconds)
+      deferred
       end
 
    wait_for (name: FIXED_STRING)
       require
          name /= Void
-      do
-         def.wait_for(name)
+      deferred
       end
 
    splice (input: INPUT_STREAM; output: OUTPUT_STREAM)
-      do
-         def.splice(input, output)
+      require
+         input.is_connected
+         output.is_connected
+      deferred
       end
 
    process_running (pid: INTEGER): BOOLEAN
       require
          pid > 0
-      do
-         Result := def.process_running(pid)
+      deferred
       end
 
-feature {}
-   def_impl: EXTERN_IMPL
-      once
-         create Result
-      end
-
-end -- class EXTERN
+end -- class EXTERN_DEF
