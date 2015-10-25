@@ -17,12 +17,9 @@ deferred class ABSTRACT_TEST_WEBCLIENT
 
 insert
    EIFFELTEST_TOOLS
-      redefine
-         default_create
-      end
 
 feature {}
-   default_create
+   prepare_test
       local
          channel_factory: CHANNEL_FACTORY
          shared: SHARED
@@ -37,7 +34,11 @@ feature {}
          create mock_shared
          shared.set_def(mock_shared.mock)
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
-            mock_shared.log_file("webclient").then_return(logfile)
+            mock_shared.log_file("webclient").whenever.then_return(logfile),
+            mock_shared.log_level.whenever.then_return(loglevel),
+            mock_shared.server_pidfile.whenever.then_return(pidfile),
+            mock_shared.vault_file.whenever.then_return(vaultfile),
+            mock_shared.runtime_dir.whenever.then_return(runtimedir)
          >>})
 
          create mock_channel_factory
@@ -46,29 +47,76 @@ feature {}
          create mock_server_channel
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_channel_factory.new_client_channel(tmpdir).then_return(mock_client_channel.mock),
-            mock_channel_factory.new_server_channel.then_return(mock_server_channel.mock)
+--            mock_channel_factory.new_server_channel.then_return(mock_server_channel.mock)
          >>})
 
          -- Mock expectations for channels start, server start...
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
-            mock_client_channel.server_running__match(create {MOCK_ANY[PROCEDURE[TUPLE[BOOLEAN]]]})
+
+            mock_client_channel.server_running__match(create {MOCK_ANY[PROCEDURE[TUPLE[BOOLEAN]]]}).whenever
                .with_side_effect(agent (args: MOCK_ARGUMENTS)
-                                    require
-                                       args.count = 1
                                     local
                                        when_reply: MOCK_TYPED_ARGUMENT[PROCEDURE[TUPLE[BOOLEAN]]]
                                     do
                                        when_reply ::= args.item(1)
-                                       assert(when_reply.item /= Void)
                                        when_reply.item.call([True])
+                                    end(?)),
+
+            mock_client_channel.call__match(create {MOCK_EQ[MESSAGE]}.make(create {QUERY_VERSION}.make), create {MOCK_ANY[PROCEDURE[TUPLE[MESSAGE]]]}).whenever
+               .with_side_effect(agent (args: MOCK_ARGUMENTS)
+                                    local
+                                       when_reply: MOCK_TYPED_ARGUMENT[PROCEDURE[TUPLE[MESSAGE]]]
+                                       v: VERSION
+                                    do
+                                       when_reply ::= args.item(2)
+                                       when_reply.item.call([create {REPLY_VERSION}.make("", v.version)])
+                                    end(?)),
+
+            mock_client_channel.call__match(create {MOCK_EQ[MESSAGE]}.make(create {QUERY_IS_OPEN}.make), create {MOCK_ANY[PROCEDURE[TUPLE[MESSAGE]]]}).whenever
+               .with_side_effect(agent (args: MOCK_ARGUMENTS)
+                                    local
+                                       when_reply: MOCK_TYPED_ARGUMENT[PROCEDURE[TUPLE[MESSAGE]]]
+                                    do
+                                       when_reply ::= args.item(2)
+                                       when_reply.item.call([create {REPLY_IS_OPEN}.make("", True)])
                                     end(?))
+
+            mock_client_channel.cleanup
+
          >>})
 
          scenario.replay_all
       end
 
-   tmpdir: FIXED_STRING once then "tmpdir".intern end
-   logfile: FIXED_STRING once then ("#(1).log" # generating_type).intern end
+   tmpdir: FIXED_STRING
+      once
+         Result := "tmpdir".intern
+      end
+
+   logfile: FIXED_STRING
+      once
+         Result := ("#(1).log" # generating_type).intern
+      end
+
+   pidfile: FIXED_STRING
+      once
+         Result := "pidfile".intern
+      end
+
+   loglevel: FIXED_STRING
+      once
+         Result := "trace".intern
+      end
+
+   vaultfile: FIXED_STRING
+      once
+         Result := "vaultfile".intern
+      end
+
+   runtimedir: FIXED_STRING
+      once
+         Result := "runtimedir".intern
+      end
 
    mock_shared: SHARED_EXPECT
    mock_extern: EXTERN_EXPECT

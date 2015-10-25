@@ -17,9 +17,30 @@ deferred class SERVER_CHANNEL
 
 insert
    JOB
-      export {SERVER} prepare, is_ready, continue, done, restart
-      end
+--      export {SERVER} prepare, is_ready, continue, done, restart
+--      end
    LOGGING
+
+feature {SERVER} -- instead of export; because mocker needs deferred features in this very source class
+   prepare (events: EVENTS_SET)
+      deferred
+      end
+
+   is_ready (events: EVENTS_SET): BOOLEAN
+      deferred
+      end
+
+   continue
+      deferred
+      end
+
+   done: BOOLEAN
+      deferred
+      end
+
+   restart
+      deferred
+      end
 
 feature {SERVER}
    on_receive (message: FUNCTION[TUPLE[MESSAGE], MESSAGE])

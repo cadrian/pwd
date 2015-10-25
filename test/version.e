@@ -13,7 +13,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-class VERSION
+expanded class VERSION
 
 feature {ANY}
    version: FIXED_STRING

@@ -24,6 +24,8 @@ create {}
 feature {}
    make
       do
+         prepare_test
+
          assert(call_cgi("GET", "").is_equal("Location:https://test.server.net:8943/open%R%NSet-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%R%N"))
 
          assert(call_cgi("GET", "/").is_equal("Location:https://test.server.net:8943/open%R%NSet-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%R%N"))
