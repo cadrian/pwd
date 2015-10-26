@@ -46,7 +46,7 @@ feature {}
          create mock_client_channel
          create mock_server_channel
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
-            mock_channel_factory.new_client_channel(tmpdir).then_return(mock_client_channel.mock),
+            mock_channel_factory.new_client_channel(tmpdir).whenever.then_return(mock_client_channel.mock),
 --            mock_channel_factory.new_server_channel.then_return(mock_server_channel.mock)
          >>})
 
@@ -79,13 +79,11 @@ feature {}
                                     do
                                        when_reply ::= args.item(2)
                                        when_reply.item.call([create {REPLY_IS_OPEN}.make("", True)])
-                                    end(?))
+                                    end(?)),
 
-            mock_client_channel.cleanup
+            mock_client_channel.cleanup.whenever
 
          >>})
-
-         scenario.replay_all
       end
 
    tmpdir: FIXED_STRING
@@ -123,6 +121,31 @@ feature {}
    mock_channel_factory: CHANNEL_FACTORY_EXPECT
    mock_client_channel: CLIENT_CHANNEL_EXPECT
    mock_server_channel: SERVER_CHANNEL_EXPECT
+
+   expect_splice
+      do
+         scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
+            mock_extern.splice__match(create {MOCK_ANY[INPUT_STREAM]}, create {MOCK_ANY[OUTPUT_STREAM]})
+               .with_side_effect(agent (args: MOCK_ARGUMENTS)
+                                    local
+                                       input: MOCK_TYPED_ARGUMENT[INPUT_STREAM]
+                                       output: MOCK_TYPED_ARGUMENT[OUTPUT_STREAM]
+                                    do
+                                       input ::= args.item(1)
+                                       output ::= args.item(2)
+                                       from
+                                          input.item.read_line
+                                       until
+                                          input.item.end_of_input
+                                       loop
+                                          output.item.put_line(input.item.last_string)
+                                          input.item.read_line
+                                       end
+                                       output.item.put_string(input.item.last_string)
+                                       output.item.flush
+                                    end(?))
+         >>})
+      end
 
 feature {}
    client: WEBCLIENT

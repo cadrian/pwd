@@ -13,7 +13,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-class TEST_WEBCLIENT_01
+class TEST_WEBCLIENT_04
 
 insert
    ABSTRACT_TEST_WEBCLIENT
@@ -26,7 +26,11 @@ feature {}
       do
          prepare_test
          scenario.replay_all
-         assert(call_cgi("GET", "").is_equal("Location:https://test.server.net:8943/open%R%N%R%N"))
+         assert(call_cgi("GET", "/static/some.txt").is_equal("Content-Type:text/html%R%N%
+                                                             %Cache-Control:%"private,no-store,no-cache%"%R%N%
+                                                             %Set-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%
+                                                             %%R%N%
+                                                             %SOME TEXT%R%N"))
       end
 
-end -- class TEST_WEBCLIENT_01
+end -- class TEST_WEBCLIENT_04
