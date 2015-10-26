@@ -126,7 +126,7 @@ feature {EXTERN}
          from
             input.read_line
          until
-            input.end_of_input --or else input.last_string.is_empty
+            input.end_of_input
          loop
             output.put_line(input.last_string)
             input.read_line
