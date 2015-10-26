@@ -24,7 +24,6 @@ inherit
 
 insert
    GLOBALS
-   FILE_TOOLS
 
 create {}
    make
@@ -99,7 +98,7 @@ feature {}
    run_in_child
          -- the main loop
       local
-         loop_stack: LOOP_STACK; tfw: TEXT_FILE_WRITE; pid: INTEGER; is_killed, initialized: BOOLEAN
+         loop_stack: LOOP_STACK; tfw: OUTPUT_STREAM; pid: INTEGER; is_killed, initialized: BOOLEAN
       do
          if not is_killed then
             period := {REAL 86400.0} -- one day
@@ -110,8 +109,8 @@ feature {}
                pid := processor.pid
                log.info.put_line(once "Starting server (#(1))." # pid.out)
 
-               create tfw.connect_to(shared.server_pidfile)
-               if tfw.is_connected then
+               tfw := filesystem.connect_write(shared.server_pidfile)
+               if tfw /= Void then
                   tfw.put_integer(pid)
                   tfw.put_new_line
                   tfw.disconnect
@@ -301,7 +300,7 @@ feature {QUERY_MASTER}
 feature {QUERY_CHANGE_MASTER}
    visit_change_master (query: QUERY_CHANGE_MASTER)
       local
-         other: VAULT; ft: FILE_TOOLS; error: ABSTRACT_STRING
+         other: VAULT; error: ABSTRACT_STRING
       do
          if vault.is_open then
             vault.close
@@ -315,8 +314,8 @@ feature {QUERY_CHANGE_MASTER}
             vault.close
 
             if error.is_empty then
-               ft.rename_to(vault.file, "#(1).old" # vault.file)
-               ft.rename_to("#(1).new" # vault.file, vault.file)
+               filesystem.rename_to(vault.file, "#(1).old" # vault.file)
+               filesystem.rename_to("#(1).new" # vault.file, vault.file)
 
                vault.open(query.new_master)
                if vault.is_open then
@@ -423,6 +422,9 @@ feature {QUERY_VERSION}
       do
          create {REPLY_VERSION} reply.make(once "", version)
       end
+
+feature {}
+   filesystem: FILESYSTEM
 
 invariant
    is_running implies vault /= Void

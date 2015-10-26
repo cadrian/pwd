@@ -18,9 +18,6 @@ class COMMAND_MERGE
 inherit
    COMMAND_WITH_REMOTE
 
-insert
-   FILE_TOOLS
-
 create {CONSOLE}
    make
 
@@ -65,7 +62,7 @@ feature {}
             end
          end
 
-         delete(merge_vault)
+         filesystem.delete(merge_vault)
       end
 
    merge_vault: FIXED_STRING
@@ -89,5 +86,7 @@ feature {}
             log.error.put_line(once "Unexpected reply")
          end
       end
+
+   filesystem: FILESYSTEM
 
 end -- class COMMAND_MERGE

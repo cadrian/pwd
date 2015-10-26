@@ -128,18 +128,16 @@ feature {WEBCLIENT}
    is_available: BOOLEAN
 
    invalidate
-      local
-         ft: FILE_TOOLS
       do
          relinquish
-         ft.delete(vaultpath)
+         filesystem.delete(vaultpath)
       end
 
 feature {}
    lock_vault: BOOLEAN
          -- open and lock the session vault
       local
-         pg: PASS_GENERATOR; cookie: CGI_COOKIE; gen: STRING; ft: FILE_TOOLS; i: INTEGER
+         pg: PASS_GENERATOR; cookie: CGI_COOKIE; gen: STRING; i: INTEGER
       do
          if log.is_trace then
             log.trace.put_line("Opening session vault")
@@ -168,7 +166,7 @@ feature {}
             vaultpath := vault_path(gen)
             if is_valid_vaultpath(vaultpath) then
                log.trace.put_line("Deleting stale #(1) cookie: #(2)" # Session_cookie_name # gen)
-               ft.delete(vaultpath)
+               filesystem.delete(vaultpath)
                check not Result end
             else
                log.trace.put_line("Creating new #(1) cookie" # Session_cookie_name)
@@ -186,8 +184,8 @@ feature {}
             i := i - 1
          end
          if Result then
-            create lock_file.connect_to(vaultpath + ".lock")
-            if lock_file.is_connected then
+            lock_file := filesystem.connect_write(vaultpath + ".lock")
+            if lock_file /= Void then
                lock := flock.lock(lock_file)
                log.trace.put_line("Locking session vault...")
                lock.write
@@ -205,7 +203,7 @@ feature {}
                Result := False
             end
          else
-            create lock_file.make
+            lock_file := io
             log.error.put_line("Could not create session vault")
          end
       end
@@ -219,17 +217,17 @@ feature {}
 
    is_valid_vaultpath (vp: ABSTRACT_STRING): BOOLEAN
       local
-         ft: FILE_TOOLS; now, last_change: TIME
+         now, last_change: TIME
       do
-         if ft.file_exists(vp) then
-            last_change := ft.last_change_of(vp)
+         if filesystem.file_exists(vp) then
+            last_change := filesystem.last_change_of(vp)
             now.update
             last_change.add_minute(Session_timeout_minutes)
             if last_change > now then
                Result := True
             else
                log.trace.put_line("Deleting stale #(1) cookie: #(2)" # Session_cookie_name # vp)
-               ft.delete(vp)
+               filesystem.delete(vp)
             end
          end
       end
@@ -259,12 +257,14 @@ feature {}
 
    flock: FILE_LOCKER
    lock: FILE_LOCK
-   lock_file: TEXT_FILE_WRITE
+   lock_file: OUTPUT_STREAM
 
    vault: VAULT
    vaultpath: ABSTRACT_STRING
 
    old_token, new_token: STRING
+
+   filesystem: FILESYSTEM
 
 invariant
    webclient /= Void

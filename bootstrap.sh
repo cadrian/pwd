@@ -84,7 +84,11 @@ channel/channel_factory_def.e
 channel/client_channel.e
 channel/server_channel.e
 config/shared_def.e
+extern/environment_def.e
 extern/extern_def.e
+extern/file_lock.e
+extern/file_locker_def.e
+extern/filesystem_def.e
 EOF
 
 

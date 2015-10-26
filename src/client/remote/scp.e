@@ -47,12 +47,12 @@ feature {ANY}
 
    load (local_file: ABSTRACT_STRING)
       local
-         proc: PROCESS; arg: like arguments; sys: SYSTEM
+         proc: PROCESS; arg: like arguments
       do
          arg := arguments
          if arg /= Void then
             arg := once "#(1) #(2)" # arg # local_file
-            sys.set_environment_variable(once "SSH_ASKPASS", once "true")
+            environment.set_variable(once "SSH_ASKPASS", once "true")
             proc := processor.execute(once "scp", arg)
             if proc.is_connected then
                proc.wait
@@ -184,5 +184,7 @@ feature {}
       once
          Result := ("options").intern
       end
+
+   environment: ENVIRONMENT
 
 end -- class SCP

@@ -17,8 +17,6 @@ class VAULT
 
 insert
    LOGGING
-   FILE_TOOLS
-   SYSTEM
    CONFIGURABLE
 
 create {ANY}
@@ -42,7 +40,7 @@ feature {ANY}
                key.clear
             end(?))
          data.clear_count
-         set_environment_variable(once "VAULT_MASTER", once "")
+         environment.set_variable(once "VAULT_MASTER", once "")
          is_open := False
          log.info.put_line(once "Vault closed: #(1)" # file)
       ensure
@@ -54,11 +52,11 @@ feature {ANY}
          master /= Void
          not is_open
       local
-         proc: PROCESS; vault_file: TEXT_FILE_READ
+         proc: PROCESS; vault_file: INPUT_STREAM
       do
-         set_environment_variable(once "VAULT_MASTER", master)
-         create vault_file.connect_to(file)
-         if vault_file.is_connected then
+         environment.set_variable(once "VAULT_MASTER", master)
+         vault_file := filesystem.connect_read(file)
+         if vault_file /= Void then
             log.trace.put_line(once "open vault")
             proc := processor.execute_redirect(once "openssl", once "#(1) -d -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
             if proc.is_connected then
@@ -69,7 +67,7 @@ feature {ANY}
                if proc.status = 0 then
                   is_open := True
                else
-                  set_environment_variable(once "VAULT_MASTER", once "")
+                  environment.set_variable(once "VAULT_MASTER", once "")
                end
             end
 
@@ -133,21 +131,21 @@ feature {ANY}
       require
          is_open
       local
-         proc: PROCESS; tfw: TEXT_FILE_WRITE; ft: FILE_TOOLS; backup: STRING
+         proc: PROCESS; tfw: OUTPUT_STREAM; backup: STRING
       do
          Result := once ""
          if dirty then
             backup := once ""
             backup.make_from_string(file)
             backup.extend('~')
-            ft.copy_to(file, backup)
+            filesystem.copy_to(file, backup)
             proc := processor.execute_redirect(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
             if proc.is_connected then
                print_all_keys(proc.input)
                proc.input.flush
                proc.input.disconnect
 
-               create tfw.connect_to(file)
+               tfw := filesystem.connect_write(file)
                if tfw.is_connected then
                   extern.splice(proc.output, tfw)
                   tfw.flush
@@ -159,7 +157,7 @@ feature {ANY}
 
                proc.wait
                if proc.status /= 0 then
-                  ft.copy_to(backup, file)
+                  filesystem.copy_to(backup, file)
                   Result := once "openssl returned status #(1)" # proc.status.out
                end
             end
@@ -311,6 +309,8 @@ feature {}
    dirty: BOOLEAN
 
    extern: EXTERN
+   filesystem: FILESYSTEM
+   environment: ENVIRONMENT
 
    processor: PROCESSOR
 

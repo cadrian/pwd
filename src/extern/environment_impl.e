@@ -13,28 +13,23 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class FILE_LOCKER
-   --
-   -- A façade to the actual file_locker implementation
-   --
+class ENVIRONMENT_IMPL
 
-insert
-   TEST_FACADE[FILE_LOCKER_DEF]
+inherit
+   ENVIRONMENT_DEF
 
-feature {ANY}
-   lock (a_stream: STREAM): FILE_LOCK
-      require
-         a_stream.has_descriptor
+feature {ENVIRONMENT}
+   variable (name: ABSTRACT_STRING): STRING
       do
-         Result := def.lock(a_stream)
-      ensure
-         Result /= Void
+         Result := system.get_environment_variable(name.out)
+      end
+
+   set_variable (name, value: ABSTRACT_STRING)
+      do
+         system.set_environment_variable(name.out, value.out)
       end
 
 feature {}
-   def_impl: FILE_LOCKER_IMPL
-      once
-         create Result
-      end
+   system: SYSTEM
 
-end -- class FILE_LOCKER
+end -- class ENVIRONMENT_IMPL

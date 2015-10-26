@@ -74,7 +74,7 @@ feature {ANY}
 feature {}
    conf: HASHED_DICTIONARY[HASHED_DICTIONARY[FIXED_STRING, FIXED_STRING], FIXED_STRING]
 
-   make (a_filename: like filename; tfr: TEXT_FILE_READ)
+   make (a_filename: like filename; tfr: INPUT_STREAM)
       require
          a_filename /= Void
          tfr /= Void implies tfr.is_connected
@@ -88,7 +88,7 @@ feature {}
          filename = a_filename
       end
 
-   do_parse_conf (tfr: TEXT_FILE_READ)
+   do_parse_conf (tfr: INPUT_STREAM)
       require
          tfr.is_connected
       local

@@ -17,7 +17,6 @@ deferred class CLIENT
 
 insert
    GLOBALS
-   FILE_TOOLS
 
 feature {}
    processor: PROCESSOR
@@ -110,9 +109,9 @@ feature {}
                               do
                                  if server_running then
                                     check_server_version
-                                 elseif not file_exists(shared.vault_file) then
+                                 elseif not filesystem.file_exists(shared.vault_file) then
                                     check
-                                       not file_exists(server_pidfile)
+                                       not filesystem.file_exists(server_pidfile)
                                     end
                                     server_bootstrap
                                  else
@@ -453,5 +452,7 @@ feature {}
          server_running := value
          action.call([])
       end
+
+   filesystem: FILESYSTEM
 
 end -- class CLIENT

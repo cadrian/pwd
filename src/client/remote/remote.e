@@ -75,10 +75,10 @@ feature {COMMAND}
 
    save_file
       local
-         tfw: TEXT_FILE_WRITE
+         tfw: OUTPUT_STREAM
       do
-         create tfw.connect_to(filename)
-         if tfw.is_connected then
+         tfw := filesystem.connect_write(filename)
+         if tfw /= Void then
             write_to(tfw)
             tfw.disconnect
          end
@@ -86,11 +86,11 @@ feature {COMMAND}
 
    delete_file
       local
-         ft: FILE_TOOLS; path: FIXED_STRING
+         path: FIXED_STRING
       do
          path := filename
-         if ft.file_exists(path) then
-            ft.delete(path)
+         if filesystem.file_exists(path) then
+            filesystem.delete(path)
          end
       end
 
@@ -112,6 +112,8 @@ feature {}
             stream.put_line(once "#(1) = #(2)" # property # value)
          end
       end
+
+   filesystem: FILESYSTEM
 
 invariant
    name /= Void

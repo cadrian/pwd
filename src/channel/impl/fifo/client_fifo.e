@@ -22,7 +22,6 @@ insert
    SHARED_FIFO
    CONFIGURABLE
    LOGGING
-   FILE_TOOLS
 
 create {ANY}
    make
@@ -30,16 +29,16 @@ create {ANY}
 feature {CLIENT}
    server_running (when_reply: PROCEDURE[TUPLE[BOOLEAN]])
       local
-         tfr: TEXT_FILE_READ; pid: INTEGER; shared: SHARED
+         tfr: INPUT_STREAM; pid: INTEGER; shared: SHARED
          res: BOOLEAN
       do
          if extern.exists(server_fifo) then
             check
                extern.exists(server_fifo)
             end
-            if file_exists(shared.server_pidfile) then
-               create tfr.connect_to(shared.server_pidfile)
-               if tfr.is_connected then
+            if filesystem.file_exists(shared.server_pidfile) then
+               tfr := filesystem.connect_read(shared.server_pidfile)
+               if tfr /= Void then
                   tfr.read_line
                   if tfr.last_string.is_integer then
                      pid := tfr.last_string.to_integer
@@ -52,12 +51,12 @@ feature {CLIENT}
                end
 
                if not res then
-                  delete(shared.server_pidfile)
+                  filesystem.delete(shared.server_pidfile)
                end
             end
 
             if not res then
-               delete(server_fifo)
+               filesystem.delete(server_fifo)
             end
          end
 
@@ -93,13 +92,13 @@ feature {CLIENT}
 
    call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]])
       local
-         tfw: TEXT_FILE_WRITE; tfr: TEXT_FILE_READ
+         tfw: OUTPUT_STREAM; tfr: INPUT_STREAM
       do
          log.trace.put_line(once "Calling: #(1)" # query.generating_type)
          extern.make(client_fifo)
          extern.sleep(25)
-         create tfw.connect_to(server_fifo)
-         if tfw.is_connected then
+         tfw := filesystem.connect_write(server_fifo)
+         if tfw /= Void then
             log.trace.put_line(once "Writing to server...")
             tfw.put_line(client_fifo)
             streamer.write_message(query, tfw)
@@ -108,12 +107,12 @@ feature {CLIENT}
             log.trace.put_line(once "... server fifo written to.")
 
             extern.wait_for(client_fifo)
-            create tfr.connect_to(client_fifo)
-            if tfr.is_connected then
+            tfr := filesystem.connect_read(client_fifo)
+            if tfr /= Void then
                log.trace.put_line(once "Reading from server...")
                streamer.read_message(tfr)
                tfr.disconnect
-               delete(client_fifo)
+               filesystem.delete(client_fifo)
                log.trace.put_line(once "... client fifo read from.")
 
                if streamer.error /= Void then
@@ -141,9 +140,9 @@ feature {CLIENT}
    cleanup
       do
          if extern.exists(client_fifo) then
-            delete(client_fifo)
+            filesystem.delete(client_fifo)
          end
-         delete(client_fifo.substring(client_fifo.lower, client_fifo.upper - 5)) -- "/fifo".count
+         filesystem.delete(client_fifo.substring(client_fifo.lower, client_fifo.upper - 5)) -- "/fifo".count
       end
 
 feature {}
@@ -160,6 +159,8 @@ feature {}
       once
          create Result.make
       end
+
+   filesystem: FILESYSTEM
 
 invariant
    client_fifo /= Void

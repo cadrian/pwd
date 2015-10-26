@@ -59,7 +59,7 @@ feature {}
       require
          a_filename /= Void
       local
-         tfr: TEXT_FILE_READ
+         tfr: INPUT_STREAM
       do
          tfr := xdg.read_config(a_filename)
          if tfr /= Void then

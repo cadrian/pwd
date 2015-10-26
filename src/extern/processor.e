@@ -293,9 +293,9 @@ feature {}
          word /= Void
          var /= Void
       local
-         sys: SYSTEM; value: STRING
+         value: STRING
       do
-         value := sys.get_environment_variable(var)
+         value := environment.variable(var)
          word.append(value)
       end
 
@@ -320,5 +320,7 @@ feature {}
    State_simple_variable_quoted: INTEGER 33
 
    State_braced_variable_quoted: INTEGER 34
+
+   environment: ENVIRONMENT
 
 end -- class PROCESSOR

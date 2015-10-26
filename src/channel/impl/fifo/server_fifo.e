@@ -27,7 +27,6 @@ inherit
 insert
    SHARED_FIFO
    LOGGING
-   FILE_TOOLS
 
 create {ANY}
    make
@@ -59,14 +58,14 @@ feature {SERVER}
 
    continue
       local
-         query, reply: MESSAGE; tfw: TEXT_FILE_WRITE
+         query, reply: MESSAGE; tfw: OUTPUT_STREAM
       do
          if channel.last_string.is_empty then
             log.trace.put_line(once "Received empty query")
          else
             log.info.put_line(once "Received query for fifo: #(1)" # channel.last_string)
-            create tfw.connect_to(channel.last_string)
-            if tfw.is_connected then
+            tfw := filesystem.connect_write(channel.last_string)
+            if tfw /= Void then
                streamer.read_message(channel)
                if streamer.error /= Void then
                   log.warning.put_line(once "Error: #(1). Discarding." # streamer.error)
@@ -99,7 +98,7 @@ feature {SERVER}
                die_with_code(1)
             end
          end
-         channel.connect_to(server_fifo)
+         channel := filesystem.connect_read_write(server_fifo)
       end
 
    disconnect
@@ -109,7 +108,7 @@ feature {SERVER}
 
    cleanup
       do
-         delete(server_fifo)
+         filesystem.delete(server_fifo)
       end
 
 feature {}
@@ -119,15 +118,17 @@ feature {}
             log.error.put_line(once "Fifo already exists, not starting server")
             die_with_code(1)
          end
-         create channel.make
+         channel := io
       end
 
-   channel: TEXT_FILE_READ_WRITE
+   channel: TERMINAL_INPUT_OUTPUT_STREAM
 
    streamer: MESSAGE_STREAMER
       once
          create Result.make
       end
+
+   filesystem: FILESYSTEM
 
 invariant
    channel /= Void

@@ -13,28 +13,30 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class FILE_LOCKER
-   --
-   -- A façade to the actual file_locker implementation
-   --
+class FILE_LOCKER_IMPL
 
-insert
-   TEST_FACADE[FILE_LOCKER_DEF]
+inherit
+   FILE_LOCKER_DEF
 
-feature {ANY}
-   lock (a_stream: STREAM): FILE_LOCK
-      require
-         a_stream.has_descriptor
+feature {FILE_LOCKER}
+   lock (a_stream: STREAM): FILE_LOCK_IMPL
+      local
+         p: POINTER
       do
-         Result := def.lock(a_stream)
-      ensure
-         Result /= Void
+         c_inline_h("#include <sys/file.h>%N")
+
+         p := a_stream.to_pointer
+         Result := locks.fast_reference_at(p)
+         if Result = Void then
+            create Result.make(a_stream)
+            locks.add(Result, p)
+         end
       end
 
 feature {}
-   def_impl: FILE_LOCKER_IMPL
+   locks: HASHED_DICTIONARY[FILE_LOCK_IMPL, POINTER]
       once
          create Result
       end
 
-end -- class FILE_LOCKER
+end

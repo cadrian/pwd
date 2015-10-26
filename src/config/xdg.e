@@ -18,19 +18,15 @@ expanded class XDG
    -- freedesktop management
    --
 
-insert
-   FILE_TOOLS
-   BASIC_DIRECTORY
-
 feature {ANY}
-   read_data (filename: ABSTRACT_STRING): TEXT_FILE_READ
+   read_data (filename: ABSTRACT_STRING): INPUT_STREAM
       do
          Result := read(filename, data_dirs)
       ensure
          Result /= Void implies Result.is_connected
       end
 
-   read_config (filename: ABSTRACT_STRING): TEXT_FILE_READ
+   read_config (filename: ABSTRACT_STRING): INPUT_STREAM
       do
          Result := read(filename, config_dirs)
       ensure
@@ -72,7 +68,7 @@ feature {ANY}
       end
 
 feature {}
-   read (filename: ABSTRACT_STRING; dirs: TRAVERSABLE[FIXED_STRING]): TEXT_FILE_READ
+   read (filename: ABSTRACT_STRING; dirs: TRAVERSABLE[FIXED_STRING]): INPUT_STREAM
       local
          i: INTEGER; path: ABSTRACT_STRING
       do
@@ -82,11 +78,11 @@ feature {}
             Result /= Void or else i > dirs.upper
          loop
             path := once "#(1)/pwd/#(2)" # dirs.item(i) # filename
-            if file_exists(path) then
+            if filesystem.file_exists(path) then
                debug
                   std_error.put_line("Reading config from #(1)" # path)
                end
-               create Result.connect_to(path)
+               Result := filesystem.connect_read(path)
             end
 
             i := i + 1
@@ -154,8 +150,8 @@ feature {}
       require
          dir /= Void
       do
-         if not is_directory(dir) then
-            if not create_new_directory(dir) then
+         if not filesystem.is_directory(dir) then
+            if not filesystem.create_new_directory(dir) then
                std_error.put_line("**** Fatal error: could not create #(1)" # dir)
                die_with_code(1)
             end
@@ -163,7 +159,8 @@ feature {}
       end
 
 feature {}
-   system: SYSTEM
+   filesystem: FILESYSTEM
+   environment: ENVIRONMENT
 
    split_dirs (value: FIXED_STRING; dirs: FAST_ARRAY[FIXED_STRING])
       require
@@ -195,7 +192,7 @@ feature {}
       local
          value: STRING
       do
-         value := system.get_environment_variable(var.out)
+         value := environment.variable(var)
          if value = Void or else value.is_empty then
             if def = Void then
                -- mandatory

@@ -18,8 +18,7 @@ class WEBCLIENT
 inherit
    CLIENT
       rename
-         make as make_client,
-         delete as ft_delete
+         make as make_client
       redefine
          read_password_and_send_master,
          server_bootstrap,
@@ -448,11 +447,11 @@ feature {}
          end
          if template_resolver = Void then
             filename := "#(1)/#(2)" # conf(config_static_path) # template_name
-            create {TEXT_FILE_READ} input.connect_to(filename)
+            input := filesystem.connect_read(filename)
             first_response := Void
          else
             filename := "#(1)/#(2)" # conf(config_template_path) # template_name
-            create {TEMPLATE_INPUT_STREAM} input.connect_to(create {TEXT_FILE_READ}.connect_to(filename), template_resolver)
+            create {TEMPLATE_INPUT_STREAM} input.connect_to(filesystem.connect_read(filename), template_resolver)
          end
          if input.is_connected then
             log.trace.put_line("Connected to file: #(1)" # filename)

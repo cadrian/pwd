@@ -29,22 +29,20 @@ feature {REMOTE}
       require
          not is_set
       local
-         sys: SYSTEM; url: like proxy_url
+         url: like proxy_url
       do
          url := proxy_url
          if url /= Void then
-            sys.set_environment_variable(once "ALL_PROXY", url.out)
+            environment.set_variable(once "ALL_PROXY", url.out)
             log.trace.put_line(once "Proxy set.")
             is_set := True
          end
       end
 
    reset
-      local
-         sys: SYSTEM
       do
          if is_set then
-            sys.set_environment_variable(once "ALL_PROXY", once "")
+            environment.set_variable(once "ALL_PROXY", once "")
             log.trace.put_line(once "Proxy unset.")
             is_set := False
          end
@@ -227,6 +225,9 @@ feature {REMOTE}
       once
          Result := ("pass").intern
       end
+
+feature {}
+   environment: ENVIRONMENT
 
 invariant
    remote /= Void
