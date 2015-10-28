@@ -6,6 +6,13 @@ set -e
 set -u
 
 cd $(dirname $(readlink -f $0))
-#./deploy.sh bootstrap
+
+if [ $# -gt 0 ]; then
+    case x$1 in
+        xbootstrap)
+            ./deploy.sh bootstrap
+            ;;
+    esac
+fi
 ./deploy.sh release
 exec test/test_webclient.sh "$@"

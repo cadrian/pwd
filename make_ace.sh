@@ -44,11 +44,11 @@ case $name in
         ;;
     webclient)
         #trace=yes
-        rescue=no
-        debug_pwd=yes
+        #rescue=no
+        #debug_pwd=yes
         #debug_liberty='"json/parser"); debug("socket"'
-        assert=require
-        no_strip=yes
+        #assert=require
+        #no_strip=yes
         #clean=no
         ;;
     server)

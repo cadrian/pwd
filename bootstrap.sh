@@ -18,7 +18,7 @@ cd $dir
 EXE=${EXE:-"server menu console webclient"}
 
 bootstrap_dir=$dir/target/bootstrap
-test -d $bootstrap_dir && rm -rf $bootstrap_dir
+rm -rf $bootstrap_dir
 mkdir -p $bootstrap_dir/bin
 mkdir -p $bootstrap_dir/c
 mkdir -p $bootstrap_dir/eiffel
@@ -97,6 +97,7 @@ do
     mkdir -p $bootstrap_dir/c/$exe
     ace=$exe.ace
     ./make_ace.sh $ace dontclean
+    rm -f *.[ch]
     if [ ${CLASS_CHECK:-no} = yes ]; then
         if [ ${DEBUG_C2C:-no} = yes ]; then
             . <(se -environment | sed 's/^/export /g')
@@ -111,10 +112,10 @@ do
 
         if [ ${DEBUG_C2C:-no} = yes ]; then
             . <(se -environment | sed 's/^/export /g')
-            echo Debugging compilation for $exe using $SE_TOOL_C2C
+            echo Debugging Eiffel compilation for $exe using $SE_TOOL_C2C
             gdb $SE_TOOL_C2C --args $SE_TOOL_C2C $ace
         else
-            echo Compiling $exe
+            echo Eiffel compiling $exe
             se c2c $ace || exit $?
         fi
         test -e $exe.make || exit 1
@@ -125,8 +126,11 @@ do
             tail -1 $exe.make | sed 's!gcc!$(CC)!g;s!'$exe'.exe!$@!;s!'$exe'!c/'$exe'/'$exe'!g' | awk '{printf("\t%s\n", $0)}'
         } >> $MAKEFILE_BOOT
 
+        egrep -o $exe'[0-9]*\.c$' $exe.make | while read gen; do
+            mv $gen $bootstrap_dir/c/$exe/
+        done
+        mv *.h $bootstrap_dir/c/$exe/
         rm $ace $exe.id $exe.make
-        mv *.[ch] $bootstrap_dir/c/$exe/
     fi
 done
 
