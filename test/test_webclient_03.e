@@ -23,15 +23,23 @@ create {}
 
 feature {}
    make
+      local
+         open_form: STRING
       do
          prepare_test
          expect_splice
+
+         open_form := "<html><head><title>test</title></head><body><h1>This is a test!</h1></body></html>%N"
+         expect_read("web/templates/open_form.html", open_form)
+
          scenario.replay_all
          assert(call_cgi("GET", "/open").is_equal("Content-Type:text/html%R%N%
                                                   %Cache-Control:%"private,no-store,no-cache%"%R%N%
                                                   %Set-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%
                                                   %%R%N%
-                                                  %<html><body></body></html>%R%N"))
+                                                  %#(1)%R%N" # open_form))
+
+         assert(scenario.missing_expectations.is_empty)
       end
 
 end -- class TEST_WEBCLIENT_03

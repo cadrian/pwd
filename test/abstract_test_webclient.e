@@ -24,6 +24,8 @@ feature {}
          channel_factory: CHANNEL_FACTORY
          shared: SHARED
          extern: EXTERN
+         filesystem: FILESYSTEM
+         environment: ENVIRONMENT
       do
          create mock_extern
          extern.set_def(mock_extern.mock)
@@ -49,6 +51,17 @@ feature {}
             mock_channel_factory.new_client_channel(tmpdir).whenever.then_return(mock_client_channel.mock),
 --            mock_channel_factory.new_server_channel.then_return(mock_server_channel.mock)
          >>})
+
+         create mock_filesystem
+         filesystem.set_def(mock_filesystem.mock)
+         create mock_environment
+         environment.set_def(mock_environment.mock)
+         scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
+            mock_environment.variable("XDG_CONFIG_HOME").whenever.then_return("XDG_CONFIG_HOME"),
+            mock_environment.variable("XDG_CONFIG_DIRS").whenever.then_return("XDG_CONFIG_DIRS"),
+            mock_filesystem.file_exists__match(create {MOCK_ANY[ABSTRACT_STRING]}).then_return(True)
+         >>})
+         expect_read("XDG_CONFIG_HOME/pwd/config.rc", "")
 
          -- Mock expectations for channels start, server start...
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
@@ -121,6 +134,8 @@ feature {}
    mock_channel_factory: CHANNEL_FACTORY_EXPECT
    mock_client_channel: CLIENT_CHANNEL_EXPECT
    mock_server_channel: SERVER_CHANNEL_EXPECT
+   mock_filesystem: FILESYSTEM_EXPECT
+   mock_environment: ENVIRONMENT_EXPECT
 
    expect_splice
       do
@@ -144,6 +159,19 @@ feature {}
                                        output.item.put_string(input.item.last_string)
                                        output.item.flush
                                     end(?))
+         >>})
+      end
+
+   expect_read (filename, content: ABSTRACT_STRING)
+      require
+         filename /= Void
+         content /= Void
+      local
+         input: STRING_INPUT_STREAM
+      do
+         create input.from_string(content)
+         scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
+            mock_filesystem.connect_read__match(create {MOCK_STREQ}.make(filename)).then_return(input)
          >>})
       end
 

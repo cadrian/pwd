@@ -8,3 +8,4 @@ travis_key.yml
 .version
 exe
 *.log
+*.log.*
