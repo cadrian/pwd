@@ -51,9 +51,15 @@ feature {}
    specific_config: CONFIG_FILE
 
    check_specific
+      local
+         s: STRING
       do
          if specific_section = Void then
-            specific_section := generating_type.as_lower.intern
+            s := generating_type.as_lower
+            if s.has_suffix(once "_impl") then
+               s.remove_tail(5)
+            end
+            specific_section := s.intern
          end
          if specific_config = Void then
             specific_config := configuration.main_config
