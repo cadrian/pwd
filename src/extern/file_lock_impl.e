@@ -26,21 +26,13 @@ create {FILE_LOCKER_IMPL}
 
 feature {ANY}
    read
-      require
-         not write_locked
-         not read_locked
       do
          flock_lock_sh(stream.descriptor)
          lock_state := 1
          log.trace.put_line(once "Got read lock: #(1)" # stream.out)
-      ensure
-         read_locked
       end
 
    try_read
-      require
-         not write_locked
-         not read_locked
       do
          if flock_try_lock_sh(stream.descriptor) then
             lock_state := 1
@@ -54,21 +46,13 @@ feature {ANY}
       end
 
    write
-      require
-         not write_locked
-         not read_locked
       do
          flock_lock_ex(stream.descriptor)
          lock_state := -1
          log.trace.put_line(once "Got write lock: #(1)" # stream.out)
-      ensure
-         write_locked
       end
 
    try_write
-      require
-         not write_locked
-         not read_locked
       do
          if flock_try_lock_sh(stream.descriptor) then
             lock_state := -1
@@ -82,14 +66,10 @@ feature {ANY}
       end
 
    done
-      require
-         locked
       do
          flock_unlock(stream.descriptor)
          lock_state := 0
          log.trace.put_line(once "Relinquished lock: #(1)" # stream.out)
-      ensure
-         not locked
       end
 
    locked: BOOLEAN
