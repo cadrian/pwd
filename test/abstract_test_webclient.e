@@ -59,7 +59,10 @@ feature {}
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_environment.variable("XDG_CONFIG_HOME").whenever.then_return("XDG_CONFIG_HOME"),
             mock_environment.variable("XDG_CONFIG_DIRS").whenever.then_return("XDG_CONFIG_DIRS"),
+            mock_environment.variable("XDG_CACHE_HOME").whenever.then_return("XDG_CACHE_HOME"),
             mock_filesystem.file_exists__match(create {MOCK_ANY[ABSTRACT_STRING]}).then_return(True)
+            mock_filesystem.is_directory__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/.cache/pwd")).whenever.then_return(True)
+            mock_filesystem.is_directory__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME")).whenever.then_return(True)
          >>})
          expect_read("XDG_CONFIG_HOME/pwd/config.rc", "")
 
@@ -171,7 +174,19 @@ feature {}
       do
          create input.from_string(content)
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
-            mock_filesystem.connect_read__match(create {MOCK_STREQ}.make(filename)).then_return(input)
+            mock_filesystem.read_text__match(create {MOCK_STREQ}.make(filename)).then_return(input)
+         >>})
+      end
+
+   expect_random
+      local
+         mock_random: BINARY_INPUT_STREAM_EXPECT
+      do
+         create mock_random
+         scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
+            mock_filesystem.read_binary__match(create {MOCK_STREQ}.make("/dev/urandom")).then_return(mock_random.mock)
+            mock_random.read_byte.whenever
+            mock_random.last_byte.whenever.then_return(0)
          >>})
       end
 

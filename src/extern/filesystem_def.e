@@ -51,7 +51,7 @@ feature {FILESYSTEM} -- Files
       deferred
       end
 
-   connect_read (path: ABSTRACT_STRING): TERMINAL_INPUT_STREAM
+   read_text (path: ABSTRACT_STRING): TERMINAL_INPUT_STREAM
       require
          path /= Void
       deferred
@@ -59,7 +59,7 @@ feature {FILESYSTEM} -- Files
          Result /= Void implies Result.is_connected
       end
 
-   connect_write (path: ABSTRACT_STRING): TERMINAL_OUTPUT_STREAM
+   write_text (path: ABSTRACT_STRING): TERMINAL_OUTPUT_STREAM
       require
          path /= Void
       deferred
@@ -67,7 +67,23 @@ feature {FILESYSTEM} -- Files
          Result /= Void implies Result.is_connected
       end
 
-   connect_read_write (path: ABSTRACT_STRING): TERMINAL_INPUT_OUTPUT_STREAM
+   read_write_text (path: ABSTRACT_STRING): TERMINAL_INPUT_OUTPUT_STREAM
+      require
+         path /= Void
+      deferred
+      ensure
+         Result /= Void implies Result.is_connected
+      end
+
+   read_binary (path: ABSTRACT_STRING): BINARY_INPUT_STREAM
+      require
+         path /= Void
+      deferred
+      ensure
+         Result /= Void implies Result.is_connected
+      end
+
+   write_binary (path: ABSTRACT_STRING): BINARY_OUTPUT_STREAM
       require
          path /= Void
       deferred

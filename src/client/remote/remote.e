@@ -77,7 +77,7 @@ feature {COMMAND}
       local
          tfw: OUTPUT_STREAM
       do
-         tfw := filesystem.connect_write(filename)
+         tfw := filesystem.write_text(filename)
          if tfw /= Void then
             write_to(tfw)
             tfw.disconnect

@@ -59,29 +59,47 @@ feature {ANY} -- Files
          def.copy_to(source_path, target_path)
       end
 
-   connect_read (path: ABSTRACT_STRING): TERMINAL_INPUT_STREAM
+   read_text (path: ABSTRACT_STRING): TERMINAL_INPUT_STREAM
       require
          path /= Void
       do
-         Result := def.connect_read(path)
+         Result := def.read_text(path)
       ensure
          Result /= Void implies Result.is_connected
       end
 
-   connect_write (path: ABSTRACT_STRING): TERMINAL_OUTPUT_STREAM
+   write_text (path: ABSTRACT_STRING): TERMINAL_OUTPUT_STREAM
       require
          path /= Void
       do
-         Result := def.connect_write(path)
+         Result := def.write_text(path)
       ensure
          Result /= Void implies Result.is_connected
       end
 
-   connect_read_write (path: ABSTRACT_STRING): TERMINAL_INPUT_OUTPUT_STREAM
+   read_write_text (path: ABSTRACT_STRING): TERMINAL_INPUT_OUTPUT_STREAM
       require
          path /= Void
       do
-         Result := def.connect_read_write(path)
+         Result := def.read_write_text(path)
+      ensure
+         Result /= Void implies Result.is_connected
+      end
+
+   read_binary (path: ABSTRACT_STRING): BINARY_INPUT_STREAM
+      require
+         path /= Void
+      do
+         Result := def.read_binary(path)
+      ensure
+         Result /= Void implies Result.is_connected
+      end
+
+   write_binary (path: ABSTRACT_STRING): BINARY_OUTPUT_STREAM
+      require
+         path /= Void
+      do
+         Result := def.write_binary(path)
       ensure
          Result /= Void implies Result.is_connected
       end

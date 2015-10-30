@@ -91,6 +91,19 @@ extern/file_locker_def.e
 extern/filesystem_def.e
 EOF
 
+while read class; do
+    mkdir -p $dir/test/testable/se
+    source=$(se find $class | awk '{print $1}')
+    base=$(echo "$class" | tr '[A-Z]' '[a-z]')
+    expect=$dir/test/testable/se/${base}_expect.e
+    mock=$dir/test/testable/se/${base}_mock.e
+
+    rm -f $expect $mock
+    se mock --expect $expect --mock $mock $source
+
+done <<EOF
+BINARY_INPUT_STREAM
+EOF
 
 for exe in $EXE
 do

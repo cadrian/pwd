@@ -447,11 +447,11 @@ feature {}
          end
          if template_resolver = Void then
             filename := "#(1)/#(2)" # conf(config_static_path) # template_name
-            input := filesystem.connect_read(filename)
+            input := filesystem.read_text(filename)
             first_response := Void
          else
             filename := "#(1)/#(2)" # conf(config_template_path) # template_name
-            create {TEMPLATE_INPUT_STREAM} input.connect_to(filesystem.connect_read(filename), template_resolver)
+            create {TEMPLATE_INPUT_STREAM} input.connect_to(filesystem.read_text(filename), template_resolver)
          end
          if input.is_connected then
             log.trace.put_line("Connected to file: #(1)" # filename)

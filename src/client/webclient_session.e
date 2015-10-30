@@ -184,7 +184,7 @@ feature {}
             i := i - 1
          end
          if Result then
-            lock_file := filesystem.connect_write(vaultpath + ".lock")
+            lock_file := filesystem.write_text(vaultpath + ".lock")
             if lock_file /= Void then
                lock := flock.lock(lock_file)
                log.trace.put_line("Locking session vault...")

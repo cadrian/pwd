@@ -32,15 +32,12 @@ feature {ANY}
       require
          is_valid
       local
-         bfr: BINARY_FILE_READ; rnd: PASS_GENERATOR_RANDOM
+         rnd: PASS_GENERATOR_RANDOM
       do
-         Result := ""
-         create bfr.with_buffer_size(3 * length) -- 3 bytes read for each random character (two bytes to select a character, one byte to select its position)
-         bfr.connect_to(random_file)
-         if bfr.is_connected then
-            create rnd.connect_to(bfr)
+         create rnd.connect_to(random_file)
+         if rnd.is_connected then
             recipe.for_each(extend.item([rnd, Result]))
-            bfr.disconnect
+            rnd.disconnect
          end
       ensure
          not Result.is_empty

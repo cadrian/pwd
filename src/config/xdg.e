@@ -82,7 +82,7 @@ feature {}
                debug
                   std_error.put_line("Reading config from #(1)" # path)
                end
-               Result := filesystem.connect_read(path)
+               Result := filesystem.read_text(path)
             end
 
             i := i + 1

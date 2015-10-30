@@ -37,7 +37,7 @@ feature {CLIENT}
                extern.exists(server_fifo)
             end
             if filesystem.file_exists(shared.server_pidfile) then
-               tfr := filesystem.connect_read(shared.server_pidfile)
+               tfr := filesystem.read_text(shared.server_pidfile)
                if tfr /= Void then
                   tfr.read_line
                   if tfr.last_string.is_integer then
@@ -97,7 +97,7 @@ feature {CLIENT}
          log.trace.put_line(once "Calling: #(1)" # query.generating_type)
          extern.make(client_fifo)
          extern.sleep(25)
-         tfw := filesystem.connect_write(server_fifo)
+         tfw := filesystem.write_text(server_fifo)
          if tfw /= Void then
             log.trace.put_line(once "Writing to server...")
             tfw.put_line(client_fifo)
@@ -107,7 +107,7 @@ feature {CLIENT}
             log.trace.put_line(once "... server fifo written to.")
 
             extern.wait_for(client_fifo)
-            tfr := filesystem.connect_read(client_fifo)
+            tfr := filesystem.read_text(client_fifo)
             if tfr /= Void then
                log.trace.put_line(once "Reading from server...")
                streamer.read_message(tfr)

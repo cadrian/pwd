@@ -109,7 +109,7 @@ feature {}
                pid := processor.pid
                log.info.put_line(once "Starting server (#(1))." # pid.out)
 
-               tfw := filesystem.connect_write(shared.server_pidfile)
+               tfw := filesystem.write_text(shared.server_pidfile)
                if tfw /= Void then
                   tfw.put_integer(pid)
                   tfw.put_new_line

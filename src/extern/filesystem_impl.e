@@ -44,7 +44,7 @@ feature {FILESYSTEM} -- Files
          file_tools.copy_to(source_path, target_path)
       end
 
-   connect_read (path: ABSTRACT_STRING): TEXT_FILE_READ
+   read_text (path: ABSTRACT_STRING): TEXT_FILE_READ
       do
          create Result.connect_to(path)
          if not Result.is_connected then
@@ -52,7 +52,7 @@ feature {FILESYSTEM} -- Files
          end
       end
 
-   connect_write (path: ABSTRACT_STRING): TEXT_FILE_WRITE
+   write_text (path: ABSTRACT_STRING): TEXT_FILE_WRITE
       do
          create Result.connect_to(path)
          if not Result.is_connected then
@@ -60,7 +60,23 @@ feature {FILESYSTEM} -- Files
          end
       end
 
-   connect_read_write (path: ABSTRACT_STRING): TEXT_FILE_READ_WRITE
+   read_write_text (path: ABSTRACT_STRING): TEXT_FILE_READ_WRITE
+      do
+         create Result.connect_to(path)
+         if not Result.is_connected then
+            Result := Void
+         end
+      end
+
+   read_binary (path: ABSTRACT_STRING): BINARY_FILE_READ
+      do
+         create Result.connect_to(path)
+         if not Result.is_connected then
+            Result := Void
+         end
+      end
+
+   write_binary (path: ABSTRACT_STRING): BINARY_FILE_WRITE
       do
          create Result.connect_to(path)
          if not Result.is_connected then

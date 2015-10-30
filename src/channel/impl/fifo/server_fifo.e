@@ -64,7 +64,7 @@ feature {SERVER}
             log.trace.put_line(once "Received empty query")
          else
             log.info.put_line(once "Received query for fifo: #(1)" # channel.last_string)
-            tfw := filesystem.connect_write(channel.last_string)
+            tfw := filesystem.write_text(channel.last_string)
             if tfw /= Void then
                streamer.read_message(channel)
                if streamer.error /= Void then
@@ -98,7 +98,7 @@ feature {SERVER}
                die_with_code(1)
             end
          end
-         channel := filesystem.connect_read_write(server_fifo)
+         channel := filesystem.read_write_text(server_fifo)
       end
 
    disconnect

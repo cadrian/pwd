@@ -55,7 +55,7 @@ feature {ANY}
          proc: PROCESS; vault_file: INPUT_STREAM
       do
          environment.set_variable(once "VAULT_MASTER", master)
-         vault_file := filesystem.connect_read(file)
+         vault_file := filesystem.read_text(file)
          if vault_file /= Void then
             log.trace.put_line(once "open vault")
             proc := processor.execute_redirect(once "openssl", once "#(1) -d -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
@@ -145,7 +145,7 @@ feature {ANY}
                proc.input.flush
                proc.input.disconnect
 
-               tfw := filesystem.connect_write(file)
+               tfw := filesystem.write_text(file)
                if tfw.is_connected then
                   extern.splice(proc.output, tfw)
                   tfw.flush

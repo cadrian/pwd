@@ -27,10 +27,14 @@ feature {ANY}
          Result := file.is_connected
       end
 
-   path: STRING
+   disconnect
+      require
+         is_connected
       do
-         Result := file.path
+         file.disconnect
       end
+
+   path: STRING
 
    item (lower, upper: INTEGER_32): INTEGER_32
       require
@@ -59,16 +63,23 @@ feature {}
          Result := file.last_byte.to_natural_8
       end
 
-   file: BINARY_FILE_READ
+   file: BINARY_INPUT_STREAM
 
 feature {}
-   connect_to (a_file: like file)
+   connect_to (a_path: ABSTRACT_STRING)
       require
-         a_file.is_connected
+         a_path /= Void
       do
-         file := a_file
+         path := a_path.out
+         file := filesystem.read_binary(path)
       ensure
-         file = a_file
+         path.is_equal(a_path)
       end
+
+   filesystem: FILESYSTEM
+
+invariant
+   path /= Void
+   file /= Void
 
 end -- class PASS_GENERATOR_RANDOM
