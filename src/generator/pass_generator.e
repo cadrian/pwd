@@ -34,6 +34,7 @@ feature {ANY}
       local
          rnd: PASS_GENERATOR_RANDOM
       do
+         Result := ""
          create rnd.connect_to(random_file)
          if rnd.is_connected then
             recipe.for_each(extend.item([rnd, Result]))
@@ -97,7 +98,7 @@ feature {}
          random_file := a_random_file.intern
          extend := a_extend
       ensure
-         random_file = a_random_file
+         random_file = a_random_file.intern
          extend = a_extend
       end
 

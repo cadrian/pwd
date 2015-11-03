@@ -60,7 +60,7 @@ feature {} -- CLIENT interface
       do
          Precursor
          if open_action /= Void then
-            open_action()
+            open_action.call([])
             open_action := Void
          end
       end

@@ -32,10 +32,10 @@ feature {WEBCLIENT}
          is_available
       do
          if old_token /= Void then
-            next_auth_token(agent (ot, nt: FIXED_STRING)
+            next_auth_token(agent (ot, nt: FIXED_STRING; a: PROCEDURE[TUPLE[FIXED_STRING, FIXED_STRING]])
                                do
-                                  action(ot, nt)
-                               end(old_token.intern, ?),
+                                  action.call([ot, nt])
+                               end(old_token.intern, ?, action),
                             on_error)
          else
             old_token := token
@@ -45,13 +45,13 @@ feature {WEBCLIENT}
                end
                --|**** TODO (Liberty Eiffel) I would have liked to write:
                -- next_auth_token(agent action(old_token, ?))
-               next_auth_token(agent (ot, nt: FIXED_STRING)
+               next_auth_token(agent (ot, nt: FIXED_STRING; a: PROCEDURE[TUPLE[FIXED_STRING, FIXED_STRING]])
                                   do
-                                     action(ot, nt)
-                                  end(old_token.intern, ?),
+                                     action.call([ot, nt])
+                                  end(old_token.intern, ?, action),
                                on_error)
             else
-               on_error("Old token not found")
+               on_error.call(["Old token not found"])
             end
          end
       end
@@ -62,7 +62,7 @@ feature {WEBCLIENT}
          is_available
       do
          if new_token /= Void then
-            action(new_token.intern)
+            action.call([new_token.intern])
          else
             log.trace.put_line("Need to get a new auth token")
             if next_token then
@@ -70,9 +70,9 @@ feature {WEBCLIENT}
                debug
                   log.trace.put_line("**** New token is: #(1)" # new_token)
                end
-               action(new_token.intern)
+               action.call([new_token.intern])
             else
-               on_error("Could not set auth token: #(1)" # error)
+               on_error.call(["Could not set auth token: #(1)" # error])
             end
          end
       ensure
