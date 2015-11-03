@@ -77,7 +77,8 @@ while read class; do
     source=$dir/src/$class
 
     rm -f $expect $mock
-    se mock --expect $expect --mock $mock $source
+    echo Mocking $class
+    se mock --loadpath test/loadpath.se --expect $expect --mock $mock $source
 
 done <<EOF
 channel/channel_factory_def.e
@@ -99,11 +100,13 @@ while read class; do
     mock=$dir/test/testable/se/${base}_mock.e
 
     rm -f $expect $mock
-    se mock --expect $expect --mock $mock $source
+    echo Mocking $class
+    se mock --loadpath test/loadpath.se --expect $expect --mock $mock $source
 
 done <<EOF
 BINARY_INPUT_STREAM
 EOF
+
 
 for exe in $EXE
 do
@@ -146,6 +149,7 @@ do
         rm $ace $exe.id $exe.make
     fi
 done
+
 
 if [ ${CLASS_CHECK:-no} = yes ]; then
     exit 0
