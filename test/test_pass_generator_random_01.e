@@ -25,10 +25,9 @@ create {}
 feature {}
    test
       local
-         gen: PASS_GENERATOR_RANDOM; file: BINARY_FILE_READ
+         gen: PASS_GENERATOR_RANDOM
       do
-         create file.connect_to(random_file)
-         create gen.connect_to(file)
+         create gen.connect_to(random_file)
 
          assert(gen.is_connected)
 
