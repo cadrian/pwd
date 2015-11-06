@@ -80,6 +80,8 @@ feature {}
          -- Mock expectations for channels start, server start...
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
 
+            mock_client_channel.is_ready.whenever.then_return(True),
+
             mock_client_channel.server_running__match(create {MOCK_ANY[PROCEDURE[TUPLE[BOOLEAN]]]}).whenever
                .with_side_effect(agent (args: MOCK_ARGUMENTS)
                                     local
