@@ -13,20 +13,16 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class PROCESSOR
-   --
-   -- A façade to the actual processor implementation
-   --
+deferred class PROCESSOR_DEF
 
-insert
-   TEST_FACADE[PROCESSOR_DEF]
+inherit
+   TESTABLE
 
-feature {ANY}
+feature {PROCESSOR}
    execute (command, arguments: ABSTRACT_STRING): PROCESS
       require
          command /= Void
-      do
-         Result := def.execute(command, arguments)
+      deferred
       ensure
          Result /= Void
       end
@@ -34,8 +30,7 @@ feature {ANY}
    execute_redirect (command, arguments: ABSTRACT_STRING): PROCESS
       require
          command /= Void
-      do
-         Result := def.execute_redirect(command, arguments)
+      deferred
       ensure
          Result /= Void
       end
@@ -43,8 +38,7 @@ feature {ANY}
    execute_to_dev_null (command, arguments: ABSTRACT_STRING): PROCESS
       require
          command /= Void
-      do
-         Result := def.execute_to_dev_null(command, arguments)
+      deferred
       ensure
          Result /= Void
       end
@@ -52,35 +46,25 @@ feature {ANY}
    execute_direct (command, arguments: ABSTRACT_STRING): PROCESS
       require
          command /= Void
-      do
-         Result := def.execute_direct(command, arguments)
+      deferred
       ensure
          Result /= Void
       end
 
    fork: PROCESS
-      do
-         Result := def.fork
+      deferred
       end
 
    split_arguments (arguments: ABSTRACT_STRING): COLLECTION[STRING]
       require
          arguments /= Void
-      do
-         Result := def.split_arguments(arguments)
+      deferred
       ensure
          Result /= Void
       end
 
    pid: INTEGER
-      do
-         Result := def.pid
+      deferred
       end
 
-feature {}
-   def_impl: PROCESSOR_IMPL
-      once
-         create Result
-      end
-
-end -- class PROCESSOR
+end -- class PROCESSOR_DEF

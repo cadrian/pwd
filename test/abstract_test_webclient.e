@@ -26,6 +26,7 @@ feature {}
          extern: EXTERN
          filesystem: FILESYSTEM
          environment: ENVIRONMENT
+         processor: PROCESSOR
       do
          create mock_extern
          extern.set_def(mock_extern.mock)
@@ -56,6 +57,8 @@ feature {}
          filesystem.set_def(mock_filesystem.mock)
          create mock_environment
          environment.set_def(mock_environment.mock)
+         create mock_processor
+         processor.set_def(mock_processor.mock)
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_environment.variable("XDG_CONFIG_HOME").whenever.then_return("XDG_CONFIG_HOME"),
             mock_environment.variable("XDG_CONFIG_DIRS").whenever.then_return("XDG_CONFIG_DIRS"),
@@ -68,6 +71,9 @@ feature {}
             [webclient]
             static.path: Test/StaticPath
             template.path: Test/TemplatePath
+
+            [vault]
+            openssl.cipher: TestOpensslCipher
 
          ]")
 
@@ -144,35 +150,36 @@ feature {}
    mock_server_channel: SERVER_CHANNEL_EXPECT
    mock_filesystem: FILESYSTEM_EXPECT
    mock_environment: ENVIRONMENT_EXPECT
+   mock_processor: PROCESSOR_EXPECT
 
-   expect_splice (expected_input: TERMINAL_INPUT_STREAM; expected_output: TERMINAL_OUTPUT_STREAM)
+   expect_splice (input: TERMINAL_INPUT_STREAM; output: TERMINAL_OUTPUT_STREAM)
       do
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_extern.splice__match(create {MOCK_ANY[INPUT_STREAM]}, create {MOCK_ANY[OUTPUT_STREAM]})
-               .with_side_effect(agent (args: MOCK_ARGUMENTS; i: TERMINAL_INPUT_STREAM; o: TERMINAL_OUTPUT_STREAM)
+               .with_side_effect(agent (args: MOCK_ARGUMENTS; expected_input: TERMINAL_INPUT_STREAM; expected_output: TERMINAL_OUTPUT_STREAM)
                                     local
-                                       input: MOCK_TYPED_ARGUMENT[INPUT_STREAM]
-                                       output: MOCK_TYPED_ARGUMENT[OUTPUT_STREAM]
+                                       actual_input: MOCK_TYPED_ARGUMENT[INPUT_STREAM]
+                                       actual_output: MOCK_TYPED_ARGUMENT[OUTPUT_STREAM]
                                     do
-                                       input ::= args.item(1)
-                                       output ::= args.item(2)
+                                       actual_input ::= args.item(1)
+                                       actual_output ::= args.item(2)
 
-                                       assert(input.item /= Void)
-                                       assert(output.item /= Void)
-                                       assert(i /= Void implies i = input.item)
-                                       assert(o /= Void implies o = output.item)
+                                       assert(actual_input.item /= Void)
+                                       assert(actual_output.item /= Void)
+                                       assert(expected_input /= Void implies expected_input = actual_input.item)
+                                       assert(expected_output /= Void implies expected_output = actual_output.item)
 
                                        from
-                                          input.item.read_line
+                                          actual_input.item.read_line
                                        until
-                                          input.item.end_of_input
+                                          actual_input.item.end_of_input
                                        loop
-                                          output.item.put_line(input.item.last_string)
-                                          input.item.read_line
+                                          actual_output.item.put_line(actual_input.item.last_string)
+                                          actual_input.item.read_line
                                        end
-                                       output.item.put_string(input.item.last_string)
-                                       output.item.flush
-                                    end(?, expected_input, expected_output))
+                                       actual_output.item.put_string(actual_input.item.last_string)
+                                       actual_output.item.flush
+                                    end(?, input, output))
          >>})
       end
 

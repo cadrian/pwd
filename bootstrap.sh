@@ -90,6 +90,7 @@ extern/extern_def.e
 extern/file_lock.e
 extern/file_locker_def.e
 extern/filesystem_def.e
+extern/processor_def.e
 EOF
 
 while read class; do
@@ -105,6 +106,8 @@ while read class; do
 
 done <<EOF
 BINARY_INPUT_STREAM
+TERMINAL_OUTPUT_STREAM
+PROCESS
 EOF
 
 
