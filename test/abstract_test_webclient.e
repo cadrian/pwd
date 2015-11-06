@@ -60,11 +60,16 @@ feature {}
             mock_environment.variable("XDG_CONFIG_HOME").whenever.then_return("XDG_CONFIG_HOME"),
             mock_environment.variable("XDG_CONFIG_DIRS").whenever.then_return("XDG_CONFIG_DIRS"),
             mock_environment.variable("XDG_CACHE_HOME").whenever.then_return("XDG_CACHE_HOME"),
-            mock_filesystem.file_exists__match(create {MOCK_ANY[ABSTRACT_STRING]}).then_return(True)
-            mock_filesystem.is_directory__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/.cache/pwd")).whenever.then_return(True)
+            mock_filesystem.file_exists__match(create {MOCK_ANY[ABSTRACT_STRING]}).then_return(True),
+            mock_filesystem.is_directory__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/.cache/pwd")).whenever.then_return(True),
             mock_filesystem.is_directory__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME")).whenever.then_return(True)
          >>})
-         expect_read("XDG_CONFIG_HOME/pwd/config.rc", "")
+         expect_read("XDG_CONFIG_HOME/pwd/config.rc", "[
+            [webclient]
+            static.path: Test/StaticPath
+            template.path: Test/TemplatePath
+
+         ]")
 
          -- Mock expectations for channels start, server start...
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
@@ -140,17 +145,23 @@ feature {}
    mock_filesystem: FILESYSTEM_EXPECT
    mock_environment: ENVIRONMENT_EXPECT
 
-   expect_splice
+   expect_splice (expected_input: TERMINAL_INPUT_STREAM; expected_output: TERMINAL_OUTPUT_STREAM)
       do
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_extern.splice__match(create {MOCK_ANY[INPUT_STREAM]}, create {MOCK_ANY[OUTPUT_STREAM]})
-               .with_side_effect(agent (args: MOCK_ARGUMENTS)
+               .with_side_effect(agent (args: MOCK_ARGUMENTS; i: TERMINAL_INPUT_STREAM; o: TERMINAL_OUTPUT_STREAM)
                                     local
                                        input: MOCK_TYPED_ARGUMENT[INPUT_STREAM]
                                        output: MOCK_TYPED_ARGUMENT[OUTPUT_STREAM]
                                     do
                                        input ::= args.item(1)
                                        output ::= args.item(2)
+
+                                       assert(input.item /= Void)
+                                       assert(output.item /= Void)
+                                       assert(i /= Void implies i = input.item)
+                                       assert(o /= Void implies o = output.item)
+
                                        from
                                           input.item.read_line
                                        until
@@ -161,7 +172,7 @@ feature {}
                                        end
                                        output.item.put_string(input.item.last_string)
                                        output.item.flush
-                                    end(?))
+                                    end(?, expected_input, expected_output))
          >>})
       end
 
@@ -174,19 +185,36 @@ feature {}
       do
          create input.from_string(content)
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
-            mock_filesystem.read_text__match(create {MOCK_STREQ}.make(filename)).then_return(input)
+            mock_filesystem.read_text__match(create {MOCK_STREQ}.make(filename)).whenever.then_return(input)
          >>})
       end
 
    expect_random
       local
          mock_random: BINARY_INPUT_STREAM_EXPECT
+         is_connected: REFERENCE[BOOLEAN]
       do
+         create is_connected
          create mock_random
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
-            mock_filesystem.read_binary__match(create {MOCK_STREQ}.make("/dev/urandom")).then_return(mock_random.mock)
-            mock_random.read_byte.whenever
-            mock_random.last_byte.whenever.then_return(0)
+            mock_filesystem.read_binary__match(create {MOCK_STREQ}.make("/dev/urandom")).whenever
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]): BINARY_INPUT_STREAM
+                                    do
+                                       iscon.item := True
+                                       Result := mock_random.mock
+                                    end (?, is_connected)),
+            mock_random.is_connected.whenever
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]): BOOLEAN
+                                    do
+                                       Result := iscon.item
+                                    end (?, is_connected)),
+            mock_random.read_byte.whenever,
+            mock_random.last_byte.whenever.then_return(0),
+            mock_random.disconnect.whenever
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN])
+                                    do
+                                       iscon.item := False
+                                    end (?, is_connected))
          >>})
       end
 
