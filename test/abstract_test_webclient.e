@@ -217,6 +217,17 @@ feature {}
                                     do
                                        Result := iscon.item
                                     end (?, is_connected)),
+            mock_random.can_read_character.whenever
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]): BOOLEAN
+                                    do
+                                       Result := iscon.item
+                                    end (?, is_connected)),
+            mock_random.end_of_input.whenever
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]): BOOLEAN
+                                    do
+                                       Result := not iscon.item
+                                    end (?, is_connected)),
+            mock_random.can_disconnect.whenever.then_return(True),
             mock_random.read_byte.whenever,
             mock_random.last_byte.whenever.then_return(0),
             mock_random.disconnect.whenever
