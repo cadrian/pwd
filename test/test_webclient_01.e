@@ -25,7 +25,6 @@ feature {}
    make
       do
          prepare_test
-         scenario.replay_all
          assert(call_cgi("GET", "").is_equal("Location:https://test.server.net:8943/open%R%N%R%N"))
       end
 

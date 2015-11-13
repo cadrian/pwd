@@ -25,7 +25,7 @@ feature {}
    make
       do
          prepare_test
-         scenario.replay_all
+
          assert(call_cgi("GET", "/static/some.txt").is_equal("Content-Type:text/html%R%N%
                                                              %Cache-Control:%"private,no-store,no-cache%"%R%N%
                                                              %Set-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%

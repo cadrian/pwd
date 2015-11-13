@@ -75,6 +75,11 @@ feature {}
                                     do
                                        Result := lck.item
                                     end (?, lock)),
+            mock_lock.locked.whenever
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS; lck: REFERENCE[BOOLEAN]): BOOLEAN
+                                    do
+                                       Result := lck.item
+                                    end (?, lock)),
             mock_environment.set_variable("VAULT_MASTER", "testuser!AAAAAAAAAAAAAAAA"),
          >>})
 
@@ -103,11 +108,16 @@ feature {}
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_process_decode.output.whenever.then_return(decode_out),
             mock_process_decode.wait
-               .with_side_effect(agent (arg: MOCK_ARGUMENTS; f: REFERENCE[BOOLEAN]; o: STRING_INPUT_STREAM)
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS; f: REFERENCE[BOOLEAN]; i: STRING_OUTPUT_STREAM; o: STRING_INPUT_STREAM)
                                     do
                                        f.item := True
-                                       o.disconnect
-                                    end (?, decode_finished, decode_out)),
+                                       if i.is_connected then
+                                          i.disconnect
+                                       end
+                                       if o.is_connected then
+                                          o.disconnect
+                                       end
+                                    end (?, decode_finished, decode_in, decode_out)),
             mock_process_decode.is_finished.whenever
                .with_side_effect(agent (arg: MOCK_ARGUMENTS; f: REFERENCE[BOOLEAN]): BOOLEAN
                                     do
@@ -140,11 +150,16 @@ feature {}
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_process_encode.output.whenever.then_return(encode_out),
             mock_process_encode.wait
-               .with_side_effect(agent (arg: MOCK_ARGUMENTS; f: REFERENCE[BOOLEAN]; i: STRING_OUTPUT_STREAM)
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS; f: REFERENCE[BOOLEAN]; i: STRING_OUTPUT_STREAM; o: STRING_INPUT_STREAM)
                                     do
                                        f.item := True
-                                       i.disconnect
-                                    end (?, encode_finished, encode_in)),
+                                       if i.is_connected then
+                                          i.disconnect
+                                       end
+                                       if o.is_connected then
+                                          o.disconnect
+                                       end
+                                    end (?, encode_finished, encode_in, encode_out)),
             mock_process_encode.is_finished.whenever
                .with_side_effect(agent (arg: MOCK_ARGUMENTS; f: REFERENCE[BOOLEAN]): BOOLEAN
                                     do
@@ -159,7 +174,11 @@ feature {}
 
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_environment.set_variable("VAULT_MASTER", ""),
-            mock_lock.done,
+            mock_lock.done
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS; lck: REFERENCE[BOOLEAN])
+                                    do
+                                       lck.item := False
+                                    end (?, lock)),
             mock_lock_file.is_connected.whenever
                .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]): BOOLEAN
                                     do
@@ -172,7 +191,6 @@ feature {}
                                     end (?, is_connected))
          >>})
 
-         scenario.replay_all
          assert(call_cgi("GET", "/open").is_equal("Content-Type:text/html%R%N%
                                                   %Cache-Control:%"private,no-store,no-cache%"%R%N%
                                                   %Set-Cookie:sessionvault=AAAAAAAAAAAAAAAA; Max-Age=14400; Secure%R%N%

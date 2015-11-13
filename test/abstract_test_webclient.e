@@ -246,6 +246,8 @@ feature {}
          system: SYSTEM; cgi: CGI_IO
          sos: STRING_OUTPUT_STREAM
       do
+         scenario.replay_all
+
          system.set_environment_variable("REQUEST_METHOD", method)
          system.set_environment_variable("REMOTE_USER", "testuser")
          system.set_environment_variable("PATH_INFO", path)
@@ -263,6 +265,8 @@ feature {}
          create client.make
 
          sedb_breakpoint
+
+         scenario.check_all_done
       end
 
    read_file (file: STRING): STRING
