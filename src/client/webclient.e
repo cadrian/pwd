@@ -497,6 +497,7 @@ feature {}
                end
                cgi.set_output(create {CRLF_OUTPUT_STREAM}.connect_to(cgi.output))
                cgi.reply(r)
+               cgi.output.detach
                cgi.output.disconnect
             end
          elseif first_response = Void then
