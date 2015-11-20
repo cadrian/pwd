@@ -229,6 +229,8 @@ feature {REMOTE}
 feature {}
    environment: ENVIRONMENT
 
+   configuration_section: STRING "proxy"
+
 invariant
    remote /= Void
    specific_config /= Void

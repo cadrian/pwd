@@ -102,6 +102,8 @@ feature {}
          extend = a_extend
       end
 
+   configuration_section: STRING "pass_generator"
+
 invariant
    is_valid implies not recipe.is_empty
    random_file /= Void

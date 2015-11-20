@@ -13,7 +13,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class CONFIGURABLE
+deferred class CONFIGURABLE
 
 feature {}
    conf_no_eval (key: ABSTRACT_STRING): FIXED_STRING
@@ -52,14 +52,13 @@ feature {}
 
    check_specific
       local
-         s: STRING
+         s: like configuration_section
       do
          if specific_section = Void then
-            s := generating_type.as_lower
-            if s.has_suffix(once "_impl") then
-               s.remove_tail(5)
+            s := configuration_section
+            if s /= Void then
+               specific_section := s.intern
             end
-            specific_section := s.intern
          end
          if specific_config = Void then
             specific_config := configuration.main_config
@@ -67,6 +66,11 @@ feature {}
       ensure
          specific_section /= Void
          specific_config /= Void
+      end
+
+   configuration_section: ABSTRACT_STRING
+         -- The name of the configuration section to user. May be Void.
+      deferred
       end
 
 end -- class CONFIGURABLE

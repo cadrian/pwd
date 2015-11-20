@@ -187,4 +187,6 @@ feature {}
 
    environment: ENVIRONMENT
 
+   configuration_section: STRING "scp"
+
 end -- class SCP

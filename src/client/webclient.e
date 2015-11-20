@@ -537,6 +537,8 @@ feature {}
    session: WEBCLIENT_SESSION
    open_action: PROCEDURE[TUPLE]
 
+   configuration_section: STRING "webclient"
+
 invariant
    cgi /= Void
 

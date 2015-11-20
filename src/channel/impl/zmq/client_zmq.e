@@ -206,4 +206,6 @@ feature {}
          create Result.make
       end
 
+   configuration_section: STRING "client_zmq"
+
 end -- class CLIENT_ZMQ

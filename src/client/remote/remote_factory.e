@@ -56,4 +56,6 @@ feature {ANY}
          Result := ("method").intern
       end
 
+   configuration_section: STRING "remote_factory"
+
 end -- class REMOTE_FACTORY

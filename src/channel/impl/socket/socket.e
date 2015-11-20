@@ -33,4 +33,6 @@ feature {ANY}
          end
       end
 
+   configuration_section: STRING "socket"
+
 end -- class SOCKET

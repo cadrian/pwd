@@ -319,6 +319,8 @@ feature {}
          Result := ("openssl.cipher").intern
       end
 
+   configuration_section: STRING "vault"
+
 feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]
 

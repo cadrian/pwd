@@ -125,4 +125,6 @@ feature {}
          Result := ("master.arguments").intern
       end
 
+   configuration_section: STRING "shared"
+
 end -- class SHARED

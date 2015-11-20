@@ -162,6 +162,8 @@ feature {}
 
    filesystem: FILESYSTEM
 
+   configuration_section: STRING "client_fifo"
+
 invariant
    client_fifo /= Void
 

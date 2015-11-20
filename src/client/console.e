@@ -330,6 +330,8 @@ feature {} -- helpers
          end
       end
 
+   configuration_section: STRING "console"
+
 invariant
    remote_map /= Void
 

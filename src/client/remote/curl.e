@@ -224,6 +224,8 @@ feature {}
 
    proxy: PROXY
 
+   configuration_section: STRING "curl"
+
 invariant
    client /= Void --proxy /= Void
 

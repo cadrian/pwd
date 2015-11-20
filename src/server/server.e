@@ -426,6 +426,8 @@ feature {QUERY_VERSION}
 feature {}
    filesystem: FILESYSTEM
 
+   configuration_section: STRING "server"
+
 invariant
    is_running implies vault /= Void
    is_running implies channel /= Void

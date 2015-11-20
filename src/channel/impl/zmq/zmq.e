@@ -46,4 +46,7 @@ feature {ANY}
          end
       end
 
+feature {}
+   configuration_section: STRING "zmq"
+
 end -- class ZMQ

@@ -106,4 +106,6 @@ feature {}
          end
       end
 
+   configuration_section: STRING "menu"
+
 end -- class MENU
