@@ -21,6 +21,7 @@ class WEBCLIENT_SESSION
 insert
    LOGGING
    DISPOSABLE
+   STRING_HANDLER
 
 create {WEBCLIENT}
    make
@@ -190,7 +191,7 @@ feature {}
                log.trace.put_line("Locking session vault...")
                lock.write
                log.trace.put_line("Session vault locked, may proceed")
-               create vault.make(vaultpath)
+               create vault.make(agent new_file(vaultpath, ?))
                vault.open(("#(1)!#(2)" # webclient.remote_info.user # cookie.value).out)
                Result := vault.is_open
                if Result then
@@ -241,6 +242,14 @@ feature {}
          is_available := lock_vault
       ensure
          webclient = a_webclient
+      end
+
+   new_file (file_name: ABSTRACT_STRING; master: STRING): VAULT_FILE
+      do
+         log.info.put_line(once "Session vault file: #(1)" # file_name)
+         create {ENCRYPTED_FILE} Result.make(master, create {SIMPLE_FILE}.make(file_name))
+         master.clear_count
+         master.storage.set_all_with('%U', master.capacity)
       end
 
    dispose

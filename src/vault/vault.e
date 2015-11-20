@@ -17,17 +17,17 @@ class VAULT
 
 insert
    LOGGING
-   CONFIGURABLE
 
 create {ANY}
    make
 
 feature {ANY}
    is_open: BOOLEAN
+      do
+         Result := file /= Void and then file.is_open
+      end
 
 feature {ANY}
-   file: FIXED_STRING
-
    close
       require
          is_open
@@ -40,9 +40,9 @@ feature {ANY}
                key.clear
             end(?))
          data.clear_count
-         environment.set_variable(once "VAULT_MASTER", once "")
-         is_open := False
-         log.info.put_line(once "Vault closed: #(1)" # file)
+         file.close
+         file := Void
+         log.info.put_line(once "Vault closed.")
       ensure
          not is_open
       end
@@ -52,36 +52,18 @@ feature {ANY}
          master /= Void
          not is_open
       local
-         proc: PROCESS; vault_file: INPUT_STREAM
+         error: ABSTRACT_STRING
       do
-         environment.set_variable(once "VAULT_MASTER", master)
-         vault_file := filesystem.read_text(file)
-         if vault_file /= Void then
-            log.trace.put_line(once "open vault")
-            proc := processor.execute_redirect(once "openssl", once "#(1) -d -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
-            if proc.is_connected then
-               extern.splice(vault_file, proc.input)
-               proc.input.disconnect
-               read_data(proc.output)
-               proc.wait
-               if proc.status = 0 then
-                  is_open := True
-               else
-                  environment.set_variable(once "VAULT_MASTER", once "")
-               end
+         file := file_provider.item([master])
+         if file = Void then
+            log.error.put_line(once "VAULT NOT OPEN! no file provided")
+         else
+            error := file.load(agent on_open(?))
+            if error.is_empty then
+               log.info.put_line(once "Vault is open")
+            else
+               log.info.put_line(once "VAULT NOT OPEN! #(1)" # error)
             end
-
-            vault_file.disconnect
-         else
-            log.trace.put_line(once "open vault as new")
-            dirty := True
-            is_open := True
-         end
-
-         if is_open then
-            log.info.put_line(once "Vault open: #(1)" # file)
-         else
-            log.error.put_line(once "VAULT NOT OPEN! #(1)" # file)
          end
       end
 
@@ -131,35 +113,29 @@ feature {ANY}
       require
          is_open
       local
-         proc: PROCESS; tfw: OUTPUT_STREAM; backup: STRING
+         p_in: PIPE_INPUT; p_out: PIPE_OUTPUT
       do
          Result := once ""
          if dirty then
-            backup := once ""
-            backup.make_from_string(file)
-            backup.extend('~')
-            filesystem.copy_to(file, backup)
-            proc := processor.execute_redirect(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
-            if proc.is_connected then
-               print_all_keys(proc.input)
-               proc.input.flush
-               proc.input.disconnect
-
-               tfw := filesystem.write_text(file)
-               if tfw.is_connected then
-                  extern.splice(proc.output, tfw)
-                  tfw.flush
-                  tfw.disconnect
-                  dirty := False
-               else
-                  Result := once "could not write to file #(1)" # file
+            create p_out.make
+            create p_in.connect_to(p_out)
+            if p_out.is_connected then
+               check
+                  p_in.is_connected
                end
-
-               proc.wait
-               if proc.status /= 0 then
-                  filesystem.copy_to(backup, file)
-                  Result := once "openssl returned status #(1)" # proc.status.out
-               end
+               print_all_keys(p_in)
+               Result := file.save(p_out, agent (str: ABSTRACT_STRING): ABSTRACT_STRING
+                                             do
+                                                Result := str
+                                                check
+                                                   dirty
+                                                end
+                                                if Result.is_empty then
+                                                   dirty := False
+                                                end
+                                             end (?))
+            else
+               Result := once "could not create pipe to save the vault!"
             end
          end
       ensure
@@ -225,6 +201,19 @@ feature {ANY}
       end
 
 feature {}
+   on_open (vault_file: INPUT_STREAM): ABSTRACT_STRING
+      do
+         if vault_file /= Void then
+            log.trace.put_line(once "open vault")
+            read_data(vault_file)
+            vault_file.disconnect
+         else
+            log.trace.put_line(once "open vault as new")
+            dirty := True
+         end
+         Result := ""
+      end
+
    merge_other (other: like data; key: KEY)
       local
          other_key: KEY
@@ -295,37 +284,26 @@ feature {}
          end
       end
 
-feature {}
-   make (a_file: ABSTRACT_STRING)
-      require
-         a_file /= Void
-      do
-         file := a_file.intern
-         create data.make
-      ensure
-         file = a_file.intern
-      end
-
-   dirty: BOOLEAN
-
-   extern: EXTERN
-   filesystem: FILESYSTEM
-   environment: ENVIRONMENT
-
-   processor: PROCESSOR
-
-   config_openssl_cipher: FIXED_STRING
-      once
-         Result := ("openssl.cipher").intern
-      end
-
-   configuration_section: STRING "vault"
-
 feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]
 
+feature {}
+   make (a_file_provider: like file_provider)
+      require
+         a_file_provider /= Void
+      do
+         file_provider := a_file_provider
+         create data.make
+      ensure
+         file_provider = a_file_provider
+      end
+
+   dirty: BOOLEAN
+   file_provider: FUNCTION[TUPLE[STRING], VAULT_FILE]
+   file: VAULT_FILE
+
 invariant
-   file /= Void
+   file_provider /= Void
    data /= Void
    data.for_all(agent (key: KEY; name: FIXED_STRING): BOOLEAN
       do

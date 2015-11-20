@@ -7,4 +7,4 @@ generator/
 protocol/
 server/
 extern/
-vault/
+vault/loadpath.se

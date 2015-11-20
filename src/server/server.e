@@ -24,6 +24,8 @@ inherit
 
 insert
    GLOBALS
+   STRING_HANDLER
+   LOGGING
 
 create {}
    make
@@ -59,7 +61,7 @@ feature {LOOP_ITEM}
             else
                log.trace.put_line("Vault is closed")
             end
-            period := {REAL 86400.0} -- one day
+            period := Timeout_closed
          else
             log.trace.put_line("Spurious continue, ignored")
          end
@@ -101,7 +103,7 @@ feature {}
          loop_stack: LOOP_STACK; tfw: OUTPUT_STREAM; pid: INTEGER; is_killed, initialized: BOOLEAN
       do
          if not is_killed then
-            period := {REAL 86400.0} -- one day
+            period := Timeout_closed
 
             if initialized then
                log.info.put_line(once "Resuming main loop.")
@@ -116,7 +118,7 @@ feature {}
                   tfw.disconnect
                end
 
-               create vault.make(shared.vault_file)
+               create vault.make(agent new_file(shared.vault_file, ?))
                create loop_stack.make
                channel.on_receive(agent run_message({MESSAGE}))
                channel.on_new_job(agent loop_stack.add_job({JOB}))
@@ -234,7 +236,7 @@ feature {QUERY_CLOSE}
    visit_close (query: QUERY_CLOSE)
       do
          vault.close
-         period := {REAL 86400.0} -- one day
+         period := Timeout_closed
          collect_garbage
          create {REPLY_CLOSE} reply.make(once "")
       end
@@ -289,10 +291,10 @@ feature {QUERY_MASTER}
          end
          vault.open(query.master)
          if vault.is_open then
-            period := {REAL 14400.0} -- 4 hours idle time
+            period := Timeout_open_idle
             create {REPLY_MASTER} reply.make(once "")
          else
-            period := {REAL 86400.0} -- one day
+            period := Timeout_closed
             create {REPLY_MASTER} reply.make(once "Vault not open")
          end
       end
@@ -300,37 +302,39 @@ feature {QUERY_MASTER}
 feature {QUERY_CHANGE_MASTER}
    visit_change_master (query: QUERY_CHANGE_MASTER)
       local
-         other: VAULT; error: ABSTRACT_STRING
+         other: VAULT; error, old_vault_file, new_vault_file: ABSTRACT_STRING
       do
          if vault.is_open then
             vault.close
          end
          vault.open(query.old_master)
          if vault.is_open then
-            create other.make("#(1).new" # vault.file)
+            old_vault_file := "#(1).old" # shared.vault_file
+            new_vault_file := "#(1).new" # shared.vault_file
+            create other.make(agent new_file(new_vault_file, ?))
             other.open(query.new_master)
             error := other.merge(vault)
             other.close
             vault.close
 
             if error.is_empty then
-               filesystem.rename_to(vault.file, "#(1).old" # vault.file)
-               filesystem.rename_to("#(1).new" # vault.file, vault.file)
+               filesystem.rename_to(shared.vault_file, old_vault_file)
+               filesystem.rename_to(new_vault_file, shared.vault_file)
 
                vault.open(query.new_master)
                if vault.is_open then
-                  period := {REAL 14400.0} -- 4 hours idle time
+                  period := Timeout_open_idle
                   create {REPLY_CHANGE_MASTER} reply.make(once "")
                else
-                  period := {REAL 86400.0} -- one day
+                  period := Timeout_closed
                   create {REPLY_CHANGE_MASTER} reply.make(once "Vault not open")
                end
             else
-               period := {REAL 86400.0} -- one day
+               period := Timeout_closed
                create {REPLY_CHANGE_MASTER} reply.make(error)
             end
          else
-            period := {REAL 86400.0} -- one day
+            period := Timeout_closed
             create {REPLY_CHANGE_MASTER} reply.make(once "Vault not open")
          end
       end
@@ -341,7 +345,7 @@ feature {QUERY_MERGE}
          other: VAULT; error: ABSTRACT_STRING
       do
          if vault.is_open then
-            create other.make(query.vault)
+            create other.make(agent new_file(query.vault, ?))
             other.open(query.master)
             if other.is_open then
                error := vault.merge(other)
@@ -427,6 +431,17 @@ feature {}
    filesystem: FILESYSTEM
 
    configuration_section: STRING "server"
+
+   new_file (file_name: ABSTRACT_STRING; master: STRING): VAULT_FILE
+      do
+         log.info.put_line(once "Vault file: #(1)" # file_name)
+         create {ENCRYPTED_FILE} Result.make(master, create {SIMPLE_FILE}.make(file_name))
+         master.clear_count
+         master.storage.set_all_with('%U', master.capacity)
+      end
+
+   Timeout_open_idle: REAL {REAL 14400.0} -- 4 hours idle time --| **** TODO: config
+   Timeout_closed: REAL {REAL 86400.0} -- one day --| **** TODO: config
 
 invariant
    is_running implies vault /= Void
