@@ -160,27 +160,32 @@ feature {}
             mock_extern.splice__match(create {MOCK_ANY[INPUT_STREAM]}, create {MOCK_ANY[OUTPUT_STREAM]})
                .with_side_effect(agent (args: MOCK_ARGUMENTS; expected_input: TERMINAL_INPUT_STREAM; expected_output: TERMINAL_OUTPUT_STREAM)
                                     local
-                                       actual_input: MOCK_TYPED_ARGUMENT[INPUT_STREAM]
-                                       actual_output: MOCK_TYPED_ARGUMENT[OUTPUT_STREAM]
+                                       actual_input_arg: MOCK_TYPED_ARGUMENT[INPUT_STREAM]
+                                       actual_output_arg: MOCK_TYPED_ARGUMENT[OUTPUT_STREAM]
+                                       actual_input: INPUT_STREAM
+                                       actual_output: OUTPUT_STREAM
                                     do
-                                       actual_input ::= args.item(1)
-                                       actual_output ::= args.item(2)
+                                       actual_input_arg ::= args.item(1)
+                                       actual_output_arg ::= args.item(2)
 
-                                       assert(actual_input.item /= Void)
-                                       assert(actual_output.item /= Void)
-                                       assert(expected_input /= Void implies expected_input = actual_input.item)
-                                       assert(expected_output /= Void implies expected_output = actual_output.item)
+                                       actual_input := actual_input_arg.item
+                                       actual_output := actual_output_arg.item
+
+                                       label_assert("actual_input must exist", actual_input /= Void)
+                                       label_assert("actual_output must exist", actual_output /= Void)
+                                       label_assert("actual_input must match expected_input", expected_input /= Void implies expected_input = actual_input)
+                                       label_assert("actual_output must match expected_output", expected_output /= Void implies expected_output = actual_output)
 
                                        from
-                                          actual_input.item.read_line
+                                          actual_input.read_line
                                        until
-                                          actual_input.item.end_of_input
+                                          actual_input.end_of_input
                                        loop
-                                          actual_output.item.put_line(actual_input.item.last_string)
-                                          actual_input.item.read_line
+                                          actual_output.put_line(actual_input.last_string)
+                                          actual_input.read_line
                                        end
-                                       actual_output.item.put_string(actual_input.item.last_string)
-                                       actual_output.item.flush
+                                       actual_output.put_string(actual_input.last_string)
+                                       actual_output.flush
                                     end(?, input, output))
          >>})
       end

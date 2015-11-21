@@ -29,7 +29,7 @@ feature {}
          mock_flock: FILE_LOCKER_EXPECT
          mock_lock_file: TERMINAL_OUTPUT_STREAM_EXPECT
          mock_lock: FILE_LOCK_EXPECT
-         vault_output: STRING_OUTPUT_STREAM
+         vault_file_output: STRING_OUTPUT_STREAM
          mock_process_decode, mock_process_encode: PROCESS_EXPECT
          decode_in, encode_in: STRING_OUTPUT_STREAM; encode_finished: REFERENCE[BOOLEAN]
          decode_out, encode_out: STRING_INPUT_STREAM; decode_finished: REFERENCE[BOOLEAN]
@@ -141,14 +141,16 @@ feature {}
             mock_process_encode.is_child.whenever.then_return(False),
             mock_process_encode.is_connected.whenever.then_return(True),
             mock_process_encode.input.whenever.then_return(encode_in),
+            mock_process_encode.output.whenever.then_return(encode_out),
             mock_process_encode.error.whenever.then_return(Void)
          >>})
 
          vault_out := ""
-         create vault_output.connect_to(vault_out)
+         create vault_file_output.connect_to(vault_out)
+
+         expect_splice(encode_out, vault_file_output)
 
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
-            mock_process_encode.output.whenever.then_return(encode_out),
             mock_process_encode.wait
                .with_side_effect(agent (arg: MOCK_ARGUMENTS; f: REFERENCE[BOOLEAN]; i: STRING_OUTPUT_STREAM; o: STRING_INPUT_STREAM)
                                     do
@@ -167,10 +169,8 @@ feature {}
                                     end (?, encode_finished)),
             mock_process_encode.status.then_return(0),
             mock_processor.split_arguments__match(create {MOCK_STREQ}.make("Test/TemplatePath")).then_return({FAST_ARRAY[STRING] << "test/template" >>}),
-            mock_filesystem.write_text__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/webclient-AAAAAAAAAAAAAAAA.vault")).then_return(vault_output)
+            mock_filesystem.write_text__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/webclient-AAAAAAAAAAAAAAAA.vault")).then_return(vault_file_output)
          >>})
-
-         expect_splice(encode_out, vault_output)
 
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_environment.set_variable("VAULT_MASTER", ""),

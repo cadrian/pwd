@@ -31,16 +31,22 @@ feature {ANY}
          Result := nested.load(agent decrypt(loader, ?))
       end
 
-   save (stream: INPUT_STREAM; on_save: FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]): ABSTRACT_STRING
+   save (saver: FUNCTION[TUPLE[OUTPUT_STREAM], ABSTRACT_STRING]; on_save: FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]): ABSTRACT_STRING
       local
-         proc: PROCESS
+         proc: PROCESS; proc_out: INPUT_STREAM
       do
          proc := processor.execute_redirect(once "openssl", once "#(1) -a -pass env:VAULT_MASTER" # conf(config_openssl_cipher))
          if proc.is_connected then
-            extern.splice(stream, proc.input)
+            Result := saver.item([proc.input])
             proc.input.flush
             proc.input.disconnect
-            Result := nested.save(proc.output, agent on_encrypt(proc, ?))
+            proc_out := proc.output
+            Result := nested.save(agent (p_in: INPUT_STREAM; p_out: OUTPUT_STREAM): ABSTRACT_STRING
+                                     do
+                                        extern.splice(p_in, p_out)
+                                        Result := once ""
+                                     end (proc_out, ?),
+                                  agent on_encrypt(proc, ?))
          else
             Result := once "could not execute openssl"
          end

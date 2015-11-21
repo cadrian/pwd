@@ -112,31 +112,24 @@ feature {ANY}
    save: ABSTRACT_STRING
       require
          is_open
-      local
-         p_in: PIPE_INPUT; p_out: PIPE_OUTPUT
       do
          Result := once ""
          if dirty then
-            create p_out.make
-            create p_in.connect_to(p_out)
-            if p_out.is_connected then
-               check
-                  p_in.is_connected
-               end
-               print_all_keys(p_in)
-               Result := file.save(p_out, agent (str: ABSTRACT_STRING): ABSTRACT_STRING
-                                             do
-                                                Result := str
-                                                check
-                                                   dirty
-                                                end
-                                                if Result.is_empty then
-                                                   dirty := False
-                                                end
-                                             end (?))
-            else
-               Result := once "could not create pipe to save the vault!"
-            end
+            Result := file.save(agent (stream: OUTPUT_STREAM): ABSTRACT_STRING
+                                   do
+                                      print_all_keys(stream)
+                                      Result := once ""
+                                   end (?),
+                                agent (str: ABSTRACT_STRING): ABSTRACT_STRING
+                                   do
+                                      Result := str
+                                      check
+                                         dirty
+                                      end
+                                      if Result.is_empty then
+                                         dirty := False
+                                      end
+                                   end (?))
          end
       ensure
          Result /= Void

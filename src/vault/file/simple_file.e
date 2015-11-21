@@ -38,7 +38,7 @@ feature {ANY}
          end
       end
 
-   save (stream: INPUT_STREAM; on_save: FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]): ABSTRACT_STRING
+   save (saver: FUNCTION[TUPLE[OUTPUT_STREAM], ABSTRACT_STRING]; on_save: FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]): ABSTRACT_STRING
       local
          tfw: OUTPUT_STREAM; backup: ABSTRACT_STRING
       do
@@ -47,10 +47,10 @@ feature {ANY}
 
          tfw := filesystem.write_text(filename)
          if tfw.is_connected then
-            extern.splice(stream, tfw)
+            Result := saver.item([tfw])
             tfw.flush
             tfw.disconnect
-            Result := on_save.item([once ""])
+            Result := on_save.item([Result])
             if not Result.is_empty then
                filesystem.copy_to(backup, filename)
             end

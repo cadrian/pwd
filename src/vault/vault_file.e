@@ -32,14 +32,16 @@ feature {ANY}
          Result /= Void
       end
 
-   save (stream: INPUT_STREAM; on_save: FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]): ABSTRACT_STRING
+   save (saver: FUNCTION[TUPLE[OUTPUT_STREAM], ABSTRACT_STRING]; on_save: FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]): ABSTRACT_STRING
          -- Save the file. Returns an empty string on success, the
          -- error message otherwise.
+         -- The `saver' must ensure to return a non-Void string
+         -- (also empty on success).
          -- The `on_save` hook will return an empty string on success;
          -- on otherwise, the file is expected to be reverted in its
          -- previous sensible state.
       require
-         stream.is_connected
+         saver /= Void
          on_save /= Void
          is_open
       deferred
