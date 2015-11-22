@@ -13,10 +13,10 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-class SIMPLE_FILE
+class FILESYSTEM_IO
 
 inherit
-   VAULT_FILE
+   VAULT_IO
 
 insert
    LOGGING
@@ -84,4 +84,4 @@ feature {}
    extern: EXTERN
    filesystem: FILESYSTEM
 
-end -- class SIMPLE_FILE
+end -- class FILESYSTEM_IO

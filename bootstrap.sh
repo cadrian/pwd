@@ -91,7 +91,7 @@ extern/file_lock.e
 extern/file_locker_def.e
 extern/filesystem_def.e
 extern/processor_def.e
-vault/vault_file.e
+vault/vault_io.e
 EOF
 
 while read class; do

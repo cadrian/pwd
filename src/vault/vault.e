@@ -292,8 +292,8 @@ feature {}
       end
 
    dirty: BOOLEAN
-   file_provider: FUNCTION[TUPLE[STRING], VAULT_FILE]
-   file: VAULT_FILE
+   file_provider: FUNCTION[TUPLE[STRING], VAULT_IO]
+   file: VAULT_IO
 
 invariant
    file_provider /= Void

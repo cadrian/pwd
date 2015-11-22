@@ -13,9 +13,9 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-deferred class VAULT_FILE
+deferred class VAULT_IO
    --
-   -- The abstraction of a vault file.
+   -- The abstraction of vault input/output.
    --
 
 feature {ANY}
@@ -59,4 +59,4 @@ feature {ANY}
          not is_open
       end
 
-end -- class VAULT_FILE
+end -- class VAULT_IO

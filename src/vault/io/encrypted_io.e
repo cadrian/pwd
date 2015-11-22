@@ -13,10 +13,10 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-class ENCRYPTED_FILE
+class ENCRYPTED_IO
 
 inherit
-   VAULT_FILE
+   VAULT_IO
 
 insert
    LOGGING
@@ -114,7 +114,7 @@ feature {}
          is_open_
       end
 
-   nested: VAULT_FILE
+   nested: VAULT_IO
    is_open_: BOOLEAN
 
    processor: PROCESSOR
@@ -128,4 +128,4 @@ feature {}
 
    configuration_section: STRING "vault"
 
-end -- class ENCRYPTED_FILE
+end -- class ENCRYPTED_IO

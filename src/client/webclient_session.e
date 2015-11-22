@@ -244,10 +244,10 @@ feature {}
          webclient = a_webclient
       end
 
-   new_file (file_name: ABSTRACT_STRING; master: STRING): VAULT_FILE
+   new_file (file_name: ABSTRACT_STRING; master: STRING): VAULT_IO
       do
          log.info.put_line(once "Session vault file: #(1)" # file_name)
-         create {ENCRYPTED_FILE} Result.make(master, create {SIMPLE_FILE}.make(file_name))
+         create {ENCRYPTED_IO} Result.make(master, create {FILESYSTEM_IO}.make(file_name))
          master.clear_count
          master.storage.set_all_with('%U', master.capacity)
       end
