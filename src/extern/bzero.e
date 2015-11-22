@@ -22,22 +22,25 @@ feature {ANY}
    secure_clean alias "()" (s: STRING)
          -- Cleans up the string in constant time.
       require
-         s.capacity < secure_max
+         s.capacity < secure_max(s.capacity)
+      local
+         c: INTEGER
       do
          s.clear_count
+         c := secure_max(s.capacity)
          bzero(s.storage, s.capacity)
       ensure
          s.is_empty
          s.storage.occurrences('%U', s.capacity) = s.capacity
       end
 
-   secure_max: INTEGER
+   secure_max (c: INTEGER): INTEGER
          -- The maximum secure capacity
       external "plug_in"
       alias "[
          location: "."
          module_name: "plugin"
-         feature_name: "MAX_BZERO"
+         feature_name: "max_bzero"
       ]"
       end
 

@@ -1,2 +1,2 @@
-#define MAX_BZERO 16384
+int max_bzero(int count);
 void force_bzero(char*buf, int count);

@@ -22,6 +22,7 @@ inherit
    VAULT_FILE
 
 insert
+   KEY_HANDLER
    LOGGING
 
 feature {ANY}
@@ -45,7 +46,7 @@ feature {} -- load
          else
             log.trace.put_line(once "open vault as new")
          end
-         Result := ""
+         Result := once ""
       end
 
    read_data (keys: DICTIONARY[KEY, FIXED_STRING]; a_data: INPUT_STREAM)

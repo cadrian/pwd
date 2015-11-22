@@ -18,7 +18,7 @@ class KEY
 create {ANY}
    new
 
-create {VAULT_FILE}
+create {KEY_HANDLER}
    from_file
 
 feature {ANY}
@@ -100,7 +100,7 @@ feature {}
          del_count = a_del_count
       end
 
-feature {KEY, VAULT_FILE}
+feature {KEY, KEY_HANDLER}
    add_count: INTEGER
    del_count: INTEGER
 
