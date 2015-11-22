@@ -17,6 +17,9 @@ class VAULT
 
 insert
    LOGGING
+      rename
+         io as any_io
+      end
 
 create {ANY}
    make
@@ -24,7 +27,7 @@ create {ANY}
 feature {ANY}
    is_open: BOOLEAN
       do
-         Result := file /= Void and then file.is_open
+         Result := io /= Void and then io.is_open
       end
 
 feature {ANY}
@@ -40,8 +43,8 @@ feature {ANY}
                key.clear
             end(?))
          data.clear_count
-         file.close
-         file := Void
+         io.close
+         io := Void
          log.info.put_line(once "Vault closed.")
       ensure
          not is_open
@@ -52,15 +55,20 @@ feature {ANY}
          master /= Void
          not is_open
       local
-         error: ABSTRACT_STRING
+         error: ABSTRACT_STRING; file: VAULT_FILE
       do
-         file := file_provider.item([master])
-         if file = Void then
+         io := io_provider.item([master])
+         if io = Void then
             log.error.put_line(once "VAULT NOT OPEN! no file provided")
          else
-            error := file.load(agent on_open(?))
+            create {LEGACY_FILE} file
+            error := file.load(data, io)
             if error.is_empty then
                log.info.put_line(once "Vault is open")
+               if data.is_empty then
+                  -- new or empty vault, will force save
+                  dirty := True
+               end
             else
                log.info.put_line(once "VAULT NOT OPEN! #(1)" # error)
             end
@@ -112,24 +120,17 @@ feature {ANY}
    save: ABSTRACT_STRING
       require
          is_open
+      local
+         file: VAULT_FILE
       do
-         Result := once ""
          if dirty then
-            Result := file.save(agent (stream: OUTPUT_STREAM): ABSTRACT_STRING
-                                   do
-                                      print_all_keys(stream)
-                                      Result := once ""
-                                   end (?),
-                                agent (str: ABSTRACT_STRING): ABSTRACT_STRING
-                                   do
-                                      Result := str
-                                      check
-                                         dirty
-                                      end
-                                      if Result.is_empty then
-                                         dirty := False
-                                      end
-                                   end (?))
+            create {LEGACY_FILE} file
+            Result := file.save(data, io)
+            if Result.is_empty then
+               dirty := False
+            end
+         else
+            Result := once ""
          end
       ensure
          Result /= Void
@@ -194,19 +195,6 @@ feature {ANY}
       end
 
 feature {}
-   on_open (vault_file: INPUT_STREAM): ABSTRACT_STRING
-      do
-         if vault_file /= Void then
-            log.trace.put_line(once "open vault")
-            read_data(vault_file)
-            vault_file.disconnect
-         else
-            log.trace.put_line(once "open vault as new")
-            dirty := True
-         end
-         Result := ""
-      end
-
    merge_other (other: like data; key: KEY)
       local
          other_key: KEY
@@ -223,45 +211,6 @@ feature {}
       end
 
 feature {}
-   print_all_keys (stream: OUTPUT_STREAM)
-      require
-         stream.is_connected
-      do
-         data.for_each(agent print_key(?, ?, stream))
-      end
-
-   print_key (key: KEY; name: FIXED_STRING; stream: OUTPUT_STREAM)
-      require
-         stream.is_connected
-      do
-         stream.put_line(key.encoded)
-      end
-
-   read_data (a_data: INPUT_STREAM)
-      require
-         a_data.is_connected
-         data.is_empty
-      local
-         line: STRING; key: KEY
-      do
-         log.trace.put_line(once "reading vault data...")
-         from
-            a_data.read_line
-         until
-            a_data.end_of_input
-         loop
-            line := a_data.last_string
-            create key.decode(line)
-            if key.is_valid then
-               data.add(key, key.name)
-            end
-
-            a_data.read_line
-         end
-
-         log.trace.put_line(once "vault data read.")
-      end
-
    generate_pass (recipe: ABSTRACT_STRING): STRING
       require
          recipe /= Void
@@ -281,22 +230,22 @@ feature {VAULT}
    data: AVL_DICTIONARY[KEY, FIXED_STRING]
 
 feature {}
-   make (a_file_provider: like file_provider)
+   make (a_io_provider: like io_provider)
       require
-         a_file_provider /= Void
+         a_io_provider /= Void
       do
-         file_provider := a_file_provider
+         io_provider := a_io_provider
          create data.make
       ensure
-         file_provider = a_file_provider
+         io_provider = a_io_provider
       end
 
    dirty: BOOLEAN
-   file_provider: FUNCTION[TUPLE[STRING], VAULT_IO]
-   file: VAULT_IO
+   io_provider: FUNCTION[TUPLE[STRING], VAULT_IO]
+   io: VAULT_IO
 
 invariant
-   file_provider /= Void
+   io_provider /= Void
    data /= Void
    data.for_all(agent (key: KEY; name: FIXED_STRING): BOOLEAN
       do
