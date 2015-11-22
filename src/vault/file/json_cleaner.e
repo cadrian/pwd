@@ -74,10 +74,18 @@ feature {JSON_STRING}
       local
          s: UNICODE_STRING; i, c: INTEGER
       do
+         s := json.string
+         check
+            s.capacity > 0
+         end
          s.clear_count
          c := bzero.secure_max(s.capacity)
-         c := bzero.secure_max(s.low_surrogate_indexes.capacity)
-         c := bzero.secure_max(s.low_surrogate_values.capacity)
+         if s.low_surrogate_indexes.capacity > 0 then
+            c := bzero.secure_max(s.low_surrogate_indexes.capacity)
+         end
+         if s.low_surrogate_values.capacity > 0 then
+            c := bzero.secure_max(s.low_surrogate_values.capacity)
+         end
 
          --|**** TODO: Not as secure as BZERO. Should it be?
          from
@@ -86,8 +94,12 @@ feature {JSON_STRING}
             i >= c
          loop
             s.storage.put(0, i \\ s.capacity)
-            s.low_surrogate_indexes.storage.put(0, i \\ s.low_surrogate_indexes.capacity)
-            s.low_surrogate_values.storage.put(0, i \\ s.low_surrogate_values.capacity)
+            if s.low_surrogate_indexes.capacity > 0 then
+               s.low_surrogate_indexes.storage.put(0, i \\ s.low_surrogate_indexes.capacity)
+            end
+            if s.low_surrogate_values.capacity > 0 then
+               s.low_surrogate_values.storage.put(0, i \\ s.low_surrogate_values.capacity)
+            end
             i := i + 1
          end
       end

@@ -121,7 +121,7 @@ feature {JSON_HANDLER}
                vi ::= a_value
                key.item.set_fourth(vi.item)
             else
-               log.warning.put_line(once "unexpected key entry")
+               log.warning.put_line(once "unexpected key entry: %"#(1)%"" # k.item)
             end
          else
             log.warning.put_line(once "unexpected object")
