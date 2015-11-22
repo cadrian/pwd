@@ -1,8 +1,6 @@
 #pragma GCC push_options
 #pragma GCC optimize ( "-O0" )
 
-#define MAX_BZERO 16384
-
 /*
  * Try to be really sure that the compiler does not optimize this:
  *  - force -O0
@@ -17,7 +15,5 @@ __attribute__ (( noinline )) void force_bzero(char*buf, int count) {
           data[i % count] = '\0';
      }
 }
-
-#undef MAX_BZERO
 
 #pragma GCC pop_options

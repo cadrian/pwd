@@ -249,7 +249,7 @@ invariant
    data /= Void
    data.for_all(agent (key: KEY; name: FIXED_STRING): BOOLEAN
       do
-         Result := key /= Void and then name = key.name and then key.is_valid
+         Result := key /= Void and then name = key.name
       end(?, ?))
    not is_open implies data.is_empty
 

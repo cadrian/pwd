@@ -24,7 +24,6 @@ inherit
 
 insert
    GLOBALS
-   STRING_HANDLER
    LOGGING
 
 create {}
@@ -433,11 +432,12 @@ feature {}
    configuration_section: STRING "server"
 
    new_file (file_name: ABSTRACT_STRING; master: STRING): VAULT_IO
+      local
+         bzero: BZERO
       do
          log.info.put_line(once "Vault file: #(1)" # file_name)
          create {ENCRYPTED_IO} Result.make(master, create {FILESYSTEM_IO}.make(file_name))
-         master.clear_count
-         master.storage.set_all_with('%U', master.capacity)
+         bzero(master)
       end
 
    Timeout_open_idle: REAL {REAL 14400.0} -- 4 hours idle time --| **** TODO: config
