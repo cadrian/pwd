@@ -16,10 +16,8 @@
 class VAULT
 
 insert
+   CONFIGURABLE
    LOGGING
-      rename
-         io as any_io
-      end
 
 create {ANY}
    make
@@ -27,7 +25,7 @@ create {ANY}
 feature {ANY}
    is_open: BOOLEAN
       do
-         Result := io /= Void and then io.is_open
+         Result := inout /= Void and then inout.is_open
       end
 
 feature {ANY}
@@ -43,8 +41,8 @@ feature {ANY}
                key.clear
             end(?))
          data.clear_count
-         io.close
-         io := Void
+         inout.close
+         inout := Void
          log.info.put_line(once "Vault closed.")
       ensure
          not is_open
@@ -55,23 +53,23 @@ feature {ANY}
          master /= Void
          not is_open
       local
-         error: ABSTRACT_STRING; file: VAULT_FILE
+         error: ABSTRACT_STRING
       do
-         io := io_provider.item([master])
-         if io = Void then
-            log.error.put_line(once "VAULT NOT OPEN! no file provided")
+         inspect
+            format
+         when "legacy" then
+            error := open_legacy(master)
          else
-            create {LEGACY_FILE} file
-            error := file.load(data, io)
-            if error.is_empty then
-               log.info.put_line(once "Vault is open")
-               if data.is_empty then
-                  -- new or empty vault, will force save
-                  dirty := True
-               end
-            else
-               log.info.put_line(once "VAULT NOT OPEN! #(1)" # error)
+            error := once "unknown vault format: #(1)" # format
+         end
+         if error.is_empty then
+            log.info.put_line(once "Vault is open")
+            if data.is_empty then
+               -- new or empty vault, will force save
+               dirty := True
             end
+         else
+            log.error.put_line(once "VAULT NOT OPEN! #(1)" # error)
          end
       end
 
@@ -120,17 +118,13 @@ feature {ANY}
    save: ABSTRACT_STRING
       require
          is_open
-      local
-         file: VAULT_FILE
       do
-         if dirty then
-            create {LEGACY_FILE} file
-            Result := file.save(data, io)
-            if Result.is_empty then
-               dirty := False
-            end
+         inspect
+            format
+         when "legacy" then
+            Result := save_legacy
          else
-            Result := once ""
+            Result := once "unknown vault format: #(1)" # format
          end
       ensure
          Result /= Void
@@ -242,7 +236,60 @@ feature {}
 
    dirty: BOOLEAN
    io_provider: FUNCTION[TUPLE[STRING], VAULT_IO]
-   io: VAULT_IO
+   inout: VAULT_IO
+
+feature {} -- Vault formats handling
+   open_legacy (master: STRING): ABSTRACT_STRING
+      require
+         master /= Void
+         not is_open
+      local
+         file: VAULT_FILE
+      do
+         inout := io_provider.item([master])
+         if inout = Void then
+            Result := once "no file provided"
+         else
+            create {LEGACY_FILE} file
+            Result := file.load(data, inout)
+         end
+      end
+
+   save_legacy: ABSTRACT_STRING
+      require
+         is_open
+      local
+         file: VAULT_FILE
+      do
+         if dirty then
+            create {LEGACY_FILE} file
+            Result := file.save(data, inout)
+            if Result.is_empty then
+               dirty := False
+            end
+         else
+            Result := once ""
+         end
+      ensure
+         Result /= Void
+         Result.is_empty = not dirty
+      end
+
+   format: FIXED_STRING
+      once
+         if has_conf(config_format) then
+            Result := conf(config_format)
+         else
+            Result := "legacy".intern
+         end
+      end
+
+   config_format: FIXED_STRING
+      once
+         Result := ("format").intern
+      end
+
+   configuration_section: STRING "vault"
 
 invariant
    io_provider /= Void
