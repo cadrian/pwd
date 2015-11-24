@@ -5,7 +5,11 @@
 `pwd` -- Passwords With Dignity -- is a small and simple password
 management utility.
 
-Typical use is through *dmenu* (<http://tools.suckless.org/dmenu/>)
+Typical *desktop use* is through *dmenu* (<http://tools.suckless.org/dmenu/>) or *zenity*.
+
+A *web client* is also provided (needs CGI). See example configuration
+with lighttpd in
+[test/test_webclient.sh](https://github.com/cadrian/pwd/blob/master/test/test_webclient.sh).
 
 An *administration console* is also provided.
 
@@ -15,10 +19,11 @@ An *administration console* is also provided.
  - vault encrypted via openssl (Blowfish Cipher) using a master key
  - vault merge
  - vault up/download
+ - CGI (read-only) access
 
 ## Dependencies:
 
- - **xclip** (mandatory)
+ - **xclip** (mandatory for desktop)
  - **openssl** (mandatory)
  - **zenity**, **yad**, or any program that allows password entry
    (mandatory)
@@ -27,10 +32,13 @@ An *administration console* is also provided.
  - either **curl** or **scp** (optional, but useful if you want to
      keep your vault in the cloud)
  - **dmenu** (optional, but useful if you don't want to use the
-     console for nominal use case -- you may also use zenity, yad, or
-     any other program that allows to choose an item in a list)
+     console for nominal use case -- you may also use **zenity**,
+     **yad**, or any other program that allows to choose an item in a
+     list)
  - **xterm** (optional, but useful to let the console open itself in
      graphical environments)
+ - **nginx**, **lighttpd**, or **apache** for CGI access
+     (configuration tips not included; think https!)
 
 ## Typical use
 
