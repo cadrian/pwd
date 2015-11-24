@@ -20,7 +20,7 @@ test -e $dir/.version || {
             version=$(se --version | awk '$1 == "release" {print $2; exit}')
         fi
         head -n 1 $dir/debian/changelog | awk -F'[()]' '{print $2}' | \
-            sed -r "s/#SNAPSHOT#/$(date -u +'~%Y%m%d%H%M%S')~liberty-eiffel-$version/"
+            sed -r "s/#SNAPSHOT#/$(date -u +'~%Y%m%d%H%M%S')~libertyeiffel.$version/"
         ) > $dir/.version
 }
 cat $dir/.version
