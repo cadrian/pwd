@@ -31,7 +31,7 @@ feature {ANY}
 feature {JSON_HANDLER}
    build (data: DICTIONARY[KEY, FIXED_STRING]): JSON_TEXT
       local
-         keys: HASHED_DICTIONARY[JSON_VALUE, JSON_STRING]
+         keys: LINKED_HASHED_DICTIONARY[JSON_VALUE, JSON_STRING]
       do
          create keys.make
          data.for_each(agent add_key(keys, ?))
@@ -72,7 +72,7 @@ feature {JSON_HANDLER}
          inspect
             depth
          when 0 then
-            create {VAULT_DATA[HASHED_DICTIONARY[KEY, FIXED_STRING]]} Result.make(create {HASHED_DICTIONARY[KEY, FIXED_STRING]}.make)
+            create {VAULT_DATA[DICTIONARY[KEY, FIXED_STRING]]} Result.make(create {LINKED_HASHED_DICTIONARY[KEY, FIXED_STRING]}.make)
          when 1 then
             create empty_key
             create {VAULT_DATA[TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER]]} Result.make(empty_key)
@@ -84,7 +84,7 @@ feature {JSON_HANDLER}
 
    add_to_object (a_object, a_key, a_value: JSON_DATA)
       local
-         keys: VAULT_DATA[HASHED_DICTIONARY[KEY, FIXED_STRING]]
+         keys: VAULT_DATA[DICTIONARY[KEY, FIXED_STRING]]
          key: VAULT_DATA[TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER]]
          k, vs: VAULT_DATA[STRING]
          vi: VAULT_DATA[INTEGER]
@@ -180,7 +180,7 @@ feature {}
          create pass.from_string(key.pass)
          create add_count.make(1, key.add_count.to_natural_64, n64_zero, i64_zero, i64_zero)
          create del_count.make(1, key.del_count.to_natural_64, n64_zero, i64_zero, i64_zero)
-         keys.add(create {JSON_OBJECT}.make({HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
+         keys.add(create {JSON_OBJECT}.make({LINKED_HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
                                                name, Key_name;
                                                pass, Key_pass;
                                                add_count, Key_add_count;

@@ -14,6 +14,9 @@
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
 class TEST_JSON_FILE_01
+   --
+   -- Test empty JSON file loading
+   --
 
 insert
    PWD_TEST

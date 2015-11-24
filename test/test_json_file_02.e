@@ -14,6 +14,9 @@
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
 class TEST_JSON_FILE_02
+   --
+   -- Test JSON file with keys loading
+   --
 
 insert
    PWD_TEST
