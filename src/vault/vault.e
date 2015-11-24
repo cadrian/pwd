@@ -53,12 +53,25 @@ feature {ANY}
          master /= Void
          not is_open
       local
-         error: ABSTRACT_STRING
+         error, error2: ABSTRACT_STRING
       do
          inspect
             format
          when "legacy" then
-            error := open_legacy(master)
+            error := open_with(master, Legacy_file_provider)
+         when "json" then
+            error := open_with(master, Json_file_provider)
+            if not error.is_empty then
+               -- Try the legacy format, transition only (will be
+               -- saved in the JSON format)
+               error2 := open_with(master, Legacy_file_provider)
+               if error2.is_empty then
+                  error := error2
+                  dirty := True -- will force save in the new format
+               else
+                  error := "#(1), #(2)" # error # error2
+               end
+            end
          else
             error := once "unknown vault format: #(1)" # format
          end
@@ -122,7 +135,9 @@ feature {ANY}
          inspect
             format
          when "legacy" then
-            Result := save_legacy
+            Result := save_with(Legacy_file_provider)
+         when "json" then
+            Result := save_with(Json_file_provider)
          else
             Result := once "unknown vault format: #(1)" # format
          end
@@ -239,10 +254,11 @@ feature {}
    inout: VAULT_IO
 
 feature {} -- Vault formats handling
-   open_legacy (master: STRING): ABSTRACT_STRING
+   open_with (master: STRING; file_provider: FUNCTION[TUPLE, VAULT_FILE]): ABSTRACT_STRING
       require
          master /= Void
          not is_open
+         file_provider /= Void
       local
          file: VAULT_FILE
       do
@@ -250,19 +266,20 @@ feature {} -- Vault formats handling
          if inout = Void then
             Result := once "no file provided"
          else
-            create {LEGACY_FILE} file
+            file := file_provider.item([])
             Result := file.load(data, inout)
          end
       end
 
-   save_legacy: ABSTRACT_STRING
+   save_with (file_provider: FUNCTION[TUPLE, VAULT_FILE]): ABSTRACT_STRING
       require
          is_open
+         file_provider /= Void
       local
          file: VAULT_FILE
       do
          if dirty then
-            create {LEGACY_FILE} file
+            file := file_provider.item([])
             Result := file.save(data, inout)
             if Result.is_empty then
                dirty := False
@@ -275,12 +292,22 @@ feature {} -- Vault formats handling
          Result.is_empty = not dirty
       end
 
+   Legacy_file_provider: FUNCTION[TUPLE, VAULT_FILE]
+      once
+         Result := agent: VAULT_FILE do create {LEGACY_FILE} Result end
+      end
+
+   Json_file_provider: FUNCTION[TUPLE, VAULT_FILE]
+      once
+         Result := agent: VAULT_FILE do create {JSON_FILE} Result end
+      end
+
    format: FIXED_STRING
       once
          if has_conf(config_format) then
             Result := conf(config_format)
          else
-            Result := "legacy".intern
+            Result := "json".intern
          end
       end
 
