@@ -9,6 +9,8 @@
 #                                                                        #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
+. <(se -environment | grep -v '^#' | sed 's/^/export /g')
+
 set -e
 set -u
 
@@ -69,49 +71,41 @@ all:$(for exe in $EXE; do printf ' %s' exe/$exe; done; echo)
 EOF
 
 
-while read class; do
-    mkdir -p $dir/test/testable/$(dirname "$class")
-    base=$(echo "$class" | sed 's!\.e$!!;s!_def$!!')
-    expect=$dir/test/testable/${base}_expect.e
-    mock=$dir/test/testable/${base}_mock.e
-    source=$dir/src/$class
+while read section class; do
+    if [ "$section" == '#' ]; then
+        wait
+    else
+        echo "Mocking $class"
+        mkdir -p $dir/test/testable/$section
+        source=$(se find --loadpath test/loadpath.se "$class" | awk '{print $1}')
+        base=$dir/test/testable/$section/$(echo "$class" | tr '[A-Z]' '[a-z]' | sed 's/_def$//')
+        expect=${base}_expect.e
+        mock=${base}_mock.e
 
-    rm -f $expect $mock
-    echo Mocking $class
-    se mock --loadpath test/loadpath.se --expect $expect --mock $mock $source
-
-done <<EOF
-channel/channel_factory_def.e
-channel/client_channel.e
-channel/server_channel.e
-config/shared_def.e
-extern/environment_def.e
-extern/extern_def.e
-extern/file_lock.e
-extern/file_locker_def.e
-extern/filesystem_def.e
-extern/processor_def.e
-vault/vault_file.e
-vault/vault_io.e
-EOF
-
-while read class; do
-    mkdir -p $dir/test/testable/se
-    source=$(se find $class | awk '{print $1}')
-    base=$(echo "$class" | tr '[A-Z]' '[a-z]')
-    expect=$dir/test/testable/se/${base}_expect.e
-    mock=$dir/test/testable/se/${base}_mock.e
-
-    rm -f $expect $mock
-    echo Mocking $class
-    se mock --loadpath test/loadpath.se --expect $expect --mock $mock $source
+        rm -f $expect $mock
+        se mock --loadpath test/loadpath.se --expect $expect --mock $mock $class &
+    fi
 
 done <<EOF
-BINARY_INPUT_STREAM
-TERMINAL_OUTPUT_STREAM
-PROCESS
+channel CHANNEL_FACTORY_DEF
+channel CLIENT_CHANNEL
+channel SERVER_CHANNEL
+config SHARED_DEF
+#
+extern ENVIRONMENT_DEF
+extern EXTERN_DEF
+extern FILE_LOCK
+extern FILE_LOCKER_DEF
+extern FILESYSTEM_DEF
+extern PROCESSOR_DEF
+#
+vault VAULT_FILE
+vault VAULT_IO
+se BINARY_INPUT_STREAM
+se TERMINAL_OUTPUT_STREAM
+se PROCESS
+#
 EOF
-
 
 for exe in $EXE
 do
@@ -120,26 +114,46 @@ do
     ./make_ace.sh $ace dontclean
     rm -f *.[ch]
     if [ ${CLASS_CHECK:-no} = yes ]; then
-        if [ ${DEBUG_C2C:-no} = yes ]; then
-            . <(se -environment | sed 's/^/export /g')
-            echo Debugging class checking for $exe using $SE_TOOL_C2C
-            gdb $SE_TOOL_CLASS_CHECK --args $SE_TOOL_CLASS_CHECK $ace
-        else
-            echo Checking $exe
-            se class_check $ace || exit $?
-        fi
+        case ${DEBUG_C2C:-no} in
+            yes|gdb)
+                echo "Debugging class checking for $exe using $SE_TOOL_C2C"
+                gdb $SE_TOOL_CLASS_CHECK --args $SE_TOOL_CLASS_CHECK $ace
+                ;;
+            yes|gdb)
+                echo "Debugging class checking memory for $exe using $SE_TOOL_C2C"
+                valgrind --trace-children=yes --log-file=valgrind-$exe.log $SE_TOOL_CLASS_CHECK $ace
+                ;;
+            no)
+                echo "Checking $exe"
+                se class_check $ace
+                ;;
+            *)
+                echo "Unknown DEBUG_C2C=$DEBUG_C2C" >&2
+                exit 1
+                ;;
+        esac
     else
         se clean $ace
 
-        if [ ${DEBUG_C2C:-no} = yes ]; then
-            . <(se -environment | sed 's/^/export /g')
-            echo Debugging Eiffel compilation for $exe using $SE_TOOL_C2C
-            gdb $SE_TOOL_C2C --args $SE_TOOL_C2C $ace
-        else
-            echo Eiffel compiling $exe
-            se c2c $ace || exit $?
-        fi
-        test -e $exe.make || exit 1
+        case ${DEBUG_C2C:-no} in
+            gdb|yes)
+                echo "Debugging Eiffel compilation for $exe using $SE_TOOL_C2C"
+                gdb $SE_TOOL_C2C --args $SE_TOOL_C2C $ace
+                ;;
+            valgrind)
+                echo "Debugging Eiffel compilation memory for $exe using $SE_TOOL_C2C"
+                valgrind --trace-children=yes --log-file=valgrind-$exe.log $SE_TOOL_C2C $ace
+                ;;
+            no)
+                echo "Eiffel compiling $exe"
+                se c2c $ace
+                ;;
+            *)
+                echo Unknown DEBUG_C2C=$DEBUG_C2C >&2
+                exit 1
+                ;;
+        esac
+        test -e $exe.make
 
         {
             echo
@@ -221,7 +235,7 @@ Those files were generated using Liberty Eiffel
 http://www.liberty-eiffel.org
 
 Original source:
-http://github.com/cadrian/pwd
+http://github.com/cadrian/pwd/tree/$(git rev-parse HEAD)
 EOF
 
 cat > $bootstrap_dir/install_local.sh <<EOF

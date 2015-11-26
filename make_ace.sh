@@ -57,7 +57,7 @@ case $name in
         #debug_pwd=yes
         #debug_liberty='"json/parser"); debug("socket"'
         #debug_liberty='"socket"'
-        assert=require
+        #assert=no
         #no_strip=yes
         #clean=no
         ;;
