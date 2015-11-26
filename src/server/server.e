@@ -136,19 +136,29 @@ feature {}
 
          channel.cleanup
 
+         if is_killed then
+            log.info.put_line(once "Killed.")
+            die_with_code(1)
+         end
+
          log.info.put_line(once "Terminated.")
       rescue
          if exceptions.is_signal then
             if exceptions.signal_number = 1 then
                log.info.put_line(once "Received SIGHUP, ignored.")
             else
-               log.info.put_line(once "Killed by signal #(1), exitting gracefully." # exceptions.signal_number.out)
+               log.info.put_line(once "Caught signal #(1), exitting gracefully." # exceptions.signal_number.out)
                is_killed := True
             end
-            retry
+         elseif not is_killed then
+            log.info.put_line(once "Caught exception #(1), exitting gracefully." # exceptions.exception_name)
+            print_run_time_stack
+            is_killed := True
          else
-            log.info.put_line(once "Killed by exception #(1)." # exceptions.exception_name)
+            log.info.put_line(once "Caught again exception #(1), aborting now." # exceptions.exception_name)
+            die_with_code(1)
          end
+         retry
       end
 
    run_in_parent (proc: PROCESS)
