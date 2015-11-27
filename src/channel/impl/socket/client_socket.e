@@ -105,7 +105,7 @@ feature {}
 
    channel: SOCKET_INPUT_OUTPUT_STREAM
 
-   socket: SOCKET
+   socket: SOCKET_CONF
 
    busy: BOOLEAN
 

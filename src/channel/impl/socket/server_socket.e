@@ -96,7 +96,7 @@ feature {}
 
    server: SOCKET_SERVER
 
-   socket: SOCKET
+   socket: SOCKET_CONF
 
    trace: BOOLEAN
 

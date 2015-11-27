@@ -13,7 +13,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with pwd.  If not, see <http://www.gnu.org/licenses/>.
 --
-expanded class SOCKET
+expanded class SOCKET_CONF
 
 insert
    CONFIGURABLE
@@ -35,4 +35,4 @@ feature {ANY}
 
    configuration_section: STRING "socket"
 
-end -- class SOCKET
+end -- class SOCKET_CONF
