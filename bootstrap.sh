@@ -17,6 +17,7 @@ set -u
 dir=$(dirname $(readlink -f $0))
 cd $dir
 
+MOCK=${MOCK:-yes}
 EXE=${EXE:-"server menu console webclient"}
 
 bootstrap_dir=$dir/target/bootstrap
@@ -70,23 +71,23 @@ endif
 all:$(for exe in $EXE; do printf ' %s' exe/$exe; done; echo)
 EOF
 
+if [ $MOCK == yes ]; then
+    while read section class; do
+        if [ "$section" == '#' ]; then
+            wait
+        else
+            echo "Mocking $class"
+            mkdir -p $dir/test/testable/$section
+            source=$(se find --loadpath test/loadpath.se "$class" | awk '{print $1}')
+            base=$dir/test/testable/$section/$(echo "$class" | tr '[A-Z]' '[a-z]' | sed 's/_def$//')
+            expect=${base}_expect.e
+            mock=${base}_mock.e
 
-while read section class; do
-    if [ "$section" == '#' ]; then
-        wait
-    else
-        echo "Mocking $class"
-        mkdir -p $dir/test/testable/$section
-        source=$(se find --loadpath test/loadpath.se "$class" | awk '{print $1}')
-        base=$dir/test/testable/$section/$(echo "$class" | tr '[A-Z]' '[a-z]' | sed 's/_def$//')
-        expect=${base}_expect.e
-        mock=${base}_mock.e
+            rm -f $expect $mock
+            se mock --loadpath test/loadpath.se --expect $expect --mock $mock $class &
+        fi
 
-        rm -f $expect $mock
-        se mock --loadpath test/loadpath.se --expect $expect --mock $mock $class &
-    fi
-
-done <<EOF
+    done <<EOF
 channel CHANNEL_FACTORY_DEF
 channel CLIENT_CHANNEL
 channel SERVER_CHANNEL
@@ -106,6 +107,7 @@ se TERMINAL_OUTPUT_STREAM
 se PROCESS
 #
 EOF
+fi
 
 for exe in $EXE
 do
