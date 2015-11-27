@@ -27,7 +27,9 @@ feature {}
          filesystem: FILESYSTEM
          environment: ENVIRONMENT
          processor: PROCESSOR
+         any_string: MOCK_ANY[ABSTRACT_STRING]
       do
+         create any_string
          create mock_extern
          extern.set_def(mock_extern.mock)
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
@@ -63,7 +65,7 @@ feature {}
             mock_environment.variable("XDG_CONFIG_HOME").whenever.then_return("XDG_CONFIG_HOME"),
             mock_environment.variable("XDG_CONFIG_DIRS").whenever.then_return("XDG_CONFIG_DIRS"),
             mock_environment.variable("XDG_CACHE_HOME").whenever.then_return("XDG_CACHE_HOME"),
-            mock_filesystem.file_exists__match(create {MOCK_ANY[ABSTRACT_STRING]}).then_return(True),
+            mock_filesystem.file_exists__match(any_string).then_return(True),
             mock_filesystem.is_directory__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/.cache/pwd")).whenever.then_return(True),
             mock_filesystem.is_directory__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME")).whenever.then_return(True)
          >>})

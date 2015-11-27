@@ -52,11 +52,11 @@ feature {}
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_filesystem.file_exists__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/webclient-AAAAAAAAAAAAAAAA.vault")).then_return(False),
             mock_filesystem.write_text__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/webclient-AAAAAAAAAAAAAAAA.vault.lock")).whenever
-               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]): TERMINAL_OUTPUT_STREAM
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]; mlf: TERMINAL_OUTPUT_STREAM_EXPECT): TERMINAL_OUTPUT_STREAM
                                     do
                                        iscon.item := True
-                                       Result := mock_lock_file.mock
-                                    end (?, is_connected)),
+                                       Result := mlf.mock
+                                    end (?, is_connected, mock_lock_file)),
             mock_lock_file.filtered_has_descriptor.whenever.then_return(True),
             mock_lock_file.filtered_descriptor.whenever.then_return(42),
             mock_flock.lock(mock_lock_file.mock).then_return(mock_lock.mock),
