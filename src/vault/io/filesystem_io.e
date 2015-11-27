@@ -25,12 +25,14 @@ create {ANY}
    make
 
 feature {ANY}
+   exists: BOOLEAN then filesystem.file_exists(filename) end
+
    load (loader: FUNCTION[TUPLE[INPUT_STREAM], ABSTRACT_STRING]): ABSTRACT_STRING
       local
          in: INPUT_STREAM
       do
          in := filesystem.read_text(filename)
-         if in.is_connected then
+         if in /= Void then
             Result := loader.item([in])
             in.disconnect
          else
@@ -46,7 +48,7 @@ feature {ANY}
          filesystem.copy_to(filename, backup)
 
          tfw := filesystem.write_text(filename)
-         if tfw.is_connected then
+         if tfw /= Void then
             Result := saver.item([tfw])
             tfw.flush
             tfw.disconnect

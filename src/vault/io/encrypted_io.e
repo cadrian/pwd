@@ -26,6 +26,8 @@ create {ANY}
    make
 
 feature {ANY}
+   exists: BOOLEAN then nested.exists end
+
    load (loader: FUNCTION[TUPLE[INPUT_STREAM], ABSTRACT_STRING]): ABSTRACT_STRING
       do
          Result := nested.load(agent decrypt(loader, ?))

@@ -19,12 +19,19 @@ deferred class VAULT_IO
    --
 
 feature {ANY}
+   exists: BOOLEAN
+      require
+         is_open
+      deferred
+      end
+
    load (loader: FUNCTION[TUPLE[INPUT_STREAM], ABSTRACT_STRING]): ABSTRACT_STRING
          -- Load the file. Returns an empty string on success, the
          -- error message otherwise.
          -- The `loader' must ensure to return a non-Void string
          -- (also empty on success).
       require
+         exists
          loader /= Void
          is_open
       deferred
@@ -47,6 +54,7 @@ feature {ANY}
       deferred
       ensure
          Result /= Void
+         Result.is_empty implies exists
       end
 
    is_open: BOOLEAN

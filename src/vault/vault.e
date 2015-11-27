@@ -62,6 +62,9 @@ feature {ANY}
          when "json" then
             error := open_with(master, Json_file_provider)
             if not error.is_empty then
+               if inout /= Void then
+                  inout.close
+               end
                -- Try the legacy format, transition only (will be
                -- saved in the JSON format)
                error2 := open_with(master, Legacy_file_provider)
@@ -264,10 +267,17 @@ feature {} -- Vault formats handling
       do
          inout := io_provider.item([master])
          if inout = Void then
-            Result := once "no file provided"
+            Result := once "no io provided"
+         elseif not inout.exists then
+            Result := once ""
+            dirty := True
          else
             file := file_provider.item([])
-            Result := file.load(data, inout)
+            if file = Void then
+               Result := once "no file provided"
+            else
+               Result := file.load(data, inout)
+            end
          end
       end
 
