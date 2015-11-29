@@ -30,6 +30,13 @@ feature {}
       do
          check_specific
          Result := specific_config.get(specific_section, key)
+         debug
+            if Result = Void then
+               io.put_line("conf(%"#(1)%") = Void" # key)
+            else
+               io.put_line("conf(%"#(1)%") = %"#(2)%"" # key # Result)
+            end
+         end
       end
 
    has_conf (key: ABSTRACT_STRING): BOOLEAN
