@@ -34,6 +34,7 @@ feature {}
          create mock_vault_io
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_vault_io.is_open.whenever.then_return(True),
+            mock_vault_io.exists.whenever.then_return(True),
             mock_vault_io.load__match(create {MOCK_ANY[FUNCTION[TUPLE[INPUT_STREAM], ABSTRACT_STRING]]}).with_side_effect(agent load("{}", ?))
          >>})
          scenario.replay_all

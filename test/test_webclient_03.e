@@ -30,9 +30,9 @@ feature {}
          mock_lock_file: TERMINAL_OUTPUT_STREAM_EXPECT
          mock_lock: FILE_LOCK_EXPECT
          vault_file_output: STRING_OUTPUT_STREAM
-         mock_process_decode, mock_process_encode: PROCESS_EXPECT
-         decode_in, encode_in: STRING_OUTPUT_STREAM; encode_finished: REFERENCE[BOOLEAN]
-         decode_out, encode_out: STRING_INPUT_STREAM; decode_finished: REFERENCE[BOOLEAN]
+         mock_process_encode: PROCESS_EXPECT
+         encode_in: STRING_OUTPUT_STREAM; encode_finished: REFERENCE[BOOLEAN]
+         encode_out: STRING_INPUT_STREAM
          is_connected: REFERENCE[BOOLEAN]
          lock: REFERENCE[BOOLEAN]
       do
@@ -50,7 +50,7 @@ feature {}
          create lock
 
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
-            mock_filesystem.file_exists__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/webclient-AAAAAAAAAAAAAAAA.vault")).then_return(False),
+            mock_filesystem.file_exists__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/webclient-AAAAAAAAAAAAAAAA.vault")).whenever.then_return(False),
             mock_filesystem.write_text__match(create {MOCK_STREQ}.make("XDG_CACHE_HOME/webclient-AAAAAAAAAAAAAAAA.vault.lock")).whenever
                .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]; mlf: TERMINAL_OUTPUT_STREAM_EXPECT): TERMINAL_OUTPUT_STREAM
                                     do
@@ -86,46 +86,8 @@ feature {}
          vault_in := "test:1:0:pwd%N"
          expect_read("XDG_CACHE_HOME/webclient-AAAAAAAAAAAAAAAA.vault", vault_in)
 
-         create mock_process_decode
-         create decode_in.connect_to("")
-         create decode_out.from_string("decode out")
-         create decode_finished
-
-         scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
-            mock_processor.split_arguments__match(create {MOCK_STREQ}.make("TestOpensslCipher")).then_return({FAST_ARRAY[STRING] << "cipher" >>}),
-            mock_processor.execute_redirect__match(create {MOCK_STREQ}.make("openssl"),
-                                                   create {MOCK_STREQ}.make("cipher -d -a -pass env:VAULT_MASTER")).then_return(mock_process_decode.mock),
-            mock_process_decode.is_child.whenever.then_return(False),
-            mock_process_decode.is_connected.whenever.then_return(True),
-            mock_process_decode.input.whenever.then_return(decode_in)
-         >>})
-
          open_form := "<html><head><title>test</title></head><body><h1>This is a test!</h1></body></html>"
          expect_read("test/template/open_form.html", "#(1)%N" # open_form)
-
-         expect_splice(Void, Void)
-
-         scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
-            mock_process_decode.output.whenever.then_return(decode_out),
-            mock_process_decode.wait
-               .with_side_effect(agent (arg: MOCK_ARGUMENTS; f: REFERENCE[BOOLEAN]; i: STRING_OUTPUT_STREAM; o: STRING_INPUT_STREAM)
-                                    do
-                                       f.item := True
-                                       if i.is_connected then
-                                          i.disconnect
-                                       end
-                                       if o.is_connected then
-                                          o.disconnect
-                                       end
-                                    end (?, decode_finished, decode_in, decode_out)),
-            mock_process_decode.is_finished.whenever
-               .with_side_effect(agent (arg: MOCK_ARGUMENTS; f: REFERENCE[BOOLEAN]): BOOLEAN
-                                    do
-                                       Result := f.item
-                                    end (?, decode_finished)),
-            mock_process_decode.status.then_return(0),
-            mock_process_decode.error.whenever.then_return(Void)
-         >>})
 
          create mock_process_encode
          create encode_in.connect_to("")

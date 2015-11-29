@@ -41,6 +41,7 @@ feature {}
 
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_vault_io.is_open.whenever.then_return(True),
+            mock_vault_io.exists.whenever.then_return(True),
             mock_vault_io.save__match(create {MOCK_ANY[FUNCTION[TUPLE[OUTPUT_STREAM], ABSTRACT_STRING]]},
                                       create {MOCK_ANY[FUNCTION[TUPLE[ABSTRACT_STRING], ABSTRACT_STRING]]})
                .with_side_effect(agent save(?))
