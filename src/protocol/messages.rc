@@ -10,5 +10,6 @@ ping            id:STRING                             id:STRING
 save            .                                     .
 set             !                                     key:STRING|pass:STRING
 stop            .                                     .
+tags            .                                     !
 unset           key:STRING                            key:STRING
 version         .                                     version:STRING

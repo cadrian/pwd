@@ -417,6 +417,20 @@ feature {QUERY_STOP}
          create {REPLY_STOP} reply.make(once "")
       end
 
+feature {QUERY_TAGS}
+   visit_tags (query: QUERY_TAGS)
+      local
+         names: FAST_ARRAY[FIXED_STRING]
+      do
+         if vault.is_open then
+            create names.with_capacity(vault.tags.count)
+            names.append_traversable(vault.tags)
+            create {REPLY_TAGS} reply.make(once "", names)
+         else
+            create {REPLY_TAGS} reply.make(once "Vault not open", create {FAST_ARRAY[FIXED_STRING]}.make(0))
+         end
+      end
+
 feature {QUERY_UNSET}
    visit_unset (query: QUERY_UNSET)
       local
