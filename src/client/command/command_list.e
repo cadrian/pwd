@@ -29,10 +29,14 @@ feature {COMMANDER}
 
    run (command: COLLECTION[STRING])
       do
-         if not command.is_empty then
-            error_and_help(message_invalid_arguments, command)
-         else
+         inspect
+            command.count
+         when 0 then
             client.call_server(create {QUERY_LIST}.make(Void), agent when_reply(?))
+         when 1 then
+            client.call_server(create {QUERY_LIST}.make(command.first), agent when_reply(?))
+         else
+            error_and_help(message_invalid_arguments, command)
          end
       end
 
@@ -43,7 +47,11 @@ feature {COMMANDER}
 
    help (command: COLLECTION[STRING]): STRING
       do
-         Result := once "[33mlist[0m               List the known passwords (show only the keys)."
+         Result := once "[
+                          [33mlist {tag}[0m         List the known passwords (show only the keys).
+                                             [33m{tag}[0m: optional tag to filter the keys to list
+
+                         ]"
       end
 
 feature {}
