@@ -2,7 +2,7 @@
 close           .                                     .
 get             key:STRING                            key:STRING|pass:STRING
 is_open         .                                     is_open:BOOLEAN
-list            .                                     !
+list            tag:STRING                            !
 master          master:STRING                         .
 change_master   old_master:STRING|new_master:STRING   .
 merge           vault:STRING|master:STRING            vault:STRING

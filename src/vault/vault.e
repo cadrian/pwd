@@ -108,17 +108,17 @@ feature {ANY}
          Result := data.count
       end
 
-   for_each_key (action: PROCEDURE[TUPLE[FIXED_STRING]])
+   for_each_key (action: PROCEDURE[TUPLE[KEY]])
       require
          is_open
          action /= Void
       do
-         data.for_each(agent (a: PROCEDURE[TUPLE[FIXED_STRING]]; k: KEY; n: FIXED_STRING)
+         data.for_each(agent (a: PROCEDURE[TUPLE[KEY]]; k: KEY)
             do
                if not k.is_deleted then
-                  a.call([n])
+                  a.call([k])
                end
-            end(action, ?, ?))
+            end(action, ?))
       end
 
    merge (other: like Current): ABSTRACT_STRING
@@ -214,7 +214,12 @@ feature {ANY}
          create tagset.make
          data.for_each_item(agent (key: KEY; ts: SET[FIXED_STRING])
                                do
-                                  key.tags.for_each(agent (tag: FIXED_STRING; t: SET[FIXED_STRING]) do t.fast_add(tag) end (?, ts))
+                                  if not key.is_deleted then
+                                     key.tags.for_each(agent (tag: FIXED_STRING; t: SET[FIXED_STRING])
+                                                          do
+                                                             t.fast_add(tag)
+                                                          end (?, ts))
+                                  end
                                end (?, tagset))
          Result := tagset
       end
@@ -290,6 +295,7 @@ feature {} -- Vault formats handling
                Result := once "no file provided"
             else
                Result := file.load(data, inout)
+               log.trace.put_line("Vault found #(1) #(2)" # data.count.out # (if data.count = 1 then "entry" else "entries" end))
             end
          end
       end

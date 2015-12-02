@@ -280,12 +280,12 @@ feature {QUERY_LIST}
       do
          if vault.is_open then
             create names.with_capacity(vault.count)
-            vault.for_each_key(agent (key: FIXED_STRING; a: FAST_ARRAY[FIXED_STRING])
+            vault.for_each_key(agent (key: KEY; tag: STRING; a: FAST_ARRAY[FIXED_STRING])
                do
-                  if not key.is_empty and then key.first /= '_' then
-                     a.add_last(key)
+                  if key.name.first /= '_' and then (tag = Void or else key.has_tag(tag)) then
+                     a.add_last(key.name)
                   end
-               end(?, names))
+               end(?, query.tag, names))
             create {REPLY_LIST} reply.make(once "", names)
          else
             create {REPLY_LIST} reply.make(once "Vault not open", create {FAST_ARRAY[FIXED_STRING]}.make(0))

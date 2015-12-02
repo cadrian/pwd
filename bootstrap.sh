@@ -71,6 +71,8 @@ endif
 all:$(for exe in $EXE; do printf ' %s' exe/$exe; done; echo)
 EOF
 
+./protocol.sh
+
 if [ $MOCK == yes ]; then
     while read section class; do
         if [ "$section" == '#' ]; then

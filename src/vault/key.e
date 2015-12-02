@@ -102,6 +102,7 @@ feature {ANY}
       require
          other.name = name
       do
+         --| **** TODO: do we have to merge properties?
          if del_count < other.del_count then
             del_count := other.del_count
          end

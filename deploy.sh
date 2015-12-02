@@ -14,8 +14,6 @@ set -e
 dir=$(dirname $(readlink -f $0))
 cd $dir
 
-$dir/protocol.sh
-
 BOOTSTRAP=false
 RELEASE=false
 ONKEY=false
