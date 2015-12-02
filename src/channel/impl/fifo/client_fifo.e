@@ -92,7 +92,7 @@ feature {CLIENT}
 
    call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]])
       local
-         tfw: OUTPUT_STREAM; tfr: INPUT_STREAM
+         tfw: OUTPUT_STREAM; tfr: INPUT_STREAM; reply: MESSAGE
       do
          log.trace.put_line(once "Calling: #(1)" # query.generating_type)
          extern.make(client_fifo)
@@ -105,6 +105,7 @@ feature {CLIENT}
             tfw.put_new_line
             tfw.flush
             log.trace.put_line(once "... server fifo written to.")
+            query.clean
 
             extern.wait_for(client_fifo)
             tfr := filesystem.read_text(client_fifo)
@@ -118,9 +119,11 @@ feature {CLIENT}
                if streamer.error /= Void then
                   log.error.put_line(streamer.error)
                else
+                  reply := streamer.last_message
                   log.trace.put_line(once "Calling reply callback...")
-                  when_reply.call([streamer.last_message])
+                  when_reply.call([reply])
                   log.trace.put_line(once "... reply callback returned.")
+                  reply.clean
                end
             else
                log.error.put_line(once "**** Could not connect to client fifo!!")
@@ -129,6 +132,7 @@ feature {CLIENT}
             tfw.disconnect
          else
             log.error.put_line(once "**** Could not connect to server fifo!!")
+            query.clean
          end
       end
 

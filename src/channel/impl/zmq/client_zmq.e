@@ -96,17 +96,20 @@ feature {}
          create sos.connect_to(s)
          streamer.write_message(query, sos)
          socket.send(s, f.None)
+         query.clean
       end
 
-   on_call_reply (reply: ABSTRACT_STRING; when_reply: PROCEDURE[TUPLE[MESSAGE]])
+   on_call_reply (str_reply: ABSTRACT_STRING; when_reply: PROCEDURE[TUPLE[MESSAGE]])
       local
-         sis: STRING_INPUT_STREAM
+         sis: STRING_INPUT_STREAM; reply: MESSAGE
       do
-         create sis.from_string(reply)
+         create sis.from_string(str_reply)
          if streamer.error /= Void then
             log.error.put_line(streamer.error)
          else
-            when_reply.call([streamer.last_message])
+            reply := streamer.last_message
+            when_reply.call([reply])
+            reply.clean
          end
       end
 

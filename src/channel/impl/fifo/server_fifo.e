@@ -72,10 +72,12 @@ feature {SERVER}
                else
                   query := streamer.last_message
                   reply := fire_receive(query)
+                  query.clean
                   if reply = Void then
                      log.warning.put_line("No reply to the query #(1)!" # query.command)
                   else
                      streamer.write_message(reply, tfw)
+                     reply.clean
                   end
                end
 

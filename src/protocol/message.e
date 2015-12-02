@@ -43,6 +43,14 @@ feature {ANY}
          end
       end
 
+   clean
+      local
+         cleaner: JSON_CLEANER
+      do
+         create cleaner
+         json.accept(cleaner)
+      end
+
 feature {}
    from_json (a_json: JSON_OBJECT)
       require

@@ -55,6 +55,8 @@ feature {CLIENT}
       end
 
    call (query: MESSAGE; when_reply: PROCEDURE[TUPLE[MESSAGE]])
+      local
+         reply: MESSAGE
       do
          busy := True
          streamer.write_message(query, channel)
@@ -66,8 +68,11 @@ feature {CLIENT}
          if streamer.error /= Void then
             log.error.put_line(streamer.error)
          else
-            when_reply.call([streamer.last_message])
+            reply := streamer.last_message
+            when_reply.call([reply])
+            reply.clean
          end
+         query.clean
       end
 
    is_ready: BOOLEAN

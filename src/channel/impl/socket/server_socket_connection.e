@@ -53,12 +53,14 @@ feature {LOOP_ITEM}
                else
                   log.info.put_line(once "Connection received: type #(1) command #(2)." # query.type # query.command)
                   reply := server.fire_receive(query)
+                  query.clean
                   if reply = Void then
                      log.warning.put_line("No reply to the query #(1)!" # query.command)
                   else
                      log.trace.put_line(once "Replying: type #(1) command #(2)." # reply.type # reply.command)
                      streamer.write_message(reply, channel)
                      channel.flush
+                     reply.clean
                   end
                end
             end
