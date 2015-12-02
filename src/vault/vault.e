@@ -18,6 +18,7 @@ class VAULT
 insert
    CONFIGURABLE
    LOGGING
+   KEY_HANDLER
 
 create {ANY}
    make
@@ -204,6 +205,18 @@ feature {ANY}
          end
 
          Result := once ""
+      end
+
+   tags: TRAVERSABLE[FIXED_STRING]
+      local
+         tagset: AVL_SET[FIXED_STRING]
+      do
+         create tagset.make
+         data.for_each_item(agent (key: KEY; ts: SET[FIXED_STRING])
+                               do
+                                  key.tags.for_each(agent (tag: FIXED_STRING; t: SET[FIXED_STRING]) do t.fast_add(tag) end (?, ts))
+                               end (?, tagset))
+         Result := tagset
       end
 
 feature {}

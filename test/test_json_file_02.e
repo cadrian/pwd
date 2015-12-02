@@ -37,7 +37,7 @@ feature {}
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_vault_io.is_open.whenever.then_return(True),
             mock_vault_io.exists.whenever.then_return(True),
-            mock_vault_io.load__match(create {MOCK_ANY[FUNCTION[TUPLE[INPUT_STREAM], ABSTRACT_STRING]]}).with_side_effect(agent load("{%"foo%":{%"name%":%"foo%",%"pass%":%"foopass%",%"add_count%":0,%"del_count%":0},%"bar%":{%"name%":%"bar%",%"pass%":%"barpass%",%"add_count%":1,%"del_count%":2}}", ?))
+            mock_vault_io.load__match(create {MOCK_ANY[FUNCTION[TUPLE[INPUT_STREAM], ABSTRACT_STRING]]}).with_side_effect(agent load("{%"foo%":{%"name%":%"foo%",%"pass%":%"foopass%",%"add_count%":0,%"del_count%":0},%"bar%":{%"name%":%"bar%",%"pass%":%"barpass%",%"add_count%":1,%"del_count%":2,%"properties%":{%"username%":%"user_bar%",%"url%":%"http://localhost:8080%"}},%"baz%":{%"name%":%"baz%",%"pass%":%"bazpass%",%"add_count%":0,%"del_count%":0,%"properties%":{%"tags%":%"THIS THAT%"}}}", ?))
          >>})
          scenario.replay_all
 
@@ -46,21 +46,39 @@ feature {}
          err := json_file.load(keys, mock_vault_io.mock)
 
          assert(err.is_empty)
-         assert(keys.count = 2)
+         assert(keys.count = 3)
          assert(keys.fast_has("foo".intern))
          assert(keys.fast_has("bar".intern))
+         assert(keys.fast_has("baz".intern))
 
          key := keys.fast_at("foo".intern)
          assert(key.name = "foo".intern)
          assert(key.pass.is_equal("foopass"))
          assert(key.add_count = 0)
          assert(key.del_count = 0)
+         assert(key.username = Void)
+         assert(key.url = Void)
+         assert(key.tags.is_empty)
 
          key := keys.fast_at("bar".intern)
          assert(key.name = "bar".intern)
          assert(key.pass.is_equal("barpass"))
          assert(key.add_count = 1)
          assert(key.del_count = 2)
+         assert(key.username.is_equal("user_bar"))
+         assert(key.url.is_equal("http://localhost:8080"))
+         assert(key.tags.is_empty)
+
+         key := keys.fast_at("baz".intern)
+         assert(key.name = "baz".intern)
+         assert(key.pass.is_equal("bazpass"))
+         assert(key.add_count = 0)
+         assert(key.del_count = 0)
+         assert(key.username = Void)
+         assert(key.url = Void)
+         assert(key.tags.count = 2)
+         assert(key.tags.fast_has("THIS".intern))
+         assert(key.tags.fast_has("THAT".intern))
 
          scenario.check_all_done
       end

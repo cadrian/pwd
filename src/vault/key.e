@@ -24,13 +24,38 @@ create {KEY_HANDLER}
 feature {ANY}
    name: FIXED_STRING
    pass: STRING
+   username: FIXED_STRING
+   url: FIXED_STRING
+
+   has_tag (tag: ABSTRACT_STRING): BOOLEAN
+      require
+         tag /= Void
+      do
+         Result := tags.fast_has(tag.intern)
+      end
+
+   add_tag (tag: ABSTRACT_STRING)
+      require
+         tag.split.count = 1 and then tag.split.first.is_equal(tag)
+      do
+         tags.fast_add(tag.intern)
+      ensure
+         has_tag(tag)
+      end
+
+   del_tag (tag: ABSTRACT_STRING)
+      require
+         has_tag(tag)
+      do
+         tags.fast_remove(tag.intern)
+      end
 
    is_deleted: BOOLEAN
       do
          Result := del_count > add_count
       end
 
-   set_pass (a_pass: STRING)
+   set_pass (a_pass: STRING) assign pass
       require
          a_pass /= Void
       do
@@ -40,6 +65,30 @@ feature {ANY}
       ensure
          pass = a_pass
          not is_deleted
+      end
+
+   set_username (a_username: ABSTRACT_STRING) assign username
+      do
+         if a_username = Void then
+            username := Void
+         else
+            username := a_username.intern
+         end
+      ensure
+         a_username = Void implies username = Void
+         a_username /= Void implies username = a_username.intern
+      end
+
+   set_url (a_url: ABSTRACT_STRING) assign url
+      do
+         if a_url = Void then
+            url := Void
+         else
+            url := a_url.intern
+         end
+      ensure
+         a_url = Void implies url = Void
+         a_url /= Void implies url = a_url.intern
       end
 
    delete
@@ -77,34 +126,72 @@ feature {}
          a_name /= Void
          a_pass /= Void
       do
-         from_file(a_name, a_pass, 0, 0)
+         from_file(a_name, a_pass, 0, 0, Void)
       ensure
          not is_deleted
       end
 
-   from_file (a_name: ABSTRACT_STRING; a_pass: STRING; a_add_count, a_del_count: INTEGER)
+   from_file (a_name: ABSTRACT_STRING; a_pass: STRING; a_add_count, a_del_count: INTEGER; a_properties: MAP[ABSTRACT_STRING, FIXED_STRING])
       require
          a_name /= Void
          a_pass /= Void
          a_add_count >= 0
          a_del_count >= 0
+         a_properties /= Void implies a_properties.for_all(agent (v: ABSTRACT_STRING; k: FIXED_STRING): BOOLEAN then valid_properties.fast_has(k) end (?, ?))
+      local
+         v: ABSTRACT_STRING
       do
          name := a_name.intern
          pass := a_pass
          add_count := a_add_count
          del_count := a_del_count
+         if a_properties = Void then
+            create tags.with_capacity(2)
+         else
+            v := a_properties.fast_reference_at(Property_username)
+            if v /= Void then
+               set_username(v)
+            end
+            v := a_properties.fast_reference_at(Property_url)
+            if v /= Void then
+               set_url(v)
+            end
+            v := a_properties.fast_reference_at(Property_tags)
+            if v = Void then
+               create tags.with_capacity(2)
+            else
+               create tags.with_capacity(1 + v.occurrences(' '))
+               v.split.for_each(agent (tag: STRING) do add_tag(tag) end (?))
+            end
+         end
       ensure
          name = a_name.intern
          pass = a_pass
          add_count = a_add_count
          del_count = a_del_count
-      end
+         (a_properties /= Void and then a_properties.fast_has(Property_username)) implies username.is_equal(a_properties.fast_at(Property_username))
+         (a_properties /= Void and then a_properties.fast_has(Property_url)) implies url.is_equal(a_properties.fast_at(Property_url))
+         (a_properties /= Void and then a_properties.fast_has(Property_tags)) implies tags.count = 1 + a_properties.fast_at(Property_tags).occurrences(' ')
+       end
 
 feature {KEY, KEY_HANDLER}
    add_count: INTEGER
    del_count: INTEGER
+   tags: HASHED_SET[FIXED_STRING]
+
+   Property_username: FIXED_STRING once then "username".intern end
+   Property_url: FIXED_STRING once then "url".intern end
+   Property_tags: FIXED_STRING once then "tags".intern end
+
+   valid_properties: SET[FIXED_STRING]
+      once
+         Result := {HASHED_SET[FIXED_STRING] <<
+            Property_username, Property_url, Property_tags
+         >> }
+      end
 
 invariant
    pass /= Void
+   tags /= Void
 
 end -- class KEY

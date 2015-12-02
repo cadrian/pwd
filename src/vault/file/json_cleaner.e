@@ -74,6 +74,7 @@ feature {JSON_STRING}
       local
          s: UNICODE_STRING; i, c: INTEGER
       do
+         json.invalidate
          s := json.string
          check
             s.capacity > 0

@@ -105,7 +105,7 @@ feature {} -- load
 
             bzero(dat)
 
-            create Result.from_file(name, pass, add_count, del_count)
+            create Result.from_file(name, pass, add_count, del_count, Void)
          end
 
          bzero(a_line)

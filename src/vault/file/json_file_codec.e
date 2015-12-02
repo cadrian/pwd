@@ -67,7 +67,7 @@ feature {JSON_HANDLER}
 
    create_object: JSON_DATA
       local
-         empty_key: TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER]
+         empty_key: TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER, HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]]
       do
          inspect
             depth
@@ -75,7 +75,9 @@ feature {JSON_HANDLER}
             create {VAULT_DATA[DICTIONARY[KEY, FIXED_STRING]]} Result.make(create {LINKED_HASHED_DICTIONARY[KEY, FIXED_STRING]}.make)
          when 1 then
             create empty_key
-            create {VAULT_DATA[TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER]]} Result.make(empty_key)
+            create {VAULT_DATA[TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER, HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]]]} Result.make(empty_key)
+         when 2 then
+            create {VAULT_DATA[HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]]} Result.make(create {HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]}.make)
          else
             crash -- not supported
          end
@@ -85,7 +87,8 @@ feature {JSON_HANDLER}
    add_to_object (a_object, a_key, a_value: JSON_DATA)
       local
          keys: VAULT_DATA[DICTIONARY[KEY, FIXED_STRING]]
-         key: VAULT_DATA[TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER]]
+         key: VAULT_DATA[TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER, HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]]]
+         properties: VAULT_DATA[HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]]
          k, vs: VAULT_DATA[STRING]
          vi: VAULT_DATA[INTEGER]
          new_key: KEY
@@ -100,7 +103,7 @@ feature {JSON_HANDLER}
             keys ::= a_object
             k ::= a_key
             key ::= a_value
-            create new_key.from_file(key.item.first, key.item.second, key.item.third, key.item.fourth)
+            create new_key.from_file(key.item.first, key.item.second, key.item.third, key.item.fourth, key.item.fifth)
             keys.item.add(new_key, k.item.intern)
          when 2 then
             key ::= a_object
@@ -120,11 +123,25 @@ feature {JSON_HANDLER}
             when "del_count" then
                vi ::= a_value
                key.item.set_fourth(vi.item)
+            when "properties" then
+               properties ::= a_value
+               key.item.set_fifth(properties.item)
             else
                log.warning.put_line(once "unexpected key entry: %"#(1)%"" # k.item)
             end
+         when 3 then
+            properties ::= a_object
+            k ::= a_key
+            inspect
+               k.item
+            when "username", "url", "tags" then
+               vs ::= a_value
+               properties.item.put(vs.item, k.item.intern)
+            else
+               log.warning.put_line(once "unexpected property: %"#(1)%"" # k.item)
+            end
          else
-            log.warning.put_line(once "unexpected object")
+            log.warning.put_line(once "unexpected object at depth #(1)" # &depth)
          end
       end
 
@@ -175,16 +192,39 @@ feature {}
          add_count, del_count: JSON_NUMBER
          n64_zero: NATURAL_64
          i64_zero: INTEGER_64
+         props: HASHED_DICTIONARY[JSON_VALUE, JSON_STRING]; properties: JSON_OBJECT
+         tags: STRING
       do
          create name.from_string(key.name)
          create pass.from_string(key.pass)
          create add_count.make(1, key.add_count.to_natural_64, n64_zero, i64_zero, i64_zero)
          create del_count.make(1, key.del_count.to_natural_64, n64_zero, i64_zero, i64_zero)
+         create props.make
+         if key.username /= Void then
+            props.add(create {JSON_STRING}.from_string(key.username), Property_username)
+         end
+         if key.url /= Void then
+            props.add(create {JSON_STRING}.from_string(key.url), Property_url)
+         end
+         if not key.tags.is_empty then
+            props.add(create {JSON_STRING}.from_string(key.username), Property_username)
+            tags := ""
+            key.tags.for_each(agent (tag: FIXED_STRING; tagstring: STRING)
+                                 do
+                                    if not tagstring.is_empty then
+                                       tagstring.extend(' ')
+                                    end
+                                    tagstring.append(tag)
+                                 end (?, tags))
+            props.add(create {JSON_STRING}.from_string(tags), Property_tags)
+         end
+         create properties.make(props)
          keys.add(create {JSON_OBJECT}.make({LINKED_HASHED_DICTIONARY[JSON_VALUE, JSON_STRING] <<
                                                name, Key_name;
                                                pass, Key_pass;
                                                add_count, Key_add_count;
-                                               del_count, Key_del_count
+                                               del_count, Key_del_count;
+                                               properties, Key_properties
                                             >> }),
                   name)
       end
@@ -207,6 +247,26 @@ feature {}
    Key_del_count: JSON_STRING
       once
          create Result.from_string("del_count")
+      end
+
+   Key_properties: JSON_STRING
+      once
+         create Result.from_string("properties")
+      end
+
+   Property_username: JSON_STRING
+      once
+         create Result.from_string("username")
+      end
+
+   Property_url: JSON_STRING
+      once
+         create Result.from_string("url")
+      end
+
+   Property_tags: JSON_STRING
+      once
+         create Result.from_string("tags")
       end
 
 end -- class JSON_FILE_CODEC
