@@ -70,9 +70,9 @@ feature {CLIENT}
          else
             reply := streamer.last_message
             when_reply.call([reply])
-            reply.clean
+            --| **** TODO reply.clean
          end
-         query.clean
+         --| **** TODO query.clean
       end
 
    is_ready: BOOLEAN

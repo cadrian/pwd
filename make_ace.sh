@@ -29,7 +29,8 @@ case $name in
         #rescue=no
         #debug_pwd=yes
         #debug_liberty='"json/parser"); debug("socket"'
-        #assert=no
+        #debug_liberty='"json/parser"); debug("socket"); debug("FIXED_STRING"); debug("UNICODE_STRING"'
+        #assert=require
         #no_strip=yes
         #clean=no
         ;;
@@ -58,6 +59,7 @@ case $name in
         #debug_liberty='"json/parser"); debug("socket"'
         #debug_liberty='"socket"'
         #debug_liberty='"FIXED_STRING"'
+        #debug_liberty='"json/parser"); debug("socket"); debug("FIXED_STRING"); debug("UNICODE_STRING"'
         #assert=require
         #no_strip=yes
         #clean=no

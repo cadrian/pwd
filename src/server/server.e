@@ -282,7 +282,7 @@ feature {QUERY_LIST}
             create names.with_capacity(vault.count)
             vault.for_each_key(agent (key: KEY; tag: STRING; a: FAST_ARRAY[FIXED_STRING])
                do
-                  if key.name.first /= '_' and then (tag = Void or else key.has_tag(tag)) then
+                  if key.name.first /= '_' and then (tag.is_empty or else key.has_tag(tag)) then
                      a.add_last(key.name)
                   end
                end(?, query.tag, names))

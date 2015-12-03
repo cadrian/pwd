@@ -44,7 +44,7 @@ feature {COMMANDER}
          inspect
             command.count
          when 0 then
-            client.call_server(create {QUERY_LIST}.make(Void), agent when_reply(?))
+            client.call_server(create {QUERY_LIST}.make(""), agent when_reply(?))
          when 1 then
             client.call_server(create {QUERY_LIST}.make(command.first), agent when_reply(?))
          else
