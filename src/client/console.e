@@ -124,6 +124,7 @@ feature {} -- command management
 
    read_command
       do
+         commands.for_each(agent (cmd: COMMAND) do cmd.clean end (?))
          rio.read_line
          command_line.clear_count
          rio.last_string.split_in(command_line)

@@ -17,6 +17,12 @@ class COMMAND_LIST
 
 inherit
    COMMAND
+      redefine
+         make, clean
+      end
+
+insert
+   READLINE_EXTERNALS
 
 create {CONSOLE}
    make
@@ -25,6 +31,12 @@ feature {COMMANDER}
    name: FIXED_STRING
       once
          Result := ("list").intern
+      end
+
+   clean
+      do
+         tags := Void
+         completing := False
       end
 
    run (command: COLLECTION[STRING])
@@ -42,7 +54,19 @@ feature {COMMANDER}
 
    complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
       do
-         Result := no_completion
+         if command.count = 1 then
+            Result := tags
+            if Result = Void then
+               std_output.put_string(once "...")
+               std_output.flush
+               if not completing then
+                  client.call_server(create {QUERY_TAGS}.make, agent when_reply_tags(?))
+               end
+               Result := no_completion
+            end
+         else
+            Result := no_completion
+         end
       end
 
    help (command: COLLECTION[STRING]): STRING
@@ -55,6 +79,16 @@ feature {COMMANDER}
       end
 
 feature {}
+   make (a_client: like client; a_map: DICTIONARY[COMMAND, FIXED_STRING])
+      do
+         Precursor(a_client, a_map)
+         map := a_map
+      end
+
+   map: DICTIONARY[COMMAND, FIXED_STRING]
+   completing: BOOLEAN
+   tags: TRAVERSABLE[FIXED_STRING]
+
    when_reply (a_reply: MESSAGE)
       local
          reply: REPLY_LIST; string: STRING
@@ -75,6 +109,29 @@ feature {}
          else
             log.error.put_line(once "Unexpected reply")
          end
+      end
+
+   when_reply_tags (a_reply: MESSAGE)
+      local
+         reply: REPLY_TAGS; taglist: FAST_ARRAY[FIXED_STRING]
+      do
+         if reply ?:= a_reply then
+            reply ::= a_reply
+            if reply.error.is_empty then
+               create taglist.with_capacity(reply.count_names)
+               reply.for_each_name(agent (tag: STRING; t: FAST_ARRAY[FIXED_STRING])
+                                      do
+                                         t.add_last(tag.intern)
+                                      end (?, taglist))
+               tags := taglist
+            else
+               tags := no_completion
+            end
+         else
+            log.error.put_line(once "Unexpected reply")
+            tags := no_completion
+         end
+         rl_redisplay
       end
 
 end -- class COMMAND_LIST

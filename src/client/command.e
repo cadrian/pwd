@@ -21,10 +21,19 @@ insert
 
 feature {COMMANDER}
    name: FIXED_STRING
+         -- The command name
       deferred
       end
 
+   clean
+         -- Called before starting to read a command, for optional
+         -- cleanup (e.g. completion results and so on)
+         -- Does nothing by default.
+      do
+      end
+
    run (command: COLLECTION[STRING])
+         -- run the command with the given arguments
       require
          client /= Void
          command /= Void
@@ -32,6 +41,7 @@ feature {COMMANDER}
       end
 
    complete (command: COLLECTION[STRING]; word: FIXED_STRING): TRAVERSABLE[FIXED_STRING]
+         -- list possible completion words
       require
          client /= Void
          command /= Void
