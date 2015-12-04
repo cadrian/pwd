@@ -65,6 +65,9 @@ feature {ANY}
          when "json" then
             log.trace.put_line("Opening with JSON file provider")
             error := open_with(master, Json_file_provider)
+            if error.is_empty and then data.is_empty then
+               error := "empty vault"
+            end
             if not error.is_empty then
                log.trace.put_line("JSON file provider failed: #(1)" # error)
                if inout /= Void then
@@ -302,9 +305,6 @@ feature {} -- Vault formats handling
             else
                Result := file.load(data, inout)
                log.trace.put_line("Vault found #(1) #(2)" # data.count.out # (if data.count = 1 then "entry" else "entries" end))
-               if data.is_empty then
-                  Result := once "empty vault"
-               end
             end
          end
       end
