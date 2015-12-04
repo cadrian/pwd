@@ -44,7 +44,8 @@ feature {}
       do
          assert(rnd.path.is_equal(random_file))
          assert(rnd.is_connected)
-         Result := agent test_extend(?, pass)
+      then
+         agent test_extend(?, pass)
       end
 
    test_extend (mix: PASS_GENERATOR_MIX; pass: STRING)

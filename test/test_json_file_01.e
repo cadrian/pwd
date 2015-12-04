@@ -58,7 +58,8 @@ feature {}
          loader ::= args.item(1)
          label_assert("loader must exist", loader /= Void)
          create strin.from_string(s)
-         Result := loader.item.item([strin])
+      then
+         loader.item.item([strin])
       end
 
 end -- class TEST_JSON_FILE_01

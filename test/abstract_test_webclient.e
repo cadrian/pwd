@@ -49,10 +49,8 @@ feature {}
          create mock_channel_factory
          channel_factory.set_def(mock_channel_factory.mock)
          create mock_client_channel
-         create mock_server_channel
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_channel_factory.new_client_channel(tmpdir).whenever.then_return(mock_client_channel.mock),
---            mock_channel_factory.new_server_channel.then_return(mock_server_channel.mock)
          >>})
 
          create mock_filesystem
@@ -117,50 +115,26 @@ feature {}
          >>})
       end
 
-   tmpdir: FIXED_STRING
-      once
-         Result := "tmpdir".intern
-      end
-
-   logfile: FIXED_STRING
-      once
-         Result := ("#(1).log" # generating_type).intern
-      end
-
-   pidfile: FIXED_STRING
-      once
-         Result := "pidfile".intern
-      end
-
-   loglevel: FIXED_STRING
-      once
-         Result := "trace".intern
-      end
-
-   vaultfile: FIXED_STRING
-      once
-         Result := "vaultfile".intern
-      end
-
-   runtimedir: FIXED_STRING
-      once
-         Result := "runtimedir".intern
-      end
+   tmpdir: FIXED_STRING once then "tmpdir".intern end
+   logfile: FIXED_STRING once then ("#(1).log" # generating_type).intern end
+   pidfile: FIXED_STRING once then "pidfile".intern end
+   loglevel: FIXED_STRING once then "trace".intern end
+   vaultfile: FIXED_STRING once then "vaultfile".intern end
+   runtimedir: FIXED_STRING once then "runtimedir".intern end
 
    mock_shared: SHARED_EXPECT
    mock_extern: EXTERN_EXPECT
    mock_channel_factory: CHANNEL_FACTORY_EXPECT
    mock_client_channel: CLIENT_CHANNEL_EXPECT
-   mock_server_channel: SERVER_CHANNEL_EXPECT
    mock_filesystem: FILESYSTEM_EXPECT
    mock_environment: ENVIRONMENT_EXPECT
    mock_processor: PROCESSOR_EXPECT
 
-   expect_splice (input: TERMINAL_INPUT_STREAM; output: TERMINAL_OUTPUT_STREAM)
+   expect_splice (expected_input: TERMINAL_INPUT_STREAM; expected_output: TERMINAL_OUTPUT_STREAM)
       do
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_extern.splice__match(create {MOCK_ANY[INPUT_STREAM]}, create {MOCK_ANY[OUTPUT_STREAM]})
-               .with_side_effect(agent (args: MOCK_ARGUMENTS; expected_input: TERMINAL_INPUT_STREAM; expected_output: TERMINAL_OUTPUT_STREAM)
+               .with_side_effect(agent (args: MOCK_ARGUMENTS)
                                     local
                                        actual_input_arg: MOCK_TYPED_ARGUMENT[INPUT_STREAM]
                                        actual_output_arg: MOCK_TYPED_ARGUMENT[OUTPUT_STREAM]
@@ -188,7 +162,7 @@ feature {}
                                        end
                                        actual_output.put_string(actual_input.last_string)
                                        actual_output.flush
-                                    end(?, input, output))
+                                    end (?))
          >>})
       end
 
@@ -214,34 +188,18 @@ feature {}
          create mock_random
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
             mock_filesystem.read_binary__match(create {MOCK_STREQ}.make("/dev/urandom")).whenever
-               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]): BINARY_INPUT_STREAM
-                                    do
-                                       iscon.item := True
-                                       Result := mock_random.mock
-                                    end (?, is_connected)),
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS): BINARY_INPUT_STREAM do is_connected.item := True then mock_random.mock end (?)),
             mock_random.is_connected.whenever
-               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]): BOOLEAN
-                                    do
-                                       Result := iscon.item
-                                    end (?, is_connected)),
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS): BOOLEAN then is_connected.item end (?)),
             mock_random.can_read_character.whenever
-               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]): BOOLEAN
-                                    do
-                                       Result := iscon.item
-                                    end (?, is_connected)),
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS): BOOLEAN then is_connected.item end (?)),
             mock_random.end_of_input.whenever
-               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN]): BOOLEAN
-                                    do
-                                       Result := not iscon.item
-                                    end (?, is_connected)),
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS): BOOLEAN then not is_connected.item end (?)),
             mock_random.can_disconnect.whenever.then_return(True),
             mock_random.read_byte.whenever,
             mock_random.last_byte.whenever.then_return(0),
             mock_random.disconnect.whenever
-               .with_side_effect(agent (arg: MOCK_ARGUMENTS; iscon: REFERENCE[BOOLEAN])
-                                    do
-                                       iscon.item := False
-                                    end (?, is_connected))
+               .with_side_effect(agent (arg: MOCK_ARGUMENTS) do is_connected.item := False end (?))
          >>})
       end
 

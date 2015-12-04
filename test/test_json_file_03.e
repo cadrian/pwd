@@ -70,7 +70,8 @@ feature {}
          label_assert("on_save must exist", on_save /= Void)
          json_out := ""
          create strout.connect_to(json_out)
-         Result := on_save.item.item([saver.item.item([strout])])
+      then
+         on_save.item.item([saver.item.item([strout])])
       end
 
    json_out: STRING
