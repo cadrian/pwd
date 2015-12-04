@@ -87,25 +87,27 @@ feature {} -- load
          if decoder.match(a_line) then
             dat := once ""
 
-            bzero(dat)
+            dat.clear_count
             decoder.append_named_group(a_line, dat, once "name")
             name := dat.intern
 
-            bzero(dat)
+            dat.clear_count
             decoder.append_named_group(a_line, dat, once "add")
             add_count := dat.to_integer
 
-            bzero(dat)
+            dat.clear_count
             decoder.append_named_group(a_line, dat, once "del")
             del_count := dat.to_integer
 
-            bzero(dat)
+            dat.clear_count
             decoder.append_named_group(a_line, dat, once "pass")
             pass := dat.twin
 
             bzero(dat)
 
             create Result.from_file(name, pass, add_count, del_count, Void)
+         else
+            log.trace.put_line("Invalid line: #(1)" # a_line)
          end
 
          bzero(a_line)

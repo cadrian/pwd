@@ -283,7 +283,10 @@ feature {QUERY_LIST}
             vault.for_each_key(agent (key: KEY; tag: STRING; a: FAST_ARRAY[FIXED_STRING])
                do
                   if key.name.first /= '_' and then (tag.is_empty or else key.has_tag(tag)) then
+                     log.trace.put_line("Listing key: #(1)" # key.name)
                      a.add_last(key.name)
+                  else
+                     log.trace.put_line("Skipping key: #(1)" # key.name)
                   end
                end(?, query.tag, names))
             create {REPLY_LIST} reply.make(once "", names)
@@ -456,12 +459,9 @@ feature {}
    configuration_section: STRING "server"
 
    new_file (file_name: ABSTRACT_STRING; master: STRING): VAULT_IO
-      local
-         bzero: BZERO
       do
          log.info.put_line(once "Vault file: #(1)" # file_name)
          create {ENCRYPTED_IO} Result.make(master, create {FILESYSTEM_IO}.make(file_name))
-         bzero(master)
       end
 
    Timeout_open_idle: REAL {REAL 14400.0} -- 4 hours idle time --| **** TODO: config

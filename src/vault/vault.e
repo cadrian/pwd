@@ -55,19 +55,24 @@ feature {ANY}
          not is_open
       local
          error, error2: ABSTRACT_STRING
+         bzero: BZERO
       do
          inspect
             format
          when "legacy" then
+            log.trace.put_line("Opening with legacy file provider")
             error := open_with(master, Legacy_file_provider)
          when "json" then
+            log.trace.put_line("Opening with JSON file provider")
             error := open_with(master, Json_file_provider)
             if not error.is_empty then
+               log.trace.put_line("JSON file provider failed: #(1)" # error)
                if inout /= Void then
                   inout.close
                end
                -- Try the legacy format, transition only (will be
                -- saved in the JSON format)
+               log.trace.put_line("Opening with legacy file provider")
                error2 := open_with(master, Legacy_file_provider)
                if error2.is_empty then
                   error := error2
@@ -88,6 +93,7 @@ feature {ANY}
          else
             log.error.put_line(once "VAULT NOT OPEN! #(1)" # error)
          end
+         bzero(master)
       end
 
    pass (key_name: STRING): STRING
@@ -296,6 +302,9 @@ feature {} -- Vault formats handling
             else
                Result := file.load(data, inout)
                log.trace.put_line("Vault found #(1) #(2)" # data.count.out # (if data.count = 1 then "entry" else "entries" end))
+               if data.is_empty then
+                  Result := once "empty vault"
+               end
             end
          end
       end

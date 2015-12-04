@@ -49,7 +49,11 @@ feature {} -- load
          if Result = Void or else Result.is_empty then
             k ::= decoder.decode(codec, value)
             k.item.for_each(agent (keymap: DICTIONARY[KEY, FIXED_STRING]; key: KEY) do keymap.add(key, key.name) end (keys, ?))
-            Result := once ""
+            if vault_file.end_of_input then
+               Result := once ""
+            else
+               Result := once "invalid JSON stream"
+            end
          end
          if value /= Void then
             value.accept(create {JSON_CLEANER})

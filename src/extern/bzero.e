@@ -22,6 +22,7 @@ feature {ANY}
    secure_clean alias "()" (s: STRING)
          -- Cleans up the string in constant time.
       require
+         s.capacity > 0
          s.capacity < secure_max(s.capacity)
       local
          c: INTEGER
@@ -47,6 +48,8 @@ feature {ANY}
 feature {}
    bzero (buf: NATIVE_ARRAY[CHARACTER]; count: INTEGER)
          -- Put `count` '%U' characters in `buf`, in a constant time.
+      require
+         count > 0
       external "plug_in"
       alias "[
          location: "."
