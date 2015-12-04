@@ -30,6 +30,19 @@ feature {ANY}
          v.visit_set(Current)
       end
 
+   clean
+      local
+         cleaner: JSON_CLEANER
+         jv: JSON_VALUE
+      do
+         create cleaner
+         jv := json.members.reference_at(json_string(once "pass"))
+         if jv /= Void then
+            jv.accept(cleaner)
+         end
+         json.members.reference_at(json_string(once "key")).accept(cleaner)
+      end
+
 feature {ANY}
    key: STRING
       do

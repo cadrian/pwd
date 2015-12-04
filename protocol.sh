@@ -51,6 +51,26 @@ generate_extra_json() {
     done
 }
 
+generate_clean() {
+    echo "   clean"
+    if [ $# -eq 0 ]; then
+        echo "      do"
+        echo "      end"
+    else
+        echo "      local"
+        echo "         cleaner: JSON_CLEANER"
+        echo "      do"
+        echo "         create cleaner"
+        while [ $# -gt 0 ]; do
+            echo "$1" | awk -F: '{print $1, $2}' | while read field type; do
+                echo "         json.members.reference_at(json_string(once \"$field\")).accept(cleaner)"
+            done
+            shift
+        done
+        echo "      end"
+    fi
+}
+
 generate_getters() {
     while [ $# -gt 0 ]; do
         echo "$1" | awk -F: '{print $1, $2}' | while read field type; do
@@ -117,6 +137,8 @@ generate() {
     echo "         v ::= visitor"
     echo "         v.visit_$name(Current)"
     echo "      end"
+    echo
+    generate_clean "$@"
     if [ $type = reply ]; then
         generate_getters error:STRING
     fi

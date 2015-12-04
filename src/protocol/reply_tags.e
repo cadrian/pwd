@@ -30,6 +30,14 @@ feature {ANY}
          v.visit_tags(Current)
       end
 
+   clean
+      local
+         cleaner: JSON_CLEANER
+      do
+         create cleaner
+         json.members.reference_at(json_string(once "names")).accept(cleaner)
+      end
+
 feature {ANY}
    error: STRING
       do

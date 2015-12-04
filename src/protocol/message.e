@@ -44,11 +44,7 @@ feature {ANY}
       end
 
    clean
-      local
-         cleaner: JSON_CLEANER
-      do
-         create cleaner
-         json.accept(cleaner)
+      deferred
       end
 
 feature {}
