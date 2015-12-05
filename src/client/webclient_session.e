@@ -245,12 +245,9 @@ feature {}
       end
 
    new_file (file_name: ABSTRACT_STRING; master: STRING): VAULT_IO
-      local
-         bzero: BZERO
       do
          log.info.put_line(once "Session vault file: #(1)" # file_name)
          create {ENCRYPTED_IO} Result.make(master, create {FILESYSTEM_IO}.make(file_name))
-         bzero(master)
       end
 
    dispose

@@ -61,10 +61,10 @@ feature {ANY}
             format
          when "legacy" then
             log.trace.put_line("Opening with legacy file provider")
-            error := open_with(master, Legacy_file_provider)
+            error := open_with(master, Legacy_file_provider())
          when "json" then
             log.trace.put_line("Opening with JSON file provider")
-            error := open_with(master, Json_file_provider)
+            error := open_with(master, Json_file_provider())
             if error.is_empty and then data.is_empty then
                error := "empty vault"
             end
@@ -76,7 +76,7 @@ feature {ANY}
                -- Try the legacy format, transition only (will be
                -- saved in the JSON format)
                log.trace.put_line("Opening with legacy file provider")
-               error2 := open_with(master, Legacy_file_provider)
+               error2 := open_with(master, Legacy_file_provider())
                if error2.is_empty then
                   error := error2
                   dirty := True -- will force save in the new format
@@ -148,9 +148,9 @@ feature {ANY}
          inspect
             format
          when "legacy" then
-            Result := save_with(Legacy_file_provider)
+            Result := save_with(Legacy_file_provider())
          when "json" then
-            Result := save_with(Json_file_provider)
+            Result := save_with(Json_file_provider())
          else
             Result := once "unknown vault format: #(1)" # format
          end
@@ -330,15 +330,8 @@ feature {} -- Vault formats handling
          Result.is_empty = not dirty
       end
 
-   Legacy_file_provider: FUNCTION[TUPLE, VAULT_FILE]
-      once
-         Result := agent: VAULT_FILE do create {LEGACY_FILE} Result end
-      end
-
-   Json_file_provider: FUNCTION[TUPLE, VAULT_FILE]
-      once
-         Result := agent: VAULT_FILE do create {JSON_FILE} Result end
-      end
+   Legacy_file_provider: LEGACY_FILE_PROVIDER
+   Json_file_provider: JSON_FILE_PROVIDER
 
    format: FIXED_STRING
       once
