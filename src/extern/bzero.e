@@ -23,7 +23,7 @@ feature {ANY}
          -- Cleans up the string in constant time.
       require
          s.capacity > 0
-         s.capacity < secure_max(s.capacity)
+         s.capacity <= secure_max(s.capacity)
       local
          c: INTEGER
       do

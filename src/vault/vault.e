@@ -245,6 +245,7 @@ feature {ANY}
       do
          key := data.reference_at(key_name.intern)
          if key /= Void and then not key.is_deleted then
+            Result := once ""
             inspect
                a_property
             when "username" then
@@ -260,6 +261,8 @@ feature {ANY}
                else
                   Result := once "Invalid split tag: '#(1)'" # value
                end
+            else
+               Result := once "Invalid property"
             end
          else
             Result := once "Unknown key"
@@ -276,6 +279,7 @@ feature {ANY}
       do
          key := data.reference_at(key_name.intern)
          if key /= Void and then not key.is_deleted then
+            Result := once ""
             inspect
                a_property
             when "username" then
@@ -289,6 +293,8 @@ feature {ANY}
                   key.del_tag(value)
                end
                dirty := True
+            else
+               Result := once "Invalid property"
             end
          else
             Result := once "Unknown key"

@@ -253,14 +253,16 @@ feature {QUERY_CLOSE}
 feature {QUERY_GET}
    visit_get (query: QUERY_GET)
       local
-         pass: STRING
+         pass: STRING; username, url: FIXED_STRING
       do
          if vault.is_open then
             pass := vault.pass(query.key)
             if pass /= Void then
+               username := vault.property(query.key, once "username")
+               url := vault.property(query.key, once "url")
                create {REPLY_GET} reply.make(once "", query.key, pass,
-                                             vault.property(query.key, once "username"),
-                                             vault.property(query.key, once "url"))
+                                             if username /= Void then username else once "" end,
+                                             if url /= Void then url else once "" end)
             else
                create {REPLY_GET} reply.make(once "Unknown key", query.key, once "", once "", once "")
             end
