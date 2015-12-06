@@ -75,6 +75,9 @@ feature {}
             reply ::= a_reply
             if reply.error.is_empty then
                io.put_line(once "[1mDone[0m")
+               if not client.send_save then
+                  std_output.put_line(once "Failed to save the vault!")
+               end
             else
                error_and_help(reply.error, Void)
             end
