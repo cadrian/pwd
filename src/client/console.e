@@ -19,7 +19,7 @@ inherit
    CLIENT
       -- commands need access to a lot of client stuff
       export {COMMAND} read_password, call_server, send_save, tmpdir, master_pass
-      redefine make, cleanup
+      redefine make, cleanup, copy_to_clipboard
       end
 
 insert
@@ -28,27 +28,6 @@ insert
 
 create {}
    make
-
-feature {COMMAND}
-   clear_clipboard
-      do
-         copy_to_clipboard(once "")
-      end
-
-   key_data (pass, username, url: STRING)
-      require
-         pass /= Void
-         username /= Void
-         url /= Void
-      do
-         copy_to_clipboard(pass)
-         if not username.is_empty then
-            io.put_line(once "[1mUsername: [m#(1)" # username)
-         end
-         if not url.is_empty then
-            io.put_line(once "[1mURL: [m#(1)" # url)
-         end
-      end
 
 feature {} -- the CLIENT interface
    stop: BOOLEAN
@@ -178,10 +157,37 @@ feature {} -- local vault commands
 
    run_get
       do
-         do_get(command_line.first, agent key_data(?,?,?), agent unknown_key(?))
+         inspect
+            command_line.count
+         when 1 then
+            do_get(command_line.first, agent copy_to_clipboard(?), agent unknown_key(?))
+         when 2 then
+            inspect
+               command_line.last
+            when "pass" then
+               do_get(command_line.first, agent copy_to_clipboard(?), agent unknown_key(?))
+            when "username" then
+               do_get(command_line.first, agent (p, username: STRING) do copy_to_clipboard(username) end (?, ?), agent unknown_key(?))
+            when "url" then
+               do_get(command_line.first, agent (p, u, url: STRING) do copy_to_clipboard(url) end (?, ?, ?), agent unknown_key(?))
+            else
+               io.put_line(once "[1mInvalid property:[m #(1)" # command_line.last)
+            end
+         else
+            io.put_line(once "[1mInvalid number of arguments[m")
+         end
       end
 
 feature {COMMAND}
+   copy_to_clipboard (string: ABSTRACT_STRING)
+      do
+         if string.is_empty then
+            io.put_line(once "[1mNothing to copy![m")
+         else
+            Precursor(string)
+         end
+      end
+
    do_stop
       do
          call_server(create {QUERY_STOP}.make, agent when_stop(?))

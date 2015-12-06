@@ -54,7 +54,7 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               client.clear_clipboard
+               client.copy_to_clipboard(once "")
                io.put_line(once "[1mDone[0m")
                if not client.send_save then
                   std_output.put_line(once "Failed to save the vault!")
