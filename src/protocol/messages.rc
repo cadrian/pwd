@@ -1,15 +1,16 @@
-# name          desc_query                            desc_reply
-close           .                                     .
-get             key:STRING                            key:STRING|pass:STRING
-is_open         .                                     is_open:BOOLEAN
-list            tag:STRING                            !
-master          master:STRING                         .
-change_master   old_master:STRING|new_master:STRING   .
-merge           vault:STRING|master:STRING            vault:STRING
-ping            id:STRING                             id:STRING
-save            .                                     .
-set             !                                     key:STRING|pass:STRING
-stop            .                                     .
-tags            .                                     !
-unset           key:STRING                            key:STRING
-version         .                                     version:STRING
+# name          desc_query                                            desc_reply
+close           .                                                     .
+get             key:STRING                                            key:STRING|pass:STRING
+is_open         .                                                     is_open:BOOLEAN
+list            tag:STRING                                            !
+master          master:STRING                                         .
+change_master   old_master:STRING|new_master:STRING                   .
+merge           vault:STRING|master:STRING                            vault:STRING
+ping            id:STRING                                             id:STRING
+property        key:STRING|action:STRING|property:STRING|value:STRING .
+save            .                                                     .
+set             !                                                     key:STRING|pass:STRING
+stop            .                                                     .
+tags            .                                                     !
+unset           key:STRING                                            key:STRING
+version         .                                                     version:STRING

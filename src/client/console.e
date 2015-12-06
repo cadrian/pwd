@@ -295,8 +295,10 @@ feature {} -- helpers
          create {COMMAND_REM} command.make(Current, commands_map)
          create {COMMAND_REMOTE} command.make(Current, commands_map, remote_map)
          create {COMMAND_SAVE} command.make(Current, commands_map, remote_map)
+         create {COMMAND_SET} command.make(Current, commands_map)
          create {COMMAND_SHOW} command.make(Current, commands_map)
          create {COMMAND_STOP} command.make(Current, commands_map)
+         create {COMMAND_UNSET} command.make(Current, commands_map)
          create {COMMAND_VERSION} command.make(Current, commands_map)
 
          commands := commands_map

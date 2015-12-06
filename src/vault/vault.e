@@ -216,6 +216,66 @@ feature {ANY}
          Result := once ""
       end
 
+   set_property (key_name, property, value: STRING): ABSTRACT_STRING
+      require
+         key_name /= Void
+         property /= Void
+         value /= Void
+      local
+         key: KEY
+      do
+         key := data.reference_at(key_name.intern)
+         if key /= Void and then not key.is_deleted then
+            inspect
+               property
+            when "username" then
+               key.username := value
+               dirty := True
+            when "url" then
+               key.url := value
+               dirty := True
+            when "tag" then
+               if value.split.count = 1 and then value.split.first.is_equal(value) then
+                  key.add_tag(value)
+                  dirty := True
+               else
+                  Result := once "Invalid split tag: '#(1)'" # value
+               end
+            end
+         else
+            Result := once "Unknown key"
+         end
+      end
+
+   unset_property (key_name, property, value: STRING): ABSTRACT_STRING
+      require
+         key_name /= Void
+         property /= Void
+         value /= Void
+      local
+         key: KEY
+      do
+         key := data.reference_at(key_name.intern)
+         if key /= Void and then not key.is_deleted then
+            inspect
+               property
+            when "username" then
+               key.username := Void
+               dirty := True
+            when "url" then
+               key.url := Void
+               dirty := True
+            when "tag" then
+               if key.has_tag(value) then
+                  key.del_tag(value)
+               end
+               dirty := True
+            end
+         else
+            Result := once "Unknown key"
+         end
+      end
+
    tags: TRAVERSABLE[FIXED_STRING]
       local
          tagset: AVL_SET[FIXED_STRING]

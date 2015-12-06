@@ -408,6 +408,27 @@ feature {QUERY_SET}
          end
       end
 
+feature {QUERY_PROPERTY}
+   visit_property (query: QUERY_PROPERTY)
+      local
+         error: ABSTRACT_STRING
+      do
+         if vault.is_open then
+            inspect
+               query.action
+            when "set" then
+               error := vault.set_property(query.key, query.property, query.value)
+            when "unset" then
+               error := vault.unset_property(query.key, query.property, query.value)
+            else
+               error := "Invalid action " + query.action
+            end
+            create {REPLY_PROPERTY} reply.make(error)
+         else
+            create {REPLY_PROPERTY} reply.make(once "Vault not open")
+         end
+      end
+
 feature {QUERY_STOP}
    visit_stop (query: QUERY_STOP)
       do
