@@ -77,7 +77,7 @@ feature {}
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               client.copy_to_clipboard(once "")
+               client.clear_clipboard
                io.put_line(once "[1mDone[0m")
             else
                error_and_help(reply.error, Void)

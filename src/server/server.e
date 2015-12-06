@@ -258,12 +258,14 @@ feature {QUERY_GET}
          if vault.is_open then
             pass := vault.pass(query.key)
             if pass /= Void then
-               create {REPLY_GET} reply.make(once "", query.key, pass)
+               create {REPLY_GET} reply.make(once "", query.key, pass,
+                                             vault.property(query.key, once "username"),
+                                             vault.property(query.key, once "url"))
             else
-               create {REPLY_GET} reply.make(once "Unknown key", query.key, once "")
+               create {REPLY_GET} reply.make(once "Unknown key", query.key, once "", once "", once "")
             end
          else
-            create {REPLY_GET} reply.make(once "Vault not open", query.key, once "")
+            create {REPLY_GET} reply.make(once "Vault not open", query.key, once "", once "", once "")
          end
       end
 

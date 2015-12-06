@@ -216,10 +216,29 @@ feature {ANY}
          Result := once ""
       end
 
-   set_property (key_name, property, value: STRING): ABSTRACT_STRING
+   property (key_name, a_property: STRING): FIXED_STRING
       require
          key_name /= Void
-         property /= Void
+         a_property /= Void
+      local
+         key: KEY
+      do
+         key := data.reference_at(key_name.intern)
+         if key /= Void and then not key.is_deleted then
+            inspect
+               a_property
+            when "username" then
+               Result := key.username
+            when "url" then
+               Result := key.url
+            end
+         end
+      end
+
+   set_property (key_name, a_property, value: STRING): ABSTRACT_STRING
+      require
+         key_name /= Void
+         a_property /= Void
          value /= Void
       local
          key: KEY
@@ -227,7 +246,7 @@ feature {ANY}
          key := data.reference_at(key_name.intern)
          if key /= Void and then not key.is_deleted then
             inspect
-               property
+               a_property
             when "username" then
                key.username := value
                dirty := True
@@ -247,10 +266,10 @@ feature {ANY}
          end
       end
 
-   unset_property (key_name, property, value: STRING): ABSTRACT_STRING
+   unset_property (key_name, a_property, value: STRING): ABSTRACT_STRING
       require
          key_name /= Void
-         property /= Void
+         a_property /= Void
          value /= Void
       local
          key: KEY
@@ -258,7 +277,7 @@ feature {ANY}
          key := data.reference_at(key_name.intern)
          if key /= Void and then not key.is_deleted then
             inspect
-               property
+               a_property
             when "username" then
                key.username := Void
                dirty := True

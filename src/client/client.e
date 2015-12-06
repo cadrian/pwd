@@ -249,7 +249,7 @@ feature {} -- get a password from the server
          create Result.with_capacity(16, 0)
       end
 
-   get_back (a_reply: MESSAGE; key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]
+   get_back (a_reply: MESSAGE; key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING, STRING, STRING]]
       when_unknown: PROCEDURE[TUPLE[ABSTRACT_STRING]])
       require
          callback /= Void
@@ -260,7 +260,7 @@ feature {} -- get a password from the server
          if reply ?:= a_reply then
             reply ::= a_reply
             if reply.error.is_empty then
-               callback.call([reply.pass])
+               callback.call([reply.pass, reply.username, reply.url])
             else
                log.error.put_line(reply.error)
                when_unknown.call([key])
@@ -270,7 +270,7 @@ feature {} -- get a password from the server
          end
       end
 
-   do_get (key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING]]; when_unknown: PROCEDURE[TUPLE[ABSTRACT_STRING]])
+   do_get (key: ABSTRACT_STRING; callback: PROCEDURE[TUPLE[STRING, STRING, STRING]]; when_unknown: PROCEDURE[TUPLE[ABSTRACT_STRING]])
          -- get key
       require
          callback /= Void

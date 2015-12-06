@@ -18,7 +18,7 @@ class CONSOLE
 inherit
    CLIENT
       -- commands need access to a lot of client stuff
-      export {COMMAND} copy_to_clipboard, read_password, call_server, send_save, tmpdir, master_pass
+      export {COMMAND} read_password, call_server, send_save, tmpdir, master_pass
       redefine make, cleanup
       end
 
@@ -28,6 +28,27 @@ insert
 
 create {}
    make
+
+feature {COMMAND}
+   clear_clipboard
+      do
+         copy_to_clipboard(once "")
+      end
+
+   key_data (pass, username, url: STRING)
+      require
+         pass /= Void
+         username /= Void
+         url /= Void
+      do
+         copy_to_clipboard(pass)
+         if not username.is_empty then
+            io.put_line(once "[1mUsername: [m#(1)" # username)
+         end
+         if not url.is_empty then
+            io.put_line(once "[1mURL: [m#(1)" # url)
+         end
+      end
 
 feature {} -- the CLIENT interface
    stop: BOOLEAN
@@ -157,7 +178,7 @@ feature {} -- local vault commands
 
    run_get
       do
-         do_get(command_line.first, agent copy_to_clipboard(?), agent unknown_key(?))
+         do_get(command_line.first, agent key_data(?,?,?), agent unknown_key(?))
       end
 
 feature {COMMAND}
