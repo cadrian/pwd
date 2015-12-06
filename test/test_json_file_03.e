@@ -35,8 +35,8 @@ feature {}
          create mock_vault_io
 
          keys := {LINKED_HASHED_DICTIONARY[KEY, FIXED_STRING] <<
-            create {KEY}.from_file("foo", "foopass", 2, 2, Void), "foo".intern;
-            create {KEY}.from_file("bar", "barpass", 0, 3, Void), "bar".intern
+            create {KEY}.from_file("foo", "foopass", 2, 2, Void, False), "foo".intern;
+            create {KEY}.from_file("bar", "barpass", 0, 3, Void, False), "bar".intern
          >> }
 
          scenario.expect({FAST_ARRAY[MOCK_EXPECTATION] <<
@@ -53,7 +53,7 @@ feature {}
          err := json_file.save(keys, mock_vault_io.mock)
 
          assert(err.is_empty)
-         assert(json_out.is_equal("{%"foo%":{%"name%":%"foo%",%"pass%":%"foopass%",%"add_count%":2,%"del_count%":2,%"properties%":{}},%"bar%":{%"name%":%"bar%",%"pass%":%"barpass%",%"add_count%":0,%"del_count%":3,%"properties%":{}}}"))
+         assert(json_out.is_equal("{%"foo%":{%"name%":%"foo%",%"pass%":%"foopass%",%"add_count%":2,%"del_count%":2,%"properties%":{},%"private%":false},%"bar%":{%"name%":%"bar%",%"pass%":%"barpass%",%"add_count%":0,%"del_count%":3,%"properties%":{},%"private%":false}}"))
 
          scenario.check_all_done
       end

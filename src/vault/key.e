@@ -27,6 +27,8 @@ feature {ANY}
    username: FIXED_STRING
    url: FIXED_STRING
 
+   is_private: BOOLEAN
+
    has_tag (tag: ABSTRACT_STRING): BOOLEAN
       require
          tag /= Void
@@ -122,17 +124,17 @@ feature {ANY}
       end
 
 feature {}
-   new (a_name: ABSTRACT_STRING; a_pass: STRING)
+   new (a_name: ABSTRACT_STRING; a_pass: STRING; private: BOOLEAN)
       require
          a_name /= Void
          a_pass /= Void
       do
-         from_file(a_name, a_pass, 0, 0, Void)
+         from_file(a_name, a_pass, 0, 0, Void, private)
       ensure
          not is_deleted
       end
 
-   from_file (a_name: ABSTRACT_STRING; a_pass: STRING; a_add_count, a_del_count: INTEGER; a_properties: MAP[ABSTRACT_STRING, FIXED_STRING])
+   from_file (a_name: ABSTRACT_STRING; a_pass: STRING; a_add_count, a_del_count: INTEGER; a_properties: MAP[ABSTRACT_STRING, FIXED_STRING]; private: BOOLEAN)
       require
          a_name /= Void
          a_pass /= Void
@@ -165,6 +167,7 @@ feature {}
                v.split.for_each(agent (tag: STRING) do add_tag(tag) end (?))
             end
          end
+         is_private := private
       ensure
          name = a_name.intern
          pass = a_pass
@@ -173,6 +176,7 @@ feature {}
          (a_properties /= Void and then a_properties.fast_has(Property_username)) implies username.is_equal(a_properties.fast_at(Property_username))
          (a_properties /= Void and then a_properties.fast_has(Property_url)) implies url.is_equal(a_properties.fast_at(Property_url))
          (a_properties /= Void and then a_properties.fast_has(Property_tags)) implies tags.count = 1 + a_properties.fast_at(Property_tags).occurrences(' ')
+         is_private = private
        end
 
 feature {KEY, KEY_HANDLER}

@@ -88,14 +88,23 @@ feature {}
          create Result.make
       end
 
-   json_boolean (bool: BOOLEAN): JSON_VALUE
+   boolean (a_key: ABSTRACT_STRING): BOOLEAN
+      require
+         a_key /= Void
+      local
+         json_value: JSON_VALUE
       do
-         if bool then
-            Result := json_true
+         json_value := json.members.reference_at(json_string(a_key))
+         if {JSON_TRUE} ?:= json_value then
+            Result := True
+         elseif {JSON_FALSE} ?:= json_value then
+            check not Result end
          else
-            Result := json_false
+            check False end
          end
       end
+
+   json_boolean (bool: BOOLEAN): JSON_VALUE then if bool then json_true else json_false end end
 
    json_true: JSON_TRUE
       once

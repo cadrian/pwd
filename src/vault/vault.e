@@ -159,7 +159,7 @@ feature {ANY}
          Result.is_empty = not dirty
       end
 
-   set_random (a_name, a_recipe: STRING): ABSTRACT_STRING
+   set_random (a_name, a_recipe: STRING; a_private: BOOLEAN): ABSTRACT_STRING
       require
          is_open
          a_name /= Void
@@ -171,14 +171,14 @@ feature {ANY}
          if pass_ = Void then
             Result := once "Invalid recipe"
          else
-            Result := set(a_name, pass_)
+            Result := set(a_name, pass_, a_private)
          end
       ensure
          Result /= Void
          Result.is_empty implies dirty
       end
 
-   set (a_name, a_pass: STRING): ABSTRACT_STRING
+   set (a_name, a_pass: STRING; a_private: BOOLEAN): ABSTRACT_STRING
       require
          is_open
          a_name /= Void
@@ -188,7 +188,7 @@ feature {ANY}
       do
          key := data.reference_at(a_name.intern)
          if key = Void then
-            create key.new(a_name, a_pass)
+            create key.new(a_name, a_pass, a_private)
             data.add(key, key.name)
          else
             key.set_pass(a_pass)

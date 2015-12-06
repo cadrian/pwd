@@ -105,7 +105,7 @@ feature {} -- load
 
             bzero(dat)
 
-            create Result.from_file(name, pass, add_count, del_count, Void)
+            create Result.from_file(name, pass, add_count, del_count, Void, name.first = '_')
          else
             log.trace.put_line("Invalid line: #(1)" # a_line)
          end

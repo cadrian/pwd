@@ -34,16 +34,16 @@ feature {COMMANDER}
          inspect
             command.count
          when 1 then
-            create query.make_random(command.first, shared.default_recipe)
+            create query.make_random(command.first, shared.default_recipe, False)
          when 2 then
             inspect
                command.last
             when "generate" then
-               create query.make_random(command.first, shared.default_recipe)
+               create query.make_random(command.first, shared.default_recipe, False)
             when "prompt" then
                pass := client.read_password(once "Please enter the new password for #(1)" # command.first, client.on_cancel)
                if pass /= Void then
-                  create query.make_given(command.first, pass)
+                  create query.make_given(command.first, pass, False)
                end
             else
                error_and_help(once "Unrecognized argument '#(1)'" # command.last, command)
@@ -54,7 +54,7 @@ feature {COMMANDER}
             inspect
                command.last
             when "generate" then
-               create query.make_random(command.first, recipe)
+               create query.make_random(command.first, recipe, False)
             else
                error_and_help(once "Unrecognized argument '#(1)'" # command.last, command)
             end

@@ -282,7 +282,7 @@ feature {QUERY_LIST}
             create names.with_capacity(vault.count)
             vault.for_each_key(agent (key: KEY; tag: STRING; a: FAST_ARRAY[FIXED_STRING])
                do
-                  if key.name.first /= '_' and then (tag.is_empty or else key.has_tag(tag)) then
+                  if not key.is_private and then (tag.is_empty or else key.has_tag(tag)) then
                      log.trace.put_line("Listing key: #(1)" # key.name)
                      a.add_last(key.name)
                   else
@@ -397,9 +397,9 @@ feature {QUERY_SET}
       do
          if vault.is_open then
             if query.recipe /= Void then
-               error := vault.set_random(query.key, query.recipe)
+               error := vault.set_random(query.key, query.recipe, query.private)
             else
-               error := vault.set(query.key, query.pass)
+               error := vault.set(query.key, query.pass, query.private)
             end
             pass := vault.pass(query.key)
             create {REPLY_SET} reply.make(error, query.key, pass)

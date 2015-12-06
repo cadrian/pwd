@@ -67,7 +67,7 @@ feature {JSON_HANDLER}
 
    create_object: JSON_DATA
       local
-         empty_key: TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER, HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]]
+         empty_key: TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER, HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING], BOOLEAN]
       do
          inspect
             depth
@@ -75,7 +75,7 @@ feature {JSON_HANDLER}
             create {VAULT_DATA[DICTIONARY[KEY, FIXED_STRING]]} Result.make(create {LINKED_HASHED_DICTIONARY[KEY, FIXED_STRING]}.make)
          when 1 then
             create empty_key
-            create {VAULT_DATA[TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER, HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]]]} Result.make(empty_key)
+            create {VAULT_DATA[TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER, HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING], BOOLEAN]]} Result.make(empty_key)
          when 2 then
             create {VAULT_DATA[HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]]} Result.make(create {HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]}.make)
          else
@@ -87,10 +87,11 @@ feature {JSON_HANDLER}
    add_to_object (a_object, a_key, a_value: JSON_DATA)
       local
          keys: VAULT_DATA[DICTIONARY[KEY, FIXED_STRING]]
-         key: VAULT_DATA[TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER, HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]]]
+         key: VAULT_DATA[TUPLE[FIXED_STRING, STRING, INTEGER, INTEGER, HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING], BOOLEAN]]
          properties: VAULT_DATA[HASHED_DICTIONARY[ABSTRACT_STRING, FIXED_STRING]]
          k, vs: VAULT_DATA[STRING]
          vi: VAULT_DATA[INTEGER]
+         vb: VAULT_DATA[BOOLEAN]
          new_key: KEY
          bzero: BZERO
       do
@@ -103,7 +104,7 @@ feature {JSON_HANDLER}
             keys ::= a_object
             k ::= a_key
             key ::= a_value
-            create new_key.from_file(key.item.first, key.item.second, key.item.third, key.item.fourth, key.item.fifth)
+            create new_key.from_file(key.item.first, key.item.second, key.item.third, key.item.fourth, key.item.fifth, key.item.item_6)
             keys.item.add(new_key, k.item.intern)
          when 2 then
             key ::= a_object
@@ -126,6 +127,9 @@ feature {JSON_HANDLER}
             when "properties" then
                properties ::= a_value
                key.item.set_fifth(properties.item)
+            when "private" then
+               vb ::= a_value
+               key.item.set_item_6(vb.item)
             else
                log.warning.put_line(once "unexpected key entry: %"#(1)%"" # k.item)
             end
@@ -166,12 +170,12 @@ feature {JSON_HANDLER}
 
    true_value: JSON_DATA
       do
-         log.warning.put_line(once "unexpected true")
+         create {VAULT_DATA[BOOLEAN]} Result.make(True)
       end
 
    false_value: JSON_DATA
       do
-         log.warning.put_line(once "unexpected false")
+         create {VAULT_DATA[BOOLEAN]} Result.make(False)
       end
 
    null_value: JSON_DATA
@@ -190,6 +194,7 @@ feature {}
       local
          name, pass: JSON_STRING
          add_count, del_count: JSON_NUMBER
+         private: JSON_VALUE
          n64_zero: NATURAL_64
          i64_zero: INTEGER_64
          props: HASHED_DICTIONARY[JSON_VALUE, JSON_STRING]; properties: JSON_OBJECT
@@ -197,6 +202,11 @@ feature {}
       do
          create name.from_string(key.name)
          create pass.from_string(key.pass)
+         if key.is_private then
+            create {JSON_TRUE} private.make
+         else
+            create {JSON_FALSE} private.make
+         end
          create add_count.make(1, key.add_count.to_natural_64, n64_zero, i64_zero, i64_zero)
          create del_count.make(1, key.del_count.to_natural_64, n64_zero, i64_zero, i64_zero)
          create props.make
@@ -224,7 +234,8 @@ feature {}
                                                pass, Key_pass;
                                                add_count, Key_add_count;
                                                del_count, Key_del_count;
-                                               properties, Key_properties
+                                               properties, Key_properties;
+                                               private, Key_private
                                             >> }),
                   name)
       end
@@ -252,6 +263,11 @@ feature {}
    Key_properties: JSON_STRING
       once
          create Result.from_string("properties")
+      end
+
+   Key_private: JSON_STRING
+      once
+         create Result.from_string("private")
       end
 
    Property_username: JSON_STRING

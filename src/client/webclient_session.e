@@ -93,7 +93,7 @@ feature {}
 
    next_token: BOOLEAN
       do
-         error := vault.set_random(Http_token_name, "12an")
+         error := vault.set_random(Http_token_name, "12an", True)
          if error.is_empty then
             error := Void
             Result := True
