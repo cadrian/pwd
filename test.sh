@@ -10,9 +10,12 @@ cd $(dirname $(readlink -f $0))
 if [ $# -gt 0 ]; then
     case x$1 in
         xbootstrap)
-            ./deploy.sh bootstrap
+            echo "Bootstrapping..."
+            ./bootstrap.sh
+            echo "Compiling..."
+            make -j4
             ;;
     esac
 fi
-./deploy.sh release
+echo "Starting test web server."
 exec test/test_webclient.sh "$@"

@@ -104,6 +104,9 @@ EOF
 } | openssl bf -a -pass pass:pwd > $RUN/pwd/vault
 
 echo "Starting HTTP server into $DIR"
+echo "User: test / Password: pwd"
+echo "Vault password: pwd"
+echo "URL: http://localhost:8888/pwd.cgi"
 
 cd $DIR
 
