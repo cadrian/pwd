@@ -283,7 +283,7 @@ feature {}
             open_action := agent (ot: FIXED_STRING)
                              do
                                 first_response := Void
-                                call_server(create {QUERY_LIST}.make(Void), agent when_pass_list(new_auth_token, ?))
+                                call_server(create {QUERY_LIST}.make(once ""), agent when_pass_list(new_auth_token, ?))
                              end(auth_token)
             send_master
          end
@@ -306,7 +306,7 @@ feature {}
             response_403("/pass: invalid token value")
          else
             log.trace.put_line("/pass: form seems legit -- calling server with list query")
-            call_server(create {QUERY_LIST}.make(Void), agent when_pass_list(new_auth_token, ?))
+            call_server(create {QUERY_LIST}.make(once ""), agent when_pass_list(new_auth_token, ?))
          end
       end
 
