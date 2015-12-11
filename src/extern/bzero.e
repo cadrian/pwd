@@ -32,7 +32,7 @@ feature {ANY}
          bzero(s.storage, s.capacity)
       ensure
          s.is_empty
-         s.storage.occurrences('%U', s.capacity) = s.capacity
+         --s.storage.occurrences('%U', s.capacity) = s.capacity -- (wrong in all_check because of canary)
       end
 
    secure_max (c: INTEGER): INTEGER

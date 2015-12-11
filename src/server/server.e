@@ -137,7 +137,7 @@ feature {}
          channel.cleanup
 
          if is_killed then
-            log.info.put_line(once "Killed.")
+            log.error.put_line(once "Killed.")
             die_with_code(1)
          end
 
@@ -155,7 +155,7 @@ feature {}
             print_run_time_stack
             is_killed := True
          else
-            log.info.put_line(once "Caught again exception #(1), aborting now." # exceptions.exception_name)
+            log.error.put_line(once "Caught again exception #(1), aborting now." # exceptions.exception_name)
             die_with_code(1)
          end
          retry
@@ -208,15 +208,15 @@ feature {}
                end
                configuration.parse_extra_conf(configuration.argument(1))
             else
-               std_error.put_line("One argument must be %"-no_detach%" and the other, the extra configuration file")
+               log.error.put_line("One argument must be %"-no_detach%" and the other, the extra configuration file")
                die_with_code(1)
             end
          else
-            std_error.put_line("Usage: #(1) [<fallback conf>] [-no_detach]" # command_name)
+            log.error.put_line("Usage: #(1) [<fallback conf>] [-no_detach]" # command_name)
             die_with_code(1)
          end
          if configuration.main_config = Void then
-            std_error.put_line("Could not find any valid configuration file")
+            log.error.put_line("Could not find any valid configuration file")
             die_with_code(1)
          end
       end
@@ -253,21 +253,23 @@ feature {QUERY_CLOSE}
 feature {QUERY_GET}
    visit_get (query: QUERY_GET)
       local
-         pass: STRING; username, url: FIXED_STRING
+         name: STRING; key: KEY
       do
          if vault.is_open then
-            pass := vault.pass(query.key)
-            if pass /= Void then
-               username := vault.property(query.key, once "username")
-               url := vault.property(query.key, once "url")
-               create {REPLY_GET} reply.make(once "", query.key, pass,
-                                             if username /= Void then username else once "" end,
-                                             if url /= Void then url else once "" end)
+            name := query.key.twin
+            log.trace.put_line("Getting key: #(1)" # name)
+            key := vault.key(name)
+            if key /= Void then
+               log.trace.put_line("Found key: #(1)" # name)
+               create {REPLY_GET} reply.make(once "", name, key.pass,
+                                             if key.username /= Void then key.username else once "" end,
+                                             if key.url /= Void then key.url else once "" end,
+                                             key.tags)
             else
-               create {REPLY_GET} reply.make(once "Unknown key", query.key, once "", once "", once "")
+               create {REPLY_GET} reply.make(once "Unknown key", query.key.twin, once "", once "", once "", create {FAST_ARRAY[STRING]}.make(0))
             end
          else
-            create {REPLY_GET} reply.make(once "Vault not open", query.key, once "", once "", once "")
+            create {REPLY_GET} reply.make(once "Vault not open", query.key.twin, once "", once "", once "", create {FAST_ARRAY[STRING]}.make(0))
          end
       end
 
@@ -397,7 +399,7 @@ feature {QUERY_SAVE}
 feature {QUERY_SET}
    visit_set (query: QUERY_SET)
       local
-         error: ABSTRACT_STRING; pass: STRING
+         error: ABSTRACT_STRING; key: KEY
       do
          if vault.is_open then
             if query.recipe /= Void then
@@ -405,8 +407,8 @@ feature {QUERY_SET}
             else
                error := vault.set(query.key, query.pass, query.private)
             end
-            pass := vault.pass(query.key)
-            create {REPLY_SET} reply.make(error, query.key, pass)
+            key := vault.key(query.key)
+            create {REPLY_SET} reply.make(error, query.key, key.pass)
          else
             create {REPLY_SET} reply.make(once "Vault not open", query.key, once "")
          end

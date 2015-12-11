@@ -9,6 +9,45 @@
     </script>
   </head>
   <body>
+    <h1>#(key)</h1>
+    #(*username)
+    #(*url)
+    #(*tags)
+    <table>
+      #(*username)
+      <tr>
+        <td>
+          <b>Username:</b>
+        </td>
+        <td>
+          #(username)
+        </td>
+      </tr>
+      #(username*)
+      #(*url)
+      <tr>
+        <td>
+          <b>URL:</b>
+        </td>
+        <td>
+          <a href="#(url)">#(url)</a>
+        </td>
+      </tr>
+      #(url*)
+      #(*tags)
+      <tr>
+        <td>
+          <b>Tags:</b>
+        </td>
+        <td>
+          #(*tags)
+          #(tag)
+          #(tags*)
+        </td>
+      </tr>
+      #(tags*)
+    </table>
+    #(username*)
     <button class="clip" data-clipboard-text="#(pass)">Copy</button>
     <form method="post" action="#(root)/pass">
       <input type="hidden" name="#(form_token_name)" value="#(auth_token)" />

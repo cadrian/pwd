@@ -17,52 +17,92 @@ class SERVER_SOCKET_CONNECTION
 
 inherit
    JOB
+      redefine
+         out_in_tagged_out_memory
+      end
 
 insert
    LOGGING
+      redefine
+         out_in_tagged_out_memory
+      end
 
 create {SERVER_SOCKET}
    make
 
+feature {ANY}
+   out_in_tagged_out_memory
+      do
+         tagged_out_memory.append(once "{SERVER_SOCKET_CONNECTION#")
+         id.append_in(tagged_out_memory)
+         tagged_out_memory.extend('}')
+      end
+
 feature {LOOP_ITEM}
    prepare (events: EVENTS_SET)
       do
-         log.trace.put_line(once "Connection established, awaiting command")
-         events.expect(channel.event_can_read)
+         if reply = Void then
+            log.trace.put_line(out + ": Connection established, awaiting query")
+            events.expect(channel.event_can_read)
+         else
+            log.trace.put_line(out + ": Reply ready, awaiting client")
+            events.expect(channel.event_can_write)
+         end
       end
 
    is_ready (events: EVENTS_SET): BOOLEAN
       do
-         Result := done or else events.event_occurred(channel.event_can_read)
+         if done then
+            Result := True
+         elseif reply = Void then
+            Result := events.event_occurred(channel.event_can_read)
+            if Result then
+               log.trace.put_line(out + ": Connection input ready")
+            end
+         else
+            Result := events.event_occurred(channel.event_can_write)
+            if Result then
+               log.trace.put_line(out + ": Connection output ready")
+            end
+         end
       end
 
    continue
-      local
-         query, reply: MESSAGE
       do
          if not done then
-            streamer.read_message(channel)
-            if streamer.error /= Void then
-               log.warning.put_line(once "Error: #(1). Closing connection." # streamer.error)
-               channel.disconnect
-            else
-               query := streamer.last_message
-               if query = Void then
-                  log.trace.put_line(once "No query, connection closed?")
-                  channel.disconnect
-               else
-                  log.info.put_line(once "Connection received: type #(1) command #(2)." # query.type # query.command)
-                  reply := server.fire_receive(query)
-                  if reply = Void then
-                     log.warning.put_line("No reply to the query #(1)!" # query.command)
+            if reply = Void then
+               streamer.read_message(channel)
+               if streamer.error /= Void then
+                  if channel.is_connected then
+                     log.warning.put_line(out + ": #(1). Closing connection." # streamer.error)
+                     channel.disconnect
                   else
-                     log.trace.put_line(once "Replying: type #(1) command #(2)." # reply.type # reply.command)
-                     streamer.write_message(reply, channel)
-                     channel.flush
-                     --| **** TODO reply.clean
+                     log.info.put_line(out + ": #(1). Connection was closed." # streamer.error)
                   end
-                  --| **** TODO query.clean
+               else
+                  query := streamer.last_message
+                  if query = Void then
+                     if channel.is_connected then
+                        log.trace.put_line(out + ": No query, invalid message? Closing connection.")
+                        channel.disconnect
+                     else
+                        log.trace.put_line(out + ": No query, connection was closed.")
+                     end
+                  else
+                     log.info.put_line(out + ": Connection received: type #(1) command #(2)." # query.type # query.command)
+                     reply := server.fire_receive(query)
+                     if reply = Void then
+                        log.warning.put_line(out + ": No reply to the query #(1)! Closing connection." # query.command)
+                        channel.disconnect
+                     end
+                  end
                end
+            else
+               log.trace.put_line(out + ": Replying: type #(1) command #(2)." # reply.type # reply.command)
+               streamer.write_message(reply, channel)
+               channel.flush
+               done := True
+               log.trace.put_line(out + ": Done.")
             end
          end
       end
@@ -82,6 +122,8 @@ feature {}
          a_server /= Void
          a_channel /= Void
       do
+         counter.increment
+         id := counter.item
          server := a_server
          channel := a_channel
          a_channel.when_disconnect(agent on_channel_disconnect(?))
@@ -90,9 +132,10 @@ feature {}
          channel = a_channel
       end
 
+   id: INTEGER
    server: SERVER_SOCKET
-
    channel: SOCKET_INPUT_OUTPUT_STREAM
+   query, reply: MESSAGE
 
    streamer: MESSAGE_STREAMER
       once
@@ -104,7 +147,18 @@ feature {}
          check
             a_channel = channel
          end
+         log.trace.put_line(out + ": Channel disconnected.")
+         if a_channel.error /= Void then
+            log.warning.put_line(out + ": Socket error: #(1)" # a_channel.error)
+         end
          done := True
+         --| **** TODO query.clean
+         --| **** TODO reply.clean
+      end
+
+   counter: COUNTER
+      once
+         create Result
       end
 
 invariant

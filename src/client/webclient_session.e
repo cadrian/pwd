@@ -88,12 +88,12 @@ feature {WEBCLIENT}
 feature {}
    token: STRING
       do
-         Result := vault.pass(Http_token_name)
+         Result := vault.key(Http_token_name).pass
       end
 
    next_token: BOOLEAN
       do
-         error := vault.set_random(Http_token_name, "12an", True)
+         error := vault.set_random(Http_token_name, "64an", True)
          if error.is_empty then
             error := Void
             Result := True
@@ -158,7 +158,7 @@ feature {}
             if Result then
                log.trace.put_line("Using #(1) cookie" # Session_cookie_name)
             else
-               create pg.parse("16an")
+               create pg.parse("64an")
             end
          until
             Result or else i < 0
@@ -275,8 +275,8 @@ feature {}
 
 invariant
    webclient /= Void
-   lock_file /= Void
    vault /= Void implies lock /= Void
-   lock_file.is_connected implies lock /= Void
+   lock /= Void implies lock_file /= Void
+   (lock_file /= Void and then lock_file.is_connected) implies lock /= Void
 
 end -- class WEBCLIENT_SESSION

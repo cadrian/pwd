@@ -60,7 +60,7 @@ feature {CLIENT}
       do
          busy := True
          streamer.write_message(query, channel)
-         channel.put_new_line
+         --channel.put_new_line
          channel.flush
          log.trace.put_line("Reading message...")
          streamer.read_message(channel)

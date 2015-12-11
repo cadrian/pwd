@@ -74,6 +74,7 @@ export XDG_DATA_HOME=$RUN
 export XDG_CONFIG_HOME=$CONF
 export XDG_DATA_DIRS=$RUN
 export XDG_CONFIG_DIRS=$RUN
+env | sort > $LOG/env.log
 exec webclient
 EOF
 
@@ -97,8 +98,8 @@ EOF
             echo
             ;;
         *)
-            echo foo:1:0:foopass
-            echo bar:1:0:barpass
+            #echo '{"foo":{"name":"foo","pass":"foopass","add_count":2,"del_count":2,"properties":{"username":"fooid"},"private":false},"bar":{"name":"bar","pass":"barpass","add_count":0,"del_count":3,"properties":{},"private":false},"baz":{"name":"baz","pass":"bazpass","add_count":1,"del_count":0,"properties":{"url":"http://localhost:8888/pwd.cgi","tags":"test baz"},"private":false}}'
+            echo '{"foo":{"name":"foo","pass":"foopass","add_count":2,"del_count":2,"properties":{},"private":false},"bar":{"name":"bar","pass":"barpass","add_count":0,"del_count":3,"properties":{},"private":false},"baz":{"name":"baz","pass":"bazpass","add_count":1,"del_count":0,"properties":{},"private":false}}'
             ;;
     esac
 } | openssl bf -a -pass pass:pwd > $RUN/pwd/vault

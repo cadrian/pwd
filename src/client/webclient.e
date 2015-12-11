@@ -326,7 +326,7 @@ feature {}
             end
             response_403("/pass: invalid token value")
          else
-            do_get(key, agent when_pass_get(?, new_auth_token), agent unknown_key(?))
+            do_get(key, agent when_pass_get(?, ?, ?, ?, ?, new_auth_token), agent unknown_key(?))
          end
       end
 
@@ -374,11 +374,11 @@ feature {}
          end
       end
 
-   when_pass_get (a_pass: STRING new_auth_token: FIXED_STRING)
+   when_pass_get (a_key, a_pass, a_username, a_url: STRING; a_tags: TRAVERSABLE[STRING]; new_auth_token: FIXED_STRING)
       do
          log.trace.put_line("Session vault provided auth token, responding with the pass")
          html_response("pass.html",
-                       create {WEBCLIENT_PASS}.make(a_pass, new_auth_token, Current,
+                       create {WEBCLIENT_PASS}.make(a_key, a_pass, a_username, a_url, a_tags, new_auth_token, Current,
                                                     agent (key: STRING)
                                                        do
                                                           response_503("/pass/*: bad template key " + key)
@@ -529,6 +529,7 @@ feature {}
       do
          create cgi.make(Current)
          make_client
+         bugfix
       end
 
    cgi: CGI
@@ -538,6 +539,15 @@ feature {}
    open_action: PROCEDURE[TUPLE]
 
    configuration_section: STRING "webclient"
+
+   bugfix
+         -- There is a bug in the compiler. Working around for the moment.
+      local
+         t: TRAVERSABLE[STRING]
+      do
+         die_with_code(0)
+         t := {FAST_ARRAY[STRING] << "BUG" >>}
+      end
 
 invariant
    cgi /= Void

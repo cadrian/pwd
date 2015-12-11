@@ -56,7 +56,6 @@ feature {EXTERN}
                      ]")
          if sts /= 0 then
             log.error.put_line(once "Error #(1) while creating #(2)" # sts.out # fifo)
-            crash
             die_with_code(1)
          end
       end

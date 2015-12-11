@@ -139,7 +139,8 @@ feature {}
             check
                not Result
             end
-            c_inline_c("} else {%Nperror(strerror(errno));%N")
+            c_inline_c("} else {%N%
+                       %perror(strerror(errno));%N")
             die_with_code(1)
             c_inline_c("}%N")
          end

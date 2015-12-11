@@ -165,11 +165,29 @@ feature {} -- local vault commands
             inspect
                command_line.last
             when "pass" then
-               do_get(command_line.first, agent copy_to_clipboard(?), agent unknown_key(?))
+               do_get(command_line.first, agent (n, pass: STRING) do copy_to_clipboard(pass) end (?, ?), agent unknown_key(?))
             when "username" then
-               do_get(command_line.first, agent (p, username: STRING) do copy_to_clipboard(username) end (?, ?), agent unknown_key(?))
+               do_get(command_line.first, agent (n, p, username: STRING) do copy_to_clipboard(username) end (?, ?, ?), agent unknown_key(?))
             when "url" then
-               do_get(command_line.first, agent (p, u, url: STRING) do copy_to_clipboard(url) end (?, ?, ?), agent unknown_key(?))
+               do_get(command_line.first, agent (n, p, u, url: STRING) do copy_to_clipboard(url) end (?, ?, ?, ?), agent unknown_key(?))
+            when "tags" then
+               do_get(command_line.first, agent (n, p, u, r: STRING; tags: TRAVERSABLE[STRING])
+                                             local
+                                                i: INTEGER
+                                             do
+                                                from
+                                                   i := tags.lower
+                                                until
+                                                   i > tags.upper
+                                                loop
+                                                   if i > tags.lower then
+                                                      io.put_string(once ", ")
+                                                   end
+                                                   io.put_string(tags.item(i))
+                                                   i := i + 1
+                                                end
+                                                io.put_new_line
+                                             end (?, ?, ?, ?, ?), agent unknown_key(?))
             else
                io.put_line(once "[1mInvalid property:[m #(1)" # command_line.last)
             end

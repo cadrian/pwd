@@ -13,7 +13,7 @@ if [ $# -gt 0 ]; then
             echo "Bootstrapping..."
             ./bootstrap.sh
             echo "Compiling..."
-            make -j4
+            make -j2
             ;;
     esac
 fi

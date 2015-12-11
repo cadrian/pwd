@@ -1,6 +1,6 @@
 # name          desc_query                                            desc_reply
 close           .                                                     .
-get             key:STRING                                            key:STRING|pass:STRING|username:STRING|url:STRING
+get             key:STRING                                            !
 is_open         .                                                     is_open:BOOLEAN
 list            tag:STRING                                            !
 master          master:STRING                                         .
