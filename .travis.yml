@@ -81,6 +81,7 @@ env:
   - secure: XyUascj2MlRhtnC33NO6Fcs78XjRD7KBfoqYJ7d35BEFHrWJUmI5Y9/MlKjuYtF9Ntsfe88ZDr/SxpHhTIbuw2lBKiFAwrvsmf+3wXlPFsuh3/g9shCxom/53CGo9rSCOYDXpNVNUl7mTEqFdW3syr/zoqU+KSZz+AdGB701JRM=
   - secure: XiT8OxGudKhGoJ8aqkGZ71Xr//fYVUN4ZtZlWFYCpBwIitFszhqTDRA3U3QUMz3R2XR5TeEwsWQvuNHgfhoky1UW/ShKyvjBHBSz8z7w0fEkiH/ZBsNkFGojAHm+SfdvSbCYm20kMmU3icDAgiHsMWpPbrbk21QNnWfYpVj8jX0=
 before_install:
+- echo 'deb http://archive.ubuntu.com/ubuntu/ yakkety main universe' | sudo tee /etc/apt/sources.list.d/yakkety.list
 - sudo apt-get update -qq
 - sudo apt-get install -qq curl wget libgc1c2 coreutils devscripts libzmq3-dev
 - mkdir $HOME/liberty
